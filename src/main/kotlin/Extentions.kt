@@ -9,14 +9,23 @@ import java.awt.Robot
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
 
+//val dateFormat = SimpleDateFormat("HH:mm:ss MM.dd")
+val dateFormat = SimpleDateFormat("HH:mm:ss")
+
+fun log(message: Any?){
+    print("[${dateFormat.format(Date())}] ")
+    println(message)
+}
+
 fun NativeKeyEvent.print() {
-    //        System.out.println(keyCode + " " + keyChar);
+    //        System.out.log(keyCode + " " + keyChar);
     val text = getKeyText(keyCode)
-    println(text)
+    log(text)
 }
 
 fun BufferedImage.toMat(): Mat {
@@ -35,7 +44,7 @@ fun BufferedImage.toMat(): Mat {
 fun BufferedImage.toFile(fileName: String) {
     val file = File("$fileName.png")
     ImageIO.write(this, "png", file)
-    println("A screenshot is captured to: " + file.path)
+    log("A screenshot is captured to: " + file.path)
 }
 
 suspend fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {

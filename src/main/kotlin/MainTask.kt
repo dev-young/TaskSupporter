@@ -1,7 +1,8 @@
+import helper.HelperCore
 import kotlinx.coroutines.*
 import maple_tasks.ActionTask
 import maple_tasks.MeisterTask
-import maple_tasks.PauseableDispatcher
+import helper.PauseableDispatcher
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyListener
@@ -12,6 +13,7 @@ import java.util.logging.LogManager
 import java.util.logging.Logger
 import kotlin.system.exitProcess
 
+// TODO: 2020-07-09 핵심 기능(일시정지, 종료 등) 따로 부모클래스로 만들어두기
 class MainTask : NativeKeyListener {
     init {
     }
@@ -25,12 +27,14 @@ class MainTask : NativeKeyListener {
         System.load(File("").absolutePath + "\\libs\\${Core.NATIVE_LIBRARY_NAME}.dll")
 
 
+        log("")
         println("f2: 일시정지")
         println("f3: 작업초기화")
         println("f4: 종료 (작업중인경우 작업 초기화)")
         println("f5: 합성하기")
-        println("f6: 경매장 무한 검색 및 구매 (테스트중)")
-        println("f7: 카운팅 테스트")
+        println("f6: 경매장 무한 검색 및 구매 (1개씩 구매)")
+        println("f7: 경매장 무한 검색 및 구매 (모두 구매)")
+        println()
 
     }
 
@@ -60,27 +64,26 @@ class MainTask : NativeKeyListener {
 
             NativeKeyEvent.VC_F5 -> {
                 jobMap[nativeKeyEvent.keyCode]?.cancel()
-                val j = GlobalScope.launch(dispatcher) {
-                    if (this.isActive) {
-                        MeisterTask().synthesizeItemSmartly()
-                    }
+                jobMap[nativeKeyEvent.keyCode] = GlobalScope.launch(dispatcher) {
+                    MeisterTask().synthesizeItemSmartly()
                 }
-                jobMap[nativeKeyEvent.keyCode] = j
             }
 
             NativeKeyEvent.VC_F6 -> {
                 jobMap[nativeKeyEvent.keyCode]?.cancel()
-                val j = GlobalScope.launch(dispatcher) {
-                    if (this.isActive) {
-                        ActionTask().auctionTest()
-                    }
+                jobMap[nativeKeyEvent.keyCode] = GlobalScope.launch(dispatcher) {
+                    ActionTask().buyOneItemUntilEnd(false)
                 }
-                jobMap[nativeKeyEvent.keyCode] = j
 
             }
 
             NativeKeyEvent.VC_F7 -> {
-                startTestTask(nativeKeyEvent.keyCode)
+//                startTestTask(nativeKeyEvent.keyCode)
+
+                jobMap[nativeKeyEvent.keyCode]?.cancel()
+                jobMap[nativeKeyEvent.keyCode] = GlobalScope.launch(dispatcher) {
+                    ActionTask().buyOneItemUntilEnd(true)
+                }
             }
 
 
@@ -90,7 +93,7 @@ class MainTask : NativeKeyListener {
     }
 
     private fun finishAllTask() {
-        println("모든 작업 취소")
+        log("모든 작업 취소")
         jobMap.values.forEach {
             it.cancel()
         }
@@ -104,7 +107,7 @@ class MainTask : NativeKeyListener {
         val j = GlobalScope.launch(dispatcher) {
             if (this.isActive) {
                 repeat(100) {
-                    println(it)
+                    log(it)
                     delay(1000)
                 }
             }

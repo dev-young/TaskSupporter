@@ -1,7 +1,10 @@
-package maple_tasks
+package helper
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.isActive
+import log
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -11,9 +14,14 @@ class PauseableDispatcher (private val handler: Thread): CoroutineDispatcher(){
 
     @Synchronized override fun dispatch(context: CoroutineContext, block: Runnable) {
         if (isPaused) {
+            isActive
             queue.add(block)
         } else {
-            handler.run { block.run() }
+            handler.run {
+                if (GlobalScope.isActive) {
+                    block.run()
+                }
+            }
         }
     }
 
@@ -38,11 +46,11 @@ class PauseableDispatcher (private val handler: Thread): CoroutineDispatcher(){
 
     fun toggle() {
         if(isPaused){
-            println("resume!")
+            log("resume!")
             resume()
         }
         else{
-            println("pause!")
+            log("pause!")
             pause()
         }
 

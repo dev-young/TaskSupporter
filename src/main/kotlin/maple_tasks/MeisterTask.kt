@@ -1,6 +1,7 @@
 package maple_tasks
 
 import helper.HelperCore
+import log
 import moveMouseSmoothly
 import java.awt.Point
 import java.awt.event.KeyEvent
@@ -9,17 +10,17 @@ class MeisterTask : MapleBaseTask() {
 
     /**빈칸이 나오거나 모든 아이템을 합성할때까지 합성을 반복한다. */
     suspend fun synthesizeItemSmartly() {
-
+        log("합성 시작!")
         HelperCore().apply {
             smartClickTimeMax = 300
             var isInventoryExpanded = isInventoryExpanded()
-            var vx = 0 //현재 합성할 아이템 x
-            var vy = 0  //현재 합성할 아이템 y
+            var vx: Int //현재 합성할 아이템 x
+            var vy: Int  //현재 합성할 아이템 y
             val point: Point = findFirstItemInInventory() ?: return
             point.let {
                 vx = it.x
                 vy = it.y
-                println("첫째칸 좌상단 위치: $vx, $vy")
+                log("첫째칸 좌상단 위치: $vx, $vy")
                 moveMouseSmoothly(Point(vx, vy), 50)
             }
 
@@ -39,6 +40,7 @@ class MeisterTask : MapleBaseTask() {
                 if (checkEmptyOrDisable(Point(vx, vy))) {
                     soundBeep()
 //                    moveMouseSmoothly(Point(vx, vy))
+                    log("합성 완료 (${i/2}회 수행)")
                     return
                 }
 
@@ -48,7 +50,7 @@ class MeisterTask : MapleBaseTask() {
                 if (i % 2 == 1) {
                     //첫번재 합성칸 클릭
                     smartClick(synItem.first, 10, 10)
-
+                    // TODO: 아이템은 남았지만 합성이 더이상 불가능 한 경우 처리 (피로도부족, 합성의 돌 부족)
                 } else {
                     // 두번째 합성칸 클릭 및 확인 클릭
                     smartClick(synItem.second, 10, 10)
@@ -80,6 +82,7 @@ class MeisterTask : MapleBaseTask() {
 
 
             }
+            log("합성 완료 (${repeatCount}회 수행)")
             return
         }
     }
@@ -88,10 +91,11 @@ class MeisterTask : MapleBaseTask() {
     private suspend fun findSynOkBtn(moveMouse: Boolean = false): Point? {
         val p = helper.imageSearch("img\\synthesizeOK.png")
         if (p == null) {
-            println("합성창을 찾을 수 없습니다.")
+            log("합성창을 찾을 수 없습니다.")
         } else {
             if (moveMouse)
                 helper.moveMouseSmoothly(p, 100)
+
         }
         return p
     }
