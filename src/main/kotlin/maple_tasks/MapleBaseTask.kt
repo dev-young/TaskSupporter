@@ -36,40 +36,59 @@ open class MapleBaseTask {
         return false
     }
 
-    fun scrollInventory(count: Int) {
-        helper.apply {
-            var point = findInventory(false)
-            point?.apply {
-                x += 150
-                y -= 35
-                moveMouseSmoothly(this, 50)
-                delayRandom(200, 300)
-                for (i in 1..count) {
-                    mouseWheel(1)
-                    delayRandom(200, 300)
-                }
-            }
-        }
+    suspend fun scrollInventory(count: Int) {
+        // TODO: 기능 추가
     }
 
 
     fun findInventory(expanded: Boolean): Point? {
         val img = if (expanded) "collapseBtn.png" else "meso.png"
         val p = helper.imageSearch("img\\$img")
-        if (p == null) {
-            println("인벤토리를 찾을 찾을 수 없습니다.")
-        }
         return p
     }
 
+    fun isInventoryExpanded(): Boolean {
+        val collapseBtn = helper.imageSearch("img\\collapseBtn.png")
+        return collapseBtn != null
+    }
+
+    /**인벤토리에서 첫번째 아이템 확인 */
+    suspend fun findFirstItemInInventory(moveMouse: Boolean = false): Point? {
+        var point: Point? = null
+        val collapseBtn = helper.imageSearch("img\\collapseBtn.png")
+        if( collapseBtn == null) {
+            val mesoBtn = helper.imageSearch("img\\meso.png")
+            if(mesoBtn == null){
+                println("인벤토리를 찾을 수 없습니다.")
+                return null
+            } else {
+                mesoBtn.let {
+                    it.x = it.x + 4
+                    it.y = it.y - 252
+                }
+                point = mesoBtn
+            }
+        } else {
+            collapseBtn.let {
+                it.x = it.x - 160
+                it.y = it.y - 340
+            }
+            point = collapseBtn
+        }
+        if(moveMouse)
+            helper.moveMouseSmoothly(point, 100)
+
+        return point
+    }
+
     /**축소된 인벤토리에서 첫번째 아이템 확인 */
-    fun findFirstItemFromCollapsed(moveMouse: Boolean = false): Point? {
+    suspend fun findFirstItemFromCollapsed(moveMouse: Boolean = false): Point? {
         var point: Point? = findInventory(false)
         point?.let {
             //첫번째 칸의 좌상단 좌표
             it.x = it.x + 4
             it.y = it.y - 252
-            println("첫째칸 좌상단 위치: $it")
+//            println("첫째칸 좌상단 위치: $it")
             if (moveMouse)
                 helper.moveMouseSmoothly(it, 100)
         }
@@ -77,13 +96,13 @@ open class MapleBaseTask {
     }
 
     /**확장된 인벤토리에서 첫번째 아이템 확인 */
-    fun findFirstItemFromExpanded(moveMouse: Boolean = false): Point? {
+    suspend fun findFirstItemFromExpanded(moveMouse: Boolean = false): Point? {
         var point: Point? = findInventory(true)
         point?.let {
             //첫번째 칸의 좌상단 좌표
             it.x = it.x - 160
             it.y = it.y - 340
-            println("첫째칸 좌상단 위치: $it")
+//            println("첫째칸 좌상단 위치: $it")
             if (moveMouse)
                 helper.moveMouseSmoothly(it, 100)
         }

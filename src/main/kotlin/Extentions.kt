@@ -38,23 +38,23 @@ fun BufferedImage.toFile(fileName: String) {
     println("A screenshot is captured to: " + file.path)
 }
 
-fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {
+suspend fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {
     //t의 60% 정도로 n을 사용해야 t만큼의 시간동안 마우스가 움직인다.
     moveMouseSmoothly(x1, y1, x2, y2, t, (t * 0.6).toInt())
 }
 
-fun Robot.moveMouseSmoothly(point: Point, t: Int) {
+suspend fun Robot.moveMouseSmoothly(point: Point, t: Int) {
     //t의 60% 정도로 n을 사용해야 t만큼의 시간동안 마우스가 움직인다.
     val pf = MouseInfo.getPointerInfo()
     moveMouseSmoothly(pf.location.x, pf.location.y, point.x, point.y, t, (t * 0.6).toInt())
 }
 
-fun Robot.moveMouseSmoothly(point: Point) {
+suspend fun Robot.moveMouseSmoothly(point: Point) {
     val pf = MouseInfo.getPointerInfo()
     moveMouseSmoothly(pf.location.x, pf.location.y, point.x, point.y, 100, 60)
 }
 
-fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int, n: Int) {
+suspend fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int, n: Int) {
     try {
         val dx = (x2 - x1) / n.toDouble()
         val dy = (y2 - y1) / n.toDouble()
@@ -63,7 +63,8 @@ fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int, n: Int) 
         val taskTime = measureTimeMillis {
             mouseMove((x1 + dx).toInt(), (y1 + dy).toInt())
             for (step in 2..n) {
-                Thread.sleep(dt.toLong())
+//                kotlinx.coroutines.delay(dt.toLong())
+                delay(dt.toInt())
                 mouseMove((x1 + dx * step).toInt(), (y1 + dy * step).toInt())
             }
         }

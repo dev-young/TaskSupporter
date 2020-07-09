@@ -1,6 +1,7 @@
 package helper
 
 import get
+import kotlinx.coroutines.delay
 import moveMouseSmoothly
 import org.opencv.core.Core
 import org.opencv.core.Mat
@@ -23,20 +24,21 @@ class HelperCore : Robot() {
     var smartClickTimeMax = 500
     val random = Random()
     val dirPath = System.getProperty("user.dir") + "\\"
-    val defaultAccuracy = 10    // 0~100 이미지서치 정확도
+    val defaultAccuracy = 10.0    // 0~100 이미지서치 정확도
 
-    fun simpleClick(x: Int, y: Int, count: Int = 1) {
+    suspend fun simpleClick(x: Int, y: Int, count: Int = 1) {
         mouseMove(x, y)
 
-        for (i in 1..count) {
-            delay(80)
+        repeat(count){
+            kotlinx.coroutines.delay(80)
             mousePress(KeyEvent.BUTTON1_MASK)
-            delay(10)
+            kotlinx.coroutines.delay(10)
             mouseRelease(KeyEvent.BUTTON1_MASK)
         }
+        kotlinx.coroutines.delay(1)
     }
 
-    fun simpleClick(point: Point, count: Int = 1) {
+    suspend fun simpleClick(point: Point, count: Int = 1) {
         simpleClick(point.x, point.y, count)
     }
 
@@ -45,7 +47,7 @@ class HelperCore : Robot() {
      * @param randomRangeY 랜덤 클릭 Y범위
      * 랜덤클릭은 (x, y) ~ (x+randomRangeX, y+randomRangeY) 사이의 범위에서 이루어진다.
      * */
-    fun smartClick(x: Int, y: Int, randomRangeX: Int, randomRangeY: Int, minTime: Int, maxTime: Int) {
+    suspend fun smartClick(x: Int, y: Int, randomRangeX: Int, randomRangeY: Int, minTime: Int, maxTime: Int) {
         val startPoint = getMousePos()
         val rx = (if (randomRangeX > 0) random.nextInt(randomRangeX) else 0) + x
         val ry = (if (randomRangeY > 0) random.nextInt(randomRangeY) else 0) + y
@@ -62,31 +64,31 @@ class HelperCore : Robot() {
         simpleClick(rx, ry)
     }
 
-    fun smartClick(point: Point, randomRangeX: Int, randomRangeY: Int, minTime: Int, maxTime: Int) {
+    suspend fun smartClick(point: Point, randomRangeX: Int, randomRangeY: Int, minTime: Int, maxTime: Int) {
         smartClick(point.x, point.y, randomRangeX, randomRangeY, minTime, maxTime)
     }
 
-    fun smartClick(x: Int, y: Int, randomRangeX: Int, randomRangeY: Int) {
+    suspend fun smartClick(x: Int, y: Int, randomRangeX: Int, randomRangeY: Int) {
         smartClick(x, y, randomRangeX, randomRangeY, smartClickTimeMin, smartClickTimeMax)
     }
 
-    fun smartClick(point: Point, randomRangeX: Int, randomRangeY: Int) {
+    suspend fun smartClick(point: Point, randomRangeX: Int, randomRangeY: Int) {
         smartClick(point.x, point.y, randomRangeX, randomRangeY)
     }
 
-    fun smartClick(x: Int, y: Int) {
+    suspend fun smartClick(x: Int, y: Int) {
         smartClick(x, y, 0, 0, smartClickTimeMin, smartClickTimeMax)
     }
 
-    fun smartClick(point: Point) {
+    suspend fun smartClick(point: Point) {
         smartClick(point.x, point.y)
     }
 
     /**
-     *@param accuracy 0~100 사이의 정확성 (100인 경우 정확히 일치하는것만 찾는다) */
-    fun imageSearch(leftTop: Point, width: Int, height: Int, imgName: String, accuracy: Int): Point? {
+     *@param accuracy 0~100 사이의 정확성 (100인 경우 정확히 일치하는것만 찾고 0인 경우에는 일치하지 않더라도 가장 비슷한 위치를 찾는다.) */
+    fun imageSearch(leftTop: Point, width: Int, height: Int, imgName: String, accuracy: Double): Point? {
         var notFoundMMR = 1000000    // 적당한 값을 입력해야하는데 여러 수치를 테스트해본 결과 500000이 적당한듯 하다.
-        notFoundMMR -= (notFoundMMR / 100 * accuracy)
+        notFoundMMR -= (notFoundMMR / 100 * accuracy).toInt()
         val bi = createScreenCapture(Rectangle(leftTop.x, leftTop.y, width, height))
         var source = bi.toMat()
         var template = Imgcodecs.imread(imgName)
@@ -102,9 +104,9 @@ class HelperCore : Robot() {
         }
 
         val mmr = Core.minMaxLoc(outputImage)
-//        println("정확도: " + mmr.minVal + ",  " + mmr.maxVal)
-        if (mmr.minVal > notFoundMMR) {
-//            println("이미지 찾기 실패")
+//        println("정확도: " + mmr.minVal + ",  " + mmr.maxVal + ", notFoundMMR: " + notFoundMMR)
+        if (accuracy > 0 && mmr.minVal > notFoundMMR) {
+//            println("$imgName 찾기 실패")
             return null
         }
 
@@ -116,8 +118,12 @@ class HelperCore : Robot() {
         return imageSearch(leftTop, width, height, imgName, defaultAccuracy)
     }
 
+    fun imageSearch(imgName: String, accuracy: Double): Point? {
+        return imageSearch(Point(0, 0), 1920, 1080, imgName, accuracy)
+    }
+
     fun imageSearch(imgName: String): Point? {
-        return imageSearch(Point(0, 0), 1920, 1080, imgName, defaultAccuracy)
+        return imageSearch(imgName, defaultAccuracy)
     }
 
     fun soundBeep() {
@@ -151,8 +157,8 @@ class HelperCore : Robot() {
         exitProcess(0)
     }
 
-    fun delayRandom(min: Int, max: Int) {
-        delay(random.get(min, max))
+    suspend fun delayRandom(min: Int, max: Int) {
+        delay(random.get(min, max).toLong())
     }
 
 

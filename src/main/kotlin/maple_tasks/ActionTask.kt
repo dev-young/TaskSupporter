@@ -9,20 +9,23 @@ class ActionTask : MapleBaseTask() {
 
     private var firstItemInAuction: Point? = null   //경매장 첫번째 아이템 위치
 
-    fun auctionTest() {
-
+    suspend fun auctionTest() {
         helper.apply {
+            var buyCount = 0
             while (isAuctionAvailable()) {
                 clickSearch()
-                delayRandom(100, 200)
+                delayRandom(50, 100)
                 if (isResultExist()) {
-                    buyFirstItem(true)
+                    buyFirstItem(false)
+                    buyCount++
 
                     while (isResultExist()) {
                         delayRandom(900, 1200)
-                        buyFirstItem(true)
+
+                        buyFirstItem(false)
+                        buyCount++
                     }
-                    delayRandom(500, 1000)
+//                    delayRandom(500, 1000)
 
                 } else {
                     delayRandom(4700, 4700)
@@ -30,18 +33,25 @@ class ActionTask : MapleBaseTask() {
 
             }
 
-            println("옥션 종료 시간: ${Date()}")
+            println("옥션 종료 시간: ${Date()}, 구매횟수: $buyCount")
+
 
         }
 
     }
 
-    private fun clickSearch() {
+    private suspend fun clickSearch() {
         helper.apply {
-            moveMouseSmoothly(Point(100, 300), 50)
-            val point = imageSearch("img\\auction\\searchBtn.png")
+//            moveMouseSmoothly(Point(100, 300), 50)
+            var point = imageSearch("img\\auction\\searchBtn.png", 0.1)
+            if (point == null) {
+                val current = getMousePos().location
+                moveMouseSmoothly(Point(current.x+100, current.y-60), 10)
+                point = imageSearch("img\\auction\\searchBtn.png", 0.1)
+            }
             point?.let {
-                smartClick(it, 50, 20)
+//                println("검색버튼 찾음")
+                smartClick(it, 20, 20, 80, 160)
                 delayRandom(200, 400)
                 keyPress(KeyEvent.VK_ENTER)
                 delayRandom(150, 300)
@@ -53,14 +63,15 @@ class ActionTask : MapleBaseTask() {
     }
 
 
-    private fun buyFirstItem(buyAll: Boolean = false) {
+    private suspend fun buyFirstItem(buyAll: Boolean = false) {
         firstItemInAuction?.let {
             helper.apply {
-                smartClick(it)
+                smartClick(it, 30,10, 80, 200)
                 simpleClick(it)
 
                 val point = imageSearch("img\\auction\\buyBtn.png") ?: return
-                smartClick(point)
+//                smartClick(point)
+                smartClick(point, 50,20, 80, 200)
                 simpleClick(point)
 
                 if (buyAll) {
