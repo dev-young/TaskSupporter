@@ -38,9 +38,8 @@ class MeisterTask : MapleBaseTask() {
             val repeatCount = if (isInventoryExpanded) 108 else 24
             for (i in 1..repeatCount) {
                 if (checkEmptyOrDisable(Point(vx, vy))) {
-                    soundBeep()
-//                    moveMouseSmoothly(Point(vx, vy))
                     log("합성 완료 (${i/2}회 수행)")
+                    soundBeep()
                     return
                 }
 

@@ -3,6 +3,7 @@ import kotlinx.coroutines.*
 import maple_tasks.ActionTask
 import maple_tasks.MeisterTask
 import helper.PauseableDispatcher
+import maple_tasks.MapleBaseTask
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyListener
@@ -34,6 +35,7 @@ class MainTask : NativeKeyListener {
         println("f5: 합성하기")
         println("f6: 경매장 무한 검색 및 구매 (1개씩 구매)")
         println("f7: 경매장 무한 검색 및 구매 (모두 구매)")
+        println("f8: 아이템 첫번째 칸부터 차례대로 확인")
         println()
 
     }
@@ -43,6 +45,7 @@ class MainTask : NativeKeyListener {
 
     private val dispatcher = PauseableDispatcher(Thread())
     private val jobMap = HashMap<Int, Job>()
+    private var mapleBaseTask: MapleBaseTask? = null
     override fun nativeKeyPressed(nativeKeyEvent: NativeKeyEvent) {
         when (nativeKeyEvent.keyCode) {
 
@@ -86,6 +89,14 @@ class MainTask : NativeKeyListener {
                 }
             }
 
+            NativeKeyEvent.VC_F8 -> {
+                if(mapleBaseTask == null)
+                    mapleBaseTask = MapleBaseTask()
+                GlobalScope.launch {
+                    mapleBaseTask?.findNextItem()
+                }
+            }
+
 
             else -> {
             }
@@ -98,6 +109,7 @@ class MainTask : NativeKeyListener {
             it.cancel()
         }
         jobMap.clear()
+        mapleBaseTask = null
         dispatcher.resume()
 
     }

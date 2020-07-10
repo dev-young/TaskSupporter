@@ -10,6 +10,10 @@ open class MapleBaseTask {
 
     val itemDistance = 42  // 아이템 간격
 
+    var nextItemPoint: Point? = null
+    var isNextItemInventoryExpanded = false
+    var nextItemPosition = 0 // 현재 확인중인 아이템 순서
+
     /**해당 좌표의 아이템이 빈칸인지 확인*/
     fun checkEmpty(leftTop: Point): Boolean {
         val x1 = leftTop.x - 10
@@ -39,6 +43,43 @@ open class MapleBaseTask {
 
     suspend fun scrollInventory(count: Int) {
         TODO("Not yet implemented")
+    }
+
+    /**수행시 인벤토리에 첫칸부터 수행될때마다 다음칸으로 마우스를 이동시킨다.*/
+    suspend fun findNextItem(){
+        HelperCore().apply {
+            if(nextItemPoint == null) {
+                isNextItemInventoryExpanded = isInventoryExpanded()
+                nextItemPoint = findFirstItemInInventory() ?: return
+                nextItemPoint!!.apply {
+                    x += 10
+                    y += 10
+                }
+            }
+
+            moveMouseSmoothly(nextItemPoint!!)
+            nextItemPosition++
+
+            if (isNextItemInventoryExpanded) {
+                //확장된 인벤토리인 경우
+                if (nextItemPosition % 32 == 0) {
+                    nextItemPoint?.apply {
+                        setLocation(x+itemDistance, y-(itemDistance * 7))
+                    }
+                    return@apply
+                }
+            }
+            nextItemPoint!!.apply {
+                if (nextItemPosition % 4 == 0) {
+                    setLocation(x - (itemDistance * 3), y + itemDistance)
+                } else {
+                    setLocation(x + itemDistance, y)
+                }
+            }
+
+
+        }
+        log(nextItemPoint.toString())
     }
 
 
