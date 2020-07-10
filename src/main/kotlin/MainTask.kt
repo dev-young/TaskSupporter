@@ -1,6 +1,5 @@
-import helper.HelperCore
 import kotlinx.coroutines.*
-import maple_tasks.ActionTask
+import maple_tasks.AuctionTask
 import maple_tasks.MeisterTask
 import helper.PauseableDispatcher
 import maple_tasks.MapleBaseTask
@@ -36,9 +35,12 @@ class MainTask : NativeKeyListener {
         println("f6: 경매장 무한 검색 및 구매 (1개씩 구매)")
         println("f7: 경매장 무한 검색 및 구매 (모두 구매)")
         println("f8: 아이템 첫번째 칸부터 차례대로 확인")
+        println("f9: 미리 정해둔 아이템 검색")
         println()
 
     }
+
+    val testTask by lazy { MapleBaseTask() }
 
     override fun nativeKeyTyped(p0: NativeKeyEvent?) {
     }
@@ -75,7 +77,7 @@ class MainTask : NativeKeyListener {
             NativeKeyEvent.VC_F6 -> {
                 jobMap[nativeKeyEvent.keyCode]?.cancel()
                 jobMap[nativeKeyEvent.keyCode] = GlobalScope.launch(dispatcher) {
-                    ActionTask().buyOneItemUntilEnd(false)
+                    AuctionTask().buyOneItemUntilEnd(false)
                 }
 
             }
@@ -85,7 +87,7 @@ class MainTask : NativeKeyListener {
 
                 jobMap[nativeKeyEvent.keyCode]?.cancel()
                 jobMap[nativeKeyEvent.keyCode] = GlobalScope.launch(dispatcher) {
-                    ActionTask().buyOneItemUntilEnd(true)
+                    AuctionTask().buyOneItemUntilEnd(true)
                 }
             }
 
@@ -95,6 +97,24 @@ class MainTask : NativeKeyListener {
                 GlobalScope.launch {
                     mapleBaseTask?.findNextItem()
                 }
+            }
+
+            NativeKeyEvent.VC_F9 -> {
+                jobMap[nativeKeyEvent.keyCode]?.cancel()
+                jobMap[nativeKeyEvent.keyCode] = GlobalScope.launch(dispatcher) {
+                    AuctionTask().buyItemListUntilEnd()
+                }
+
+            }
+
+            NativeKeyEvent.VC_F12 -> {
+                testTask.apply {
+                    helper.copyToClipboard("Test!")
+                    helper.paste()
+                    clearText()
+
+                }
+
             }
 
 

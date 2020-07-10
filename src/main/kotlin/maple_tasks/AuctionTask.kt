@@ -2,12 +2,11 @@ package maple_tasks
 
 import kotlinx.coroutines.delay
 import log
-import moveMouseSmoothly
 import java.awt.Point
 import java.awt.event.KeyEvent
-import java.util.*
+import kotlin.collections.ArrayList
 
-class ActionTask : MapleBaseTask() {
+class AuctionTask : MapleBaseTask() {
     private var defaultImgPath = "img\\auction"
     private var firstItemInAuction: Point? = null   //경매장 첫번째 아이템 위치
 
@@ -18,6 +17,9 @@ class ActionTask : MapleBaseTask() {
 
     private val purchaseSlotCount = 10  //구매 슬롯 수
 
+    //여러개의 아이템 검색시 다음 아이템으로 넘어가기까지 필요한 검색 수 (결과가 없을경우에만 넘어감)
+    private val noResultCountMax = 3
+
    /**한가지 아이템을 계속 구매*/
     suspend fun buyOneItemUntilEnd(buyAll: Boolean) {
         log("아이템 구매 작업 시작! #####")
@@ -25,7 +27,13 @@ class ActionTask : MapleBaseTask() {
             var buyCount = 0
             var buyStack = 0 //구매슬롯 꽉찾는지 여부 판별을 위한 변수
             root@ while (isAuctionAvailable()) {
-                clickBuyTab()
+                val p = clickSearchTab()
+                //혹시나 검색탭이 안눌리는 경우를 대비하여 한번 더 클릭
+                p?.let {
+                    delayRandom(50, 100)
+                    simpleClick(it)
+                }
+
                 searchItem()
                 delayRandom(50, 100)
                 while (isResultExist()) {
@@ -36,17 +44,21 @@ class ActionTask : MapleBaseTask() {
                         log("구매 성공 ($buyCount)")
                     }
 
-                    if( buyStack >= purchaseSlotCount || !success || isPurchaseSlotFull() ) {
+                    if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
+                        // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
                         log("구매슬롯 가득참")
                         val success = getAllItems()
                         if (success) {
                             log("모두받기 완료.")
+                            sendEnter()
                             buyStack = 0
                             break
                         } else {
                             log("모두받기 실패.")
                             break@root
                         }
+                    } else {
+                        // 가득 안찼지만 구매 실패한 경우
                     }
                 }
 
@@ -57,9 +69,82 @@ class ActionTask : MapleBaseTask() {
 
     }
 
-    /**파일에 작성된 아이템들을 바탕으로 검색어 바꿔가며 구매*/
-    suspend fun buyOneItemUntilEnd(){
-        TODO()
+    /**파일에 작성된 아이템들을 바탕으로 검색어 바꿔가며 구매
+     * */
+    suspend fun buyItemListUntilEnd(){
+        val itemList = loadItemList()
+        var targetIndex = 0 //검색 대상 인덱스
+
+        var buyCount = 0
+        var buyStack = 0 //구매슬롯 꽉찾는지 여부 판별을 위한 변수
+
+        log("아이템 구매 작업 시작! #####")
+        itemList.forEach { log(it.contentToString()) }
+        helper.apply {
+            root@while (isAuctionAvailable()) {
+                var targetCategory = itemList[targetIndex][0]
+                var targetName = itemList[targetIndex][1]
+                var targetPrice = itemList[targetIndex][2]
+                var targetBuyAll = itemList[targetIndex][3].contains("t")
+                var noResultCount = 0
+
+                clickSearchTab()
+                delayRandom(30, 50)
+                clickCategory(targetCategory)
+                delayRandom(30, 50)
+
+                val success = inputItemInfo(targetName, targetPrice)
+                if(!success){
+                    log("아이템 정보 입력을 실패했습니다. [$targetName, $targetPrice]")
+                    log("다음 아이템으로 건너뜁니다.")
+                    targetIndex = (targetIndex + 1) % itemList.size
+                    continue
+                }
+                delayRandom(30, 50)
+
+                while (noResultCount < noResultCountMax){
+                    clickSearchTab()
+                    delayRandom(30, 50)
+                    searchItem()
+                    delayRandom(50, 100)
+                    while (isResultExist()) {
+                        val success = buyFirstItem(targetBuyAll)
+                        if (success) {
+                            buyCount++
+                            buyStack++
+                            noResultCount = 0
+                            log("구매 성공 ($buyCount)")
+                        }
+
+
+                        if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
+                            // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
+                            log("구매슬롯 가득참")
+                            val success = getAllItems()
+                            if (success) {
+                                log("모두받기 완료.")
+                                sendEnter() //완료창 종료
+                                buyStack = 0
+                                continue
+                            } else {
+                                log("모두받기 실패.")
+                                break@root
+                            }
+                        } else {
+                            // 가득 안찼지만 구매 실패한 경우
+                        }
+                    }
+                    noResultCount++
+                }
+
+                targetIndex = (targetIndex + 1) % itemList.size
+
+            }
+
+
+        }
+
+        log("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
     }
 
     /**완료 탭으로 이동하여 '모두받기' 수행
@@ -202,6 +287,32 @@ class ActionTask : MapleBaseTask() {
         return false
     }
 
+    /**파일로부터 구매할 아이템 목록을 가져온다.
+     * Array<String> = {분류, 템이름, 가격, buyAll}
+     * 분류 = 방어구, 무기, 소비, 캐시, 기타
+     * 템이름 = 공백없이 작성
+     * buyAll = 구매시 갯수 입력할때 최대치로 할지 여부 (true, false)
+     * */
+    private fun loadItemList(): ArrayList<Array<String>> {
+        val list = arrayListOf<Array<String>>()
+
+//        list.add(arrayOf("소비", "한큐브", "85000", "false"))
+        list.add(arrayOf("방어구", "성배", "2500000", "false"))
+//        list.add(arrayOf("기타", "꺼지지", "9990000", "false"))
+        list.add(arrayOf("방어구", "아쿠아틱", "2200000", "false"))
+        list.add(arrayOf("방어구", "골든클", "2000000", "false"))
+        list.add(arrayOf("방어구", "응축된", "2300000", "false"))
+        list.add(arrayOf("방어구", "데아", "1000000", "false"))
+
+        list.add(arrayOf("방어구", "이글아이", "1400000", "false"))
+        list.add(arrayOf("방어구", "트릭스터", "1400000", "false"))
+        list.add(arrayOf("방어구", "하이네스", "800000", "false"))
+
+
+        // TODO: 파일로부터 읽어오도록 변경
+        return list
+    }
+
     /**구매 완료 메시지를 체크하여 성공 여부 반환*/
     private fun isPurchased(): Boolean {
         helper.apply {
@@ -231,14 +342,15 @@ class ActionTask : MapleBaseTask() {
         return false
     }
 
-    suspend fun clickBuyTab() {
+    suspend fun clickSearchTab(): Point? {
         helper.apply {
             val point = imageSearchAndClick("$defaultImgPath\\buyTab.png", maxTime = 300)
             if (point == null) {
 //                log("구매탭을 찾을 수 없습니다.")
-                return
+                return null
             }
             simpleClick()
+            return point
         }
     }
 
@@ -263,6 +375,70 @@ class ActionTask : MapleBaseTask() {
             simpleClick()
             return true
         }
+    }
+
+    suspend fun clickCategory(category: String){
+        var imgName = when(category){
+            "방어구" -> "categoryDefence.png"
+            "무기" -> "categoryWeapon.png"
+            "소비" -> "categoryConsume.png"
+            "캐시" -> "categoryCash.png"
+            "기타" -> "categoryElse.png"
+            else -> ""
+        }
+
+        helper.apply {
+            val point = imageSearchAndClick("$defaultImgPath\\$imgName", maxTime = 200)
+            if (point == null) {
+                return
+            }
+            simpleClick()
+        }
+
+    }
+
+    /**검색시 이름 및 가격을 입력한다. */
+    private suspend fun inputItemInfo(itemName: String, itemPrice: String): Boolean {
+        helper.apply {
+            val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
+            pointName.let {
+                it.setLocation(it.x+120, it.y+5)
+                smartClick(it, randomRangeX = 20, randomRangeY = 5, maxTime = 300)
+                delayRandom(50, 100)
+                simpleClick()
+                send(KeyEvent.VK_DELETE)
+
+                clearText()
+                delayRandom(20, 30)
+                clearText()
+                copyToClipboard(itemName)
+                delayRandom(200, 300)
+                paste()
+                delayRandom(50, 60)
+            }
+
+
+            val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
+            pointPrice.let {
+                it.setLocation(it.x+170, it.y+5)
+                smartClick(it, randomRangeX = 30, randomRangeY = 5, maxTime = 300)
+                delayRandom(50, 100)
+                simpleClick()
+                send(KeyEvent.VK_DELETE)
+
+                clearText()
+                delayRandom(20, 30)
+                clearText()
+                copyToClipboard(itemPrice)
+                delayRandom(100, 120)
+                paste()
+                delayRandom(50, 60)
+            }
+
+            return true
+
+        }
+
     }
 
 }

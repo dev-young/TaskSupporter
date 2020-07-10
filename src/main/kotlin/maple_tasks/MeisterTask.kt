@@ -12,6 +12,8 @@ class MeisterTask : MapleBaseTask() {
     suspend fun synthesizeItemSmartly() {
         log("합성 시작!")
         HelperCore().apply {
+            soundBeep()
+
             smartClickTimeMax = 300
             var isInventoryExpanded = isInventoryExpanded()
             var vx: Int //현재 합성할 아이템 x
@@ -82,6 +84,7 @@ class MeisterTask : MapleBaseTask() {
 
             }
             log("합성 완료 (${repeatCount}회 수행)")
+            soundBeep()
             return
         }
     }

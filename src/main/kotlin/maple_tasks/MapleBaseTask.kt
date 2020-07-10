@@ -4,6 +4,7 @@ import helper.HelperCore
 import log
 import moveMouseSmoothly
 import java.awt.Point
+import java.awt.event.KeyEvent
 
 open class MapleBaseTask {
     val helper: HelperCore = HelperCore()
@@ -13,6 +14,8 @@ open class MapleBaseTask {
     var nextItemPoint: Point? = null
     var isNextItemInventoryExpanded = false
     var nextItemPosition = 0 // 현재 확인중인 아이템 순서
+
+    var isNumberLock = helper.toolkit.getLockingKeyState(KeyEvent.VK_NUM_LOCK)
 
     /**해당 좌표의 아이템이 빈칸인지 확인*/
     fun checkEmpty(leftTop: Point): Boolean {
@@ -149,5 +152,23 @@ open class MapleBaseTask {
                 helper.moveMouseSmoothly(it, 100)
         }
         return point
+    }
+
+    /**텍스트를 입력을 할 수 있는 곳에서 텍스트를 지운다.*/
+    fun clearText(){
+        helper.apply {
+            if(isNumberLock){
+                toolkit.setLockingKeyState(KeyEvent.VK_NUM_LOCK, false)
+                isNumberLock = false
+            }
+
+            autoDelay = 10
+            send(KeyEvent.VK_HOME)
+            keyPress(KeyEvent.VK_SHIFT)
+            send(KeyEvent.VK_END)
+            keyRelease(KeyEvent.VK_SHIFT)
+            keyPress(KeyEvent.VK_DELETE)
+            autoDelay = 0
+        }
     }
 }
