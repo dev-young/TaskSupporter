@@ -1,3 +1,4 @@
+import helper.HelperCore
 import kotlinx.coroutines.*
 import maple_tasks.AuctionTask
 import maple_tasks.MeisterTask
@@ -7,6 +8,7 @@ import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyListener
 import org.opencv.core.Core
+import java.awt.event.KeyEvent
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.LogManager

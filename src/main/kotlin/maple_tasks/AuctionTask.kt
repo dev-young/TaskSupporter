@@ -4,7 +4,11 @@ import kotlinx.coroutines.delay
 import log
 import java.awt.Point
 import java.awt.event.KeyEvent
-import kotlin.collections.ArrayList
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.IOException
+
 
 class AuctionTask : MapleBaseTask() {
     private var defaultImgPath = "img\\auction"
@@ -63,7 +67,7 @@ class AuctionTask : MapleBaseTask() {
                 }
 
             }
-
+            helper.soundBeep()
             log("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
         }
 
@@ -77,15 +81,21 @@ class AuctionTask : MapleBaseTask() {
 
         var buyCount = 0
         var buyStack = 0 //구매슬롯 꽉찾는지 여부 판별을 위한 변수
-
         log("아이템 구매 작업 시작! #####")
+
+        if(itemList.isEmpty()){
+            itemList.add(arrayOf("","","","",""))
+        }
+
         itemList.forEach { log(it.contentToString()) }
         helper.apply {
             root@while (isAuctionAvailable()) {
-                var targetCategory = itemList[targetIndex][0]
-                var targetName = itemList[targetIndex][1]
-                var targetPrice = itemList[targetIndex][2]
-                var targetBuyAll = itemList[targetIndex][3].contains("t")
+                val itemInfo = itemList[targetIndex]
+                val targetCategory = itemInfo[0]
+                val targetName = itemInfo[1]
+                val targetPrice = itemInfo[2]
+                val targetBuyAll = if(itemInfo.size>3) itemInfo[3].contains("t") else false
+                val targetClickReset= if(itemInfo.size>4) !itemInfo[4].contains("f") else true
                 var noResultCount = 0
 
                 clickSearchTab()
@@ -93,7 +103,7 @@ class AuctionTask : MapleBaseTask() {
                 clickCategory(targetCategory)
                 delayRandom(30, 50)
 
-                val success = inputItemInfo(targetName, targetPrice)
+                val success = inputItemInfo(targetName, targetPrice, targetClickReset)
                 if(!success){
                     log("아이템 정보 입력을 실패했습니다. [$targetName, $targetPrice]")
                     log("다음 아이템으로 건너뜁니다.")
@@ -113,7 +123,7 @@ class AuctionTask : MapleBaseTask() {
                             buyCount++
                             buyStack++
                             noResultCount = 0
-                            log("구매 성공 ($buyCount)")
+                            log("구매 성공 ($buyCount) [ $targetName ]")
                         }
 
 
@@ -144,6 +154,7 @@ class AuctionTask : MapleBaseTask() {
 
         }
 
+        helper.soundBeep()
         log("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
     }
 
@@ -296,17 +307,49 @@ class AuctionTask : MapleBaseTask() {
     private fun loadItemList(): ArrayList<Array<String>> {
         val list = arrayListOf<Array<String>>()
 
-//        list.add(arrayOf("소비", "한큐브", "85000", "false"))
-        list.add(arrayOf("방어구", "성배", "2500000", "false"))
-//        list.add(arrayOf("기타", "꺼지지", "9990000", "false"))
-        list.add(arrayOf("방어구", "아쿠아틱", "2200000", "false"))
-        list.add(arrayOf("방어구", "골든클", "2000000", "false"))
-        list.add(arrayOf("방어구", "응축된", "2300000", "false"))
-        list.add(arrayOf("방어구", "데아", "1000000", "false"))
+        val file = File("itemList.txt")
+        if(file.exists()){
+            file.readLines().forEach {
+//                    log(it)
+                if(it.startsWith("//") || it.isEmpty()) {
+                    //공백 혹은 주석처리된 line
+                } else {
+                    val s = it.split("/").toTypedArray()
+                    if(s.size < 3) {
+                        log("올바르지 않은 형식입니다. -> $it")
+                    } else {
+                        s.apply {
+                            forEachIndexed { index, s ->
+                                this[index] = s.trim()
+                            }
+                        }
+                        list.add(s)
+                    }
 
-        list.add(arrayOf("방어구", "이글아이", "1400000", "false"))
-        list.add(arrayOf("방어구", "트릭스터", "1400000", "false"))
-        list.add(arrayOf("방어구", "하이네스", "800000", "false"))
+                }
+
+
+            }
+
+        } else {
+
+
+//        list.add(arrayOf("소비", "한큐브", "85000", "false"))
+            list.add(arrayOf("방어구", "성배", "2200000", "false"))
+//        list.add(arrayOf("기타", "꺼지지", "9990000", "false"))
+            list.add(arrayOf("방어구", "아쿠아틱", "2100000", "false"))
+            list.add(arrayOf("방어구", "골든클", "1900000", "false"))
+            list.add(arrayOf("방어구", "응축된", "2200000", "false"))
+            list.add(arrayOf("방어구", "데아", "900000", "false"))
+
+            list.add(arrayOf("방어구", "이글아이", "1400000", "false"))
+            list.add(arrayOf("방어구", "트릭스터", "1400000", "false"))
+            list.add(arrayOf("방어구", "하이네스", "780000", "false"))
+        }
+
+
+
+
 
 
         // TODO: 파일로부터 읽어오도록 변경
@@ -379,7 +422,7 @@ class AuctionTask : MapleBaseTask() {
 
     suspend fun clickCategory(category: String){
         var imgName = when(category){
-            "방어구" -> "categoryDefence.png"
+            "방어", "방어구" -> "categoryDefence.png"
             "무기" -> "categoryWeapon.png"
             "소비" -> "categoryConsume.png"
             "캐시" -> "categoryCash.png"
@@ -387,19 +430,25 @@ class AuctionTask : MapleBaseTask() {
             else -> ""
         }
 
+        if(imgName.isEmpty()) return
         helper.apply {
-            val point = imageSearchAndClick("$defaultImgPath\\$imgName", maxTime = 200)
-            if (point == null) {
-                return
-            }
+            imageSearchAndClick("$defaultImgPath\\$imgName", maxTime = 200) ?: return
             simpleClick()
         }
 
     }
 
     /**검색시 이름 및 가격을 입력한다. */
-    private suspend fun inputItemInfo(itemName: String, itemPrice: String): Boolean {
+    private suspend fun inputItemInfo(itemName: String, itemPrice: String, reset: Boolean = false): Boolean {
+
         helper.apply {
+            if (reset) {
+                val p = imageSearchAndClick("$defaultImgPath\\resetConditionBtn.png")
+                p?.let {
+                    simpleClick()
+                }
+            }
+
             val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
             pointName.let {
                 it.setLocation(it.x+120, it.y+5)

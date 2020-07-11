@@ -18,7 +18,7 @@ class MeisterTask : MapleBaseTask() {
             var isInventoryExpanded = isInventoryExpanded()
             var vx: Int //현재 합성할 아이템 x
             var vy: Int  //현재 합성할 아이템 y
-            val point: Point = findFirstItemInInventory() ?: return
+            val point: Point = findFirstItemInInventory() ?: return soundBeep()
             point.let {
                 vx = it.x
                 vy = it.y
@@ -27,7 +27,7 @@ class MeisterTask : MapleBaseTask() {
             }
 
             //확인버튼 중앙 좌표 찾기
-            val synOkBtn = findSynOkBtn(true) ?: return
+            val synOkBtn = findSynOkBtn(true) ?: return soundBeep()
             delay(100)
 
             val synItem = Pair(Point(), Point()) //합성아이템1,2 좌표 담을 변수
