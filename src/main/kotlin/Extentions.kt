@@ -17,7 +17,7 @@ import kotlin.system.measureTimeMillis
 //val dateFormat = SimpleDateFormat("HH:mm:ss MM.dd")
 val dateFormat = SimpleDateFormat("HH:mm:ss")
 
-fun log(message: Any?){
+fun logI(message: Any?){
     print("[${dateFormat.format(Date())}] ")
     println(message)
 }
@@ -25,7 +25,7 @@ fun log(message: Any?){
 fun NativeKeyEvent.print() {
     //        System.out.log(keyCode + " " + keyChar);
     val text = getKeyText(keyCode)
-    log(text)
+    logI(text)
 }
 
 fun BufferedImage.toMat(): Mat {
@@ -44,7 +44,7 @@ fun BufferedImage.toMat(): Mat {
 fun BufferedImage.toFile(fileName: String) {
     val file = File("$fileName.png")
     ImageIO.write(this, "png", file)
-    log("A screenshot is captured to: " + file.path)
+    logI("A screenshot is captured to: " + file.path)
 }
 
 suspend fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {

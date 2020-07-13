@@ -2,7 +2,7 @@ package helper
 
 import get
 import kotlinx.coroutines.delay
-import log
+import logI
 import moveMouseSmoothly
 import org.opencv.core.Core
 import org.opencv.core.Mat
@@ -12,7 +12,6 @@ import toMat
 import java.awt.*
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.StringSelection
-import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.awt.event.KeyEvent.*
 import java.util.*
@@ -146,7 +145,7 @@ class HelperCore : Robot() {
             Imgproc.matchTemplate(source, template, outputImage, machMethod)
         } catch (e: Exception) {
 //            print("[Error] 2" + e.message)
-            log("사진 파일 확인 필요. error: ${e.message}")
+            logI("사진 파일 확인 필요. error: ${e.message}")
             return null
         }
 
@@ -192,7 +191,7 @@ class HelperCore : Robot() {
 
     fun showDialog(msg: String) {
         TODO("Not yet implemented")
-        log("dialog: $msg")
+        logI("dialog: $msg")
     }
 
     fun copyToClipboard(str: String) {

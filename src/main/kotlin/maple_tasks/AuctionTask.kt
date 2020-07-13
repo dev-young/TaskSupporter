@@ -1,13 +1,10 @@
 package maple_tasks
 
 import kotlinx.coroutines.delay
-import log
+import logI
 import java.awt.Point
 import java.awt.event.KeyEvent
-import java.io.BufferedReader
 import java.io.File
-import java.io.FileReader
-import java.io.IOException
 
 
 class AuctionTask : MapleBaseTask() {
@@ -26,7 +23,7 @@ class AuctionTask : MapleBaseTask() {
 
    /**한가지 아이템을 계속 구매*/
     suspend fun buyOneItemUntilEnd(buyAll: Boolean) {
-        log("아이템 구매 작업 시작! #####")
+        logI("아이템 구매 작업 시작! #####")
         helper.apply {
             var buyCount = 0
             var buyStack = 0 //구매슬롯 꽉찾는지 여부 판별을 위한 변수
@@ -45,20 +42,20 @@ class AuctionTask : MapleBaseTask() {
                     if (success) {
                         buyCount++
                         buyStack++
-                        log("구매 성공 ($buyCount)")
+                        logI("구매 성공 ($buyCount)")
                     }
 
                     if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
                         // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
-                        log("구매슬롯 가득참")
+                        logI("구매슬롯 가득참")
                         val success = getAllItems()
                         if (success) {
-                            log("모두받기 완료.")
+                            logI("모두받기 완료.")
                             sendEnter()
                             buyStack = 0
                             break
                         } else {
-                            log("모두받기 실패.")
+                            logI("모두받기 실패.")
                             break@root
                         }
                     } else {
@@ -68,7 +65,7 @@ class AuctionTask : MapleBaseTask() {
 
             }
             helper.soundBeep()
-            log("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
+            logI("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
         }
 
     }
@@ -81,15 +78,15 @@ class AuctionTask : MapleBaseTask() {
 
         var buyCount = 0
         var buyStack = 0 //구매슬롯 꽉찾는지 여부 판별을 위한 변수
-        log("아이템 구매 작업 시작! #####")
+        logI("아이템 구매 작업 시작! #####")
 
         if(itemList.isEmpty()){
             itemList.add(arrayOf("","","","",""))
         }
 
-        itemList.forEach { log(it.contentToString()) }
+        itemList.forEach { logI(it.contentToString()) }
         helper.apply {
-            root@while (isAuctionAvailable()) {
+            root@while (isAuctionAvailable() && itemList.isNotEmpty()) {
                 val itemInfo = itemList[targetIndex]
                 val targetCategory = itemInfo[0]
                 val targetName = itemInfo[1]
@@ -105,8 +102,8 @@ class AuctionTask : MapleBaseTask() {
 
                 val success = inputItemInfo(targetName, targetPrice, targetClickReset)
                 if(!success){
-                    log("아이템 정보 입력을 실패했습니다. [$targetName, $targetPrice]")
-                    log("다음 아이템으로 건너뜁니다.")
+                    logI("아이템 정보 입력을 실패했습니다. [$targetName, $targetPrice]")
+                    logI("다음 아이템으로 건너뜁니다.")
                     targetIndex = (targetIndex + 1) % itemList.size
                     continue
                 }
@@ -123,25 +120,26 @@ class AuctionTask : MapleBaseTask() {
                             buyCount++
                             buyStack++
                             noResultCount = 0
-                            log("구매 성공 ($buyCount) [ $targetName ]")
+                            logI("구매 성공 ($buyCount) [ $targetName ]")
                         }
 
 
                         if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
                             // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
-                            log("구매슬롯 가득참")
+                            logI("구매슬롯 가득참")
                             val success = getAllItems()
                             if (success) {
-                                log("모두받기 완료.")
+                                logI("모두받기 완료.")
                                 sendEnter() //완료창 종료
                                 buyStack = 0
                                 continue
                             } else {
-                                log("모두받기 실패.")
+                                logI("모두받기 실패.")
                                 break@root
                             }
                         } else {
-                            // 가득 안찼지만 구매 실패한 경우
+                            // 가득 안찼지만 구매 실패한 경우 (메소 부족, 이미 팔린 물건)
+                            // TODO: 메소부족시 현재 아이템을 구매 리스트에서 제외시키고 다음 아이템으로 넘어가기
                         }
                     }
                     noResultCount++
@@ -155,7 +153,7 @@ class AuctionTask : MapleBaseTask() {
         }
 
         helper.soundBeep()
-        log("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
+        logI("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
     }
 
     /**완료 탭으로 이동하여 '모두받기' 수행
@@ -179,7 +177,7 @@ class AuctionTask : MapleBaseTask() {
                 if(imageSearch("$defaultImgPath\\getAllComplete.png") != null){
                     return true
                 } else {
-                    log("인벤토리가 가득 찼습니다.")
+                    logI("인벤토리가 가득 찼습니다.")
                 }
             }
 
@@ -227,7 +225,7 @@ class AuctionTask : MapleBaseTask() {
 //                }
 
             if (point == null) {
-                log("검색버튼을 찾을 수 없습니다.")
+                logI("검색버튼을 찾을 수 없습니다.")
             }
 
             point?.let {
@@ -316,7 +314,7 @@ class AuctionTask : MapleBaseTask() {
                 } else {
                     val s = it.split("/").toTypedArray()
                     if(s.size < 3) {
-                        log("올바르지 않은 형식입니다. -> $it")
+                        logI("올바르지 않은 형식입니다. -> $it")
                     } else {
                         s.apply {
                             forEachIndexed { index, s ->
@@ -347,12 +345,6 @@ class AuctionTask : MapleBaseTask() {
             list.add(arrayOf("방어구", "하이네스", "780000", "false"))
         }
 
-
-
-
-
-
-        // TODO: 파일로부터 읽어오도록 변경
         return list
     }
 
@@ -412,7 +404,7 @@ class AuctionTask : MapleBaseTask() {
         helper.apply {
             val point = imageSearchAndClick("$defaultImgPath\\getAllBtn.png")
             if (point == null) {
-                log("모두받기 버튼을 찾을 수 없습니다.")
+                logI("모두받기 버튼을 찾을 수 없습니다.")
                 return false
             }
             simpleClick()

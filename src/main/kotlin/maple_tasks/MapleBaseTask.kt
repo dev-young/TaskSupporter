@@ -1,7 +1,7 @@
 package maple_tasks
 
 import helper.HelperCore
-import log
+import logI
 import moveMouseSmoothly
 import java.awt.Point
 import java.awt.event.KeyEvent
@@ -32,12 +32,12 @@ open class MapleBaseTask {
         val x1 = leftTop.x - 10
         val y1 = leftTop.y - 10
         helper.imageSearch(Point(x1, y1), 40, 40, "img\\emptyItem.png")?.let {
-            log("빈칸 발견!")
+            logI("빈칸 발견!")
             return true
         }
 
         helper.imageSearch(Point(x1, y1), 40, 40, "img\\disableItem.png")?.let {
-            log("사용할 수 없는 칸 확인")
+            logI("사용할 수 없는 칸 확인")
             return true
         }
 
@@ -82,7 +82,7 @@ open class MapleBaseTask {
 
 
         }
-        log(nextItemPoint.toString())
+        logI(nextItemPoint.toString())
     }
 
 
@@ -104,7 +104,7 @@ open class MapleBaseTask {
         if( collapseBtn == null) {
             val mesoBtn = helper.imageSearch("img\\meso.png")
             if(mesoBtn == null){
-                log("인벤토리를 찾을 수 없습니다.")
+                logI("인벤토리를 찾을 수 없습니다.")
                 return null
             } else {
                 mesoBtn.let {

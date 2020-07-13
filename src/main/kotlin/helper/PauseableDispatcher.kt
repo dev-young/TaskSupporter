@@ -4,13 +4,16 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.isActive
-import log
+import logI
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class PauseableDispatcher (private val handler: Thread): CoroutineDispatcher(){
     private val queue: Queue<Runnable> = LinkedList()
     private var isPaused: Boolean = false
+    fun isPaused(): Boolean {
+        return isPaused
+    }
 
     @Synchronized override fun dispatch(context: CoroutineContext, block: Runnable) {
         if (isPaused) {
@@ -46,11 +49,11 @@ class PauseableDispatcher (private val handler: Thread): CoroutineDispatcher(){
 
     fun toggle() {
         if(isPaused){
-            log("resume!")
+            logI("resume!")
             resume()
         }
         else{
-            log("pause!")
+            logI("pause!")
             pause()
         }
 
