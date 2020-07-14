@@ -1,11 +1,9 @@
-import helper.PauseableDispatcher
+package helper
+
 import kotlinx.coroutines.*
-import org.jnativehook.GlobalScreen
-import org.jnativehook.keyboard.NativeKeyEvent
-import org.jnativehook.keyboard.NativeKeyListener
+import logI
 import org.opencv.core.Core
 import java.io.File
-import kotlin.math.log
 import kotlin.system.exitProcess
 
 open class BaseTaskManager {

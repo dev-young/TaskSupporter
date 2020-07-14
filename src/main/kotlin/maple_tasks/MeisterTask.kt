@@ -4,7 +4,6 @@ import helper.HelperCore
 import logI
 import moveMouseSmoothly
 import java.awt.Point
-import kotlin.math.log
 
 class MeisterTask : MapleBaseTask() {
 
@@ -90,11 +89,11 @@ class MeisterTask : MapleBaseTask() {
         }
     }
 
-    suspend fun makeItemInfinitely() {
+    suspend fun makeItemInfinitely(maxCount: Int) {
         logI("제작 시작!")
         helper.apply {
             var successCounter = 0
-            while(true) {
+            while(maxCount == 0 || successCounter != maxCount) {
                 kotlinx.coroutines.delay(1)
                 val point = imageSearchAndClick("img\\meister\\makeBtn.png")
                 point?.let {

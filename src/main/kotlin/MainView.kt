@@ -1,12 +1,12 @@
-import BaseTaskManager.Companion.STATE_IDEL
-import BaseTaskManager.Companion.STATE_PAUSED
-import BaseTaskManager.Companion.STATE_WORKING
+import helper.BaseTaskManager.Companion.STATE_IDEL
+import helper.BaseTaskManager.Companion.STATE_PAUSED
+import helper.BaseTaskManager.Companion.STATE_WORKING
 import javafx.application.Platform
+import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
 import javafx.scene.paint.Color
-import javafx.scene.text.FontPosture
 import javafx.scene.text.FontWeight
 import maple_tasks.MapleTaskManager
 import tornadofx.*
@@ -17,12 +17,25 @@ class MainView : View() {
     private lateinit var infoLabel: Label
     override val root = borderpane {
 
-        top = checkbox {
-            paddingHorizontal = defaultItemSpacing
-            paddingVertical = 5
-            text = "항상 위에 표시"
-            isSelected = true
-            action { primaryStage.isAlwaysOnTop = isSelected }
+        top = hbox {
+
+            spacing = defaultItemSpacing
+            checkbox {
+                paddingHorizontal = defaultItemSpacing
+                paddingVertical = 5
+                text = "항상 위에 표시"
+                isSelected = true
+                action { primaryStage.isAlwaysOnTop = isSelected }
+            }
+
+            togglebutton {
+                isSelected = true
+                text = "단축키 활성화"
+                action {
+                    text = if(isSelected) "단축키 활성화" else "단축키 비활성"
+                    taskManager.isHotkeyEnable = isSelected
+                }
+            }
         }
 
         center = tabpane {
@@ -71,11 +84,24 @@ class MainView : View() {
                         }
                     }
 
-                    button("반복제작") {
-                        action {
-                            taskManager.makeItemInfinitely()
+                    val input = SimpleStringProperty()
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+                        button("반복제작") {
+                            action {
+                                taskManager.makeItemInfinitely(input.value.toInt())
+                            }
                         }
+
+                        textfield(input){
+                            text = "0"
+                            maxWidth = 50.0
+                        }
+
+                        label("0=무한반복")
                     }
+
 
                     checkbox {
                         text = "스페이스바로 아이템 확인하기 (F3:위치 초기화)"
@@ -95,6 +121,7 @@ class MainView : View() {
                     var buyAll: CheckBox? = null
                     val useItemList = checkbox {
                         text = "ItemList.txt 사용"
+                        isSelected = true
                         action {
                             buyAll?.let {
                                 it.isDisable = isSelected
@@ -103,6 +130,7 @@ class MainView : View() {
                     }
 
                     buyAll = checkbox {
+                        isDisable = true
                         text = "구매수량 최대치 입력"
                     }
 

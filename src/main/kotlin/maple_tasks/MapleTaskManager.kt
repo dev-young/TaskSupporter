@@ -1,6 +1,7 @@
 package maple_tasks
 
-import BaseTaskManager
+import helper.BaseTaskManager
+import helper.ConsumeEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.jnativehook.GlobalScreen
@@ -10,18 +11,67 @@ import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
 
-class MapleTaskManager : BaseTaskManager(), NativeKeyListener {
+class MapleTaskManager : BaseTaskManager() {
+    var isHotkeyEnable = true
+    val keyListener = ConsumeEvent().apply {
+        setPressedListener {
+            if(!isHotkeyEnable) return@setPressedListener true
+            when (it.keyCode) {
+
+                NativeKeyEvent.VC_F2 -> {
+                    //pause, resume
+                    toggle()
+                    false
+                }
+
+                NativeKeyEvent.VC_F3 -> {
+                    resetTask()
+                    false
+                }
+
+                NativeKeyEvent.VC_F4 -> {
+                    if(jobMap.isEmpty())
+                        finishApp()
+                    else
+                        resetTask()
+                    true
+                }
+
+                NativeKeyEvent.VC_SPACE -> {
+                    if(isItemCheckerEnable){
+                        if(mapleBaseTask == null)
+                            mapleBaseTask = MapleBaseTask()
+                        GlobalScope.launch {
+                            mapleBaseTask?.findNextItem()
+                        }
+                        false
+                    } else
+                        true
+                }
+
+
+
+
+                else -> {
+                    true
+                }
+            }
+        }
+    }
 
     init {
         LogManager.getLogManager().reset()
         Logger.getLogger(GlobalScreen::class.java.getPackage().name).level = Level.OFF
         GlobalScreen.registerNativeHook()
-        GlobalScreen.addNativeKeyListener(this)
+        GlobalScreen.setEventDispatcher(ConsumeEvent.VoidDispatchService())
+        GlobalScreen.addNativeKeyListener(keyListener)
     }
 
 
     private var mapleBaseTask: MapleBaseTask? = null
     var isItemCheckerEnable = false
+
+
 
     fun login(id: String, pw: String) {
         runTask("login") {
@@ -44,74 +94,16 @@ class MapleTaskManager : BaseTaskManager(), NativeKeyListener {
         }
     }
 
-    fun makeItemInfinitely() {
+    fun makeItemInfinitely(maxCount: Int) {
         runTask("makeItem") {
-            MeisterTask().makeItemInfinitely()
+            MeisterTask().makeItemInfinitely(maxCount)
         }
-    }
-
-    override fun nativeKeyTyped(p0: NativeKeyEvent?) {
-
-    }
-
-    override fun nativeKeyPressed(keyEvent: NativeKeyEvent) {
-        when (keyEvent.keyCode) {
-
-            NativeKeyEvent.VC_F2 -> {
-                //pause, resume
-                toggle()
-            }
-
-            NativeKeyEvent.VC_F3 -> {
-                resetTask()
-            }
-
-            NativeKeyEvent.VC_F4 -> {
-                if(jobMap.isEmpty())
-                    finishApp()
-                else
-                    resetTask()
-            }
-
-            NativeKeyEvent.VC_F4 -> {
-                if(jobMap.isEmpty())
-                    finishApp()
-                else
-                    resetTask()
-            }
-
-            NativeKeyEvent.VC_SPACE -> {
-                if(isItemCheckerEnable){
-                    if(mapleBaseTask == null)
-                        mapleBaseTask = MapleBaseTask()
-                    GlobalScope.launch {
-                        mapleBaseTask?.findNextItem()
-                    }
-                }
-            }
-
-
-
-
-            else -> {
-            }
-        }
-    }
-
-    override fun nativeKeyReleased(p0: NativeKeyEvent?) {
-
     }
 
 
     override fun resetTask() {
         super.resetTask()
         mapleBaseTask = null
-    }
-
-    override fun finishApp() {
-        GlobalScreen.removeNativeKeyListener(this)
-        GlobalScreen.unregisterNativeHook()
-        super.finishApp()
     }
 
 }
