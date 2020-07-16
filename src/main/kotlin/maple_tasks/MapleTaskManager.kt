@@ -16,6 +16,7 @@ class MapleTaskManager : BaseTaskManager() {
     val keyListener = ConsumeEvent().apply {
         setPressedListener {
             if(!isHotkeyEnable) return@setPressedListener true
+
             when (it.keyCode) {
 
                 NativeKeyEvent.VC_F2 -> {
@@ -35,6 +36,18 @@ class MapleTaskManager : BaseTaskManager() {
                     else
                         resetTask()
                     true
+                }
+
+                NativeKeyEvent.VC_SPACE -> {
+                    if(isItemCheckerEnable){
+                        if(mapleBaseTask == null)
+                            mapleBaseTask = MapleBaseTask()
+                        GlobalScope.launch {
+                            mapleBaseTask?.findNextItem()
+                        }
+                        false
+                    } else
+                        true
                 }
 
                 NativeKeyEvent.VC_SPACE -> {

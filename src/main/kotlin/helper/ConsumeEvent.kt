@@ -1,15 +1,11 @@
 package helper
 
-import org.jnativehook.GlobalScreen
-import org.jnativehook.NativeHookException
 import org.jnativehook.NativeInputEvent
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyListener
 import java.util.*
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.TimeUnit
-import java.util.logging.Level
-import java.util.logging.Logger
 
 class ConsumeEvent : NativeKeyListener {
     class VoidDispatchService : AbstractExecutorService() {

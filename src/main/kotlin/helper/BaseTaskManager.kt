@@ -45,9 +45,11 @@ open class BaseTaskManager {
 
     fun toggle(){
         if(jobMap.isNotEmpty()){
-            dispatcher.toggle()
+            GlobalScope.launch(Dispatchers.Default) {
+                dispatcher.toggle()
+                notifyTaskStateChanged()
+            }
         }
-        notifyTaskStateChanged()
     }
 
     private fun notifyTaskStateChanged(state:String? = null) {
@@ -90,11 +92,14 @@ open class BaseTaskManager {
         } else
             logI("모든 작업 취소")
 
-        jobMap.values.forEach {
-            it.cancel()
+        GlobalScope.launch(Dispatchers.Default) {
+            jobMap.values.forEach {
+                it.cancel()
+            }
+            jobMap.clear()
+            dispatcher.resume()
+            notifyTaskStateChanged()
         }
-        jobMap.clear()
-        dispatcher.resume()
-        notifyTaskStateChanged()
+
     }
 }

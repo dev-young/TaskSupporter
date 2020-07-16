@@ -109,7 +109,7 @@ class AuctionTask : MapleBaseTask() {
                 }
                 delayRandom(30, 50)
 
-                while (noResultCount < noResultCountMax){
+                sub@while (noResultCount < noResultCountMax){
                     clickSearchTab()
                     delayRandom(30, 50)
                     searchItem()
@@ -131,8 +131,11 @@ class AuctionTask : MapleBaseTask() {
                             if (success) {
                                 logI("모두받기 완료.")
                                 sendEnter() //완료창 종료
+
+
                                 buyStack = 0
-                                continue
+                                targetIndex = (targetIndex + itemList.size - 1) % itemList.size // 이전 아이템
+                                break@sub
                             } else {
                                 logI("모두받기 실패.")
                                 break@root
