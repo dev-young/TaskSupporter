@@ -1,3 +1,4 @@
+import com.sun.jna.Native
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
 import org.jnativehook.keyboard.NativeKeyEvent
@@ -104,8 +105,9 @@ fun User32.winExist(title: String): WinDef.HWND? {
 }
 
 fun User32.winIsForeground(title: String): Boolean {
-    val h = FindWindow(null, title)
-    return GetForegroundWindow() == h
+    val target = CharArray(MAX_TITLE_LENGTH * 2)
+    GetWindowText(GetForegroundWindow(), target, MAX_TITLE_LENGTH)
+    return title == Native.toString(target)
 }
 
 /**윈도우 활성화 (활성화가 완료될때까지 기다린다. 최대 2초)*/
