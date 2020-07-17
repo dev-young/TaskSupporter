@@ -1,13 +1,18 @@
 package maple_tasks
 
+import com.sun.jna.platform.win32.User32
+import com.sun.jna.platform.win32.WinDef
 import helper.HelperCore
 import logI
 import moveMouseSmoothly
+import winActive
 import java.awt.Point
 import java.awt.event.KeyEvent
 
 open class MapleBaseTask {
     val helper: HelperCore = HelperCore()
+
+    var hwnd = User32.INSTANCE.FindWindow("", "MapleStory")
 
     val itemDistance = 42  // 아이템 간격
 
@@ -16,6 +21,10 @@ open class MapleBaseTask {
     var nextItemPosition = 0 // 현재 확인중인 아이템 순서
 
     var isNumberLock = helper.toolkit.getLockingKeyState(KeyEvent.VK_NUM_LOCK)
+
+    fun activateMaple(): Boolean {
+        return User32.INSTANCE.winActive("MapleStory")
+    }
 
     /**해당 좌표의 아이템이 빈칸인지 확인*/
     fun checkEmpty(leftTop: Point): Boolean {

@@ -1,8 +1,10 @@
 package helper
 
+import com.sun.jna.platform.win32.User32
 import kotlinx.coroutines.*
 import logI
 import org.opencv.core.Core
+import winActive
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -13,7 +15,6 @@ open class BaseTaskManager {
         val STATE_WORKING = "실행중"
         val STATE_COMPLETE = "완료"
     }
-
 
     private val dispatcher = PauseableDispatcher(Thread())
     val jobMap = HashMap<String, Job>()

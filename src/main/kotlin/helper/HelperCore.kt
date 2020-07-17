@@ -1,7 +1,12 @@
 package helper
 
+import winActive
+import com.sun.jna.platform.win32.User32
+import com.sun.jna.platform.win32.WinDef
 import get
+import getHeight
 import kotlinx.coroutines.delay
+import leftTop
 import logI
 import moveMouseSmoothly
 import org.opencv.core.Core
@@ -9,6 +14,8 @@ import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 import toMat
+import width
+import winGetPos
 import java.awt.*
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.StringSelection
@@ -21,6 +28,8 @@ import kotlin.system.exitProcess
 class HelperCore : Robot() {
     val random = Random()
 
+    private val user32 = User32.INSTANCE
+
     val dirPath = System.getProperty("user.dir") + "\\"
 
     var smartClickRange = 5
@@ -29,9 +38,8 @@ class HelperCore : Robot() {
     var defaultClickKey = KeyEvent.BUTTON1_MASK //마우스 클릭시 KeyCode (BUTTON1_MASK == 왼쪽버튼)
 
     val defaultAccuracy = 10.0    // 0~100 이미지서치 정확도
-    var searchedImgWidth = 0
-
-    var searchedImgHeight = 0
+    var searchedImgWidth = 0    //가장 최근에 검색된 이미지의 넓이
+    var searchedImgHeight = 0   //가장 최근에 검색된 이미지의 높이
 
     val toolkit = Toolkit.getDefaultToolkit()
 
@@ -164,12 +172,18 @@ class HelperCore : Robot() {
         return imageSearch(leftTop, width, height, imgName, defaultAccuracy)
     }
 
-    fun imageSearch(imgName: String, accuracy: Double): Point? {
-        return imageSearch(Point(0, 0), 1920, 1080, imgName, accuracy)
+    /**@param findOnForeground 활성화된 윈도우 범위 내에서만 찾을지 여부*/
+    fun imageSearch(imgName: String, accuracy: Double, findOnForeground : Boolean = true): Point? {
+        return if(findOnForeground){
+            val rect = user32.winGetPos(user32.GetForegroundWindow())
+            imageSearch(rect.leftTop(), rect.width(), rect.getHeight(), imgName, accuracy)
+        } else {
+            imageSearch(Point(0, 0), 1920, 1080, imgName, accuracy)
+        }
     }
 
-    fun imageSearch(imgName: String): Point? {
-        return imageSearch(imgName, defaultAccuracy)
+    fun imageSearch(imgName: String, findOnForeground : Boolean = true): Point? {
+        return imageSearch(imgName, defaultAccuracy, findOnForeground)
     }
 
     /**이미지를 찾고 찾은 이미지 범위 내에서 클릭을 한다.

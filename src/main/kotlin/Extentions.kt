@@ -1,3 +1,5 @@
+import com.sun.jna.platform.win32.User32
+import com.sun.jna.platform.win32.WinDef
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyEvent.getKeyText
 import org.opencv.core.CvType
@@ -93,3 +95,63 @@ fun Random.get(from: Int, to: Int): Int {
         return from + nextInt(range)
     return from
 }
+
+val MAX_TITLE_LENGTH = 1024
+
+
+fun User32.winExist(title: String): WinDef.HWND? {
+    return FindWindow(null, title)
+}
+
+/**윈도우 활성화 (활성화가 완료될때까지 기다린다. 최대 2초)*/
+fun User32.winActive(hwnd : WinDef.HWND): Boolean {
+
+    val target = CharArray(MAX_TITLE_LENGTH * 2)
+    GetWindowText(hwnd, target, MAX_TITLE_LENGTH)
+
+    val current = CharArray(MAX_TITLE_LENGTH * 2)
+    for(i in 1..200) {
+        SetForegroundWindow(hwnd)
+//            logI("not yet activate   current:${Native.toString(current)}")
+        Thread.sleep(10)
+        GetWindowText(GetForegroundWindow(), current, MAX_TITLE_LENGTH)
+
+        if(target.contentEquals(current))
+            return true
+    }
+    return false
+}
+
+fun User32.winActive(title : String): Boolean {
+    val hwnd = FindWindow(null, title) ?: return false
+
+    return winActive(hwnd)
+}
+
+fun User32.winMove( point: Point, title : String? = null, hwnd_: WinDef.HWND? = null)  {
+    var hwnd = hwnd_
+
+    if(title != null){
+        hwnd = FindWindow(null, title)
+    }
+
+    if(hwnd == null)
+        hwnd = GetForegroundWindow()
+
+    val rect = WinDef.RECT()
+    GetWindowRect(hwnd, rect)
+    val w = rect.right - rect.left
+    val h = rect.bottom - rect.top
+    MoveWindow(hwnd, point.x, point.y, w, h, false)
+}
+
+fun User32.winGetPos(hwnd: WinDef.HWND): WinDef.RECT {
+    val rect = WinDef.RECT()
+    GetWindowRect(hwnd, rect)
+    return rect
+}
+
+fun WinDef.RECT.leftTop() = Point(left, top)
+fun WinDef.RECT.rightBottom() = Point(right, bottom)
+fun WinDef.RECT.width() = right - left
+fun WinDef.RECT.getHeight() = bottom - top

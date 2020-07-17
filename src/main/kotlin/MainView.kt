@@ -15,6 +15,8 @@ import java.io.File
 class MainView : View() {
     private val defaultItemSpacing = 8.0
     private lateinit var infoLabel: Label
+    val taskManager = MapleTaskManager()
+
     override val root = borderpane {
 
         top = hbox {
@@ -151,6 +153,41 @@ class MainView : View() {
                     button("수큐 에픽 띄우기")
                 }
             }
+
+            tab("설정") {
+                isClosable = false
+
+                vbox {
+                    paddingAll = defaultItemSpacing
+                    spacing = defaultItemSpacing
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+                        textfield(taskManager.winTarget){
+                            text = "MapleStory"
+                            maxWidth = 90.0
+                        }
+
+                        label("활성화")
+                    }
+
+
+                    button("테스트1") {
+                        action {
+                            logI("")
+                            taskManager.test()
+                        }
+                    }
+
+                    button("테스트2") {
+                        action {
+                            logI("")
+                            taskManager.test2()
+                        }
+                    }
+                }
+            }
         }
 
         infoLabel = label(STATE_IDEL) {
@@ -160,8 +197,6 @@ class MainView : View() {
 
         bottom = infoLabel
     }
-
-    val taskManager = MapleTaskManager()
 
     private fun loadAccountList(): List<List<String>> {
         val list = ArrayList<List<String>>()
