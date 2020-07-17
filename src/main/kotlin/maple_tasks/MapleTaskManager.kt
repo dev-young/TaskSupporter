@@ -14,13 +14,13 @@ import logI
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import winActive
+import winIsForeground
 import winMove
 import java.awt.Point
 import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
 import kotlin.system.measureNanoTime
-import kotlin.system.measureTimeMillis
 
 
 class MapleTaskManager : BaseTaskManager() {
@@ -32,12 +32,16 @@ class MapleTaskManager : BaseTaskManager() {
             when (it.keyCode) {
 
                 NativeKeyEvent.VC_F2 -> {
+                    if(jobMap.isEmpty()) return@setPressedListener true
                     //pause, resume
                     toggle()
                     false
                 }
 
                 NativeKeyEvent.VC_F3 -> {
+                    if(jobMap.isEmpty() && !isItemCheckerEnable) {
+                        return@setPressedListener true
+                    }
                     resetTask()
                     false
                 }
@@ -47,7 +51,7 @@ class MapleTaskManager : BaseTaskManager() {
                         finishApp()
                     else
                         resetTask()
-                    true
+                    false
                 }
 
                 NativeKeyEvent.VC_SPACE -> {
@@ -55,6 +59,10 @@ class MapleTaskManager : BaseTaskManager() {
 
                         if (mapleBaseTask == null)
                             mapleBaseTask = MapleBaseTask()
+
+                        if(!User32.INSTANCE.winIsForeground(winTarget.value))
+                            return@setPressedListener true
+
                         GlobalScope.launch {
                             mapleBaseTask?.findNextItem()
                         }
@@ -62,19 +70,6 @@ class MapleTaskManager : BaseTaskManager() {
                     } else
                         true
                 }
-
-                NativeKeyEvent.VC_SPACE -> {
-                    if (isItemCheckerEnable) {
-                        if (mapleBaseTask == null)
-                            mapleBaseTask = MapleBaseTask()
-                        GlobalScope.launch {
-                            mapleBaseTask?.findNextItem()
-                        }
-                        false
-                    } else
-                        true
-                }
-
 
                 else -> {
                     true

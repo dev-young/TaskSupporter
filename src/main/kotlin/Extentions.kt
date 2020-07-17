@@ -103,6 +103,11 @@ fun User32.winExist(title: String): WinDef.HWND? {
     return FindWindow(null, title)
 }
 
+fun User32.winIsForeground(title: String): Boolean {
+    val h = FindWindow(null, title)
+    return GetForegroundWindow() == h
+}
+
 /**윈도우 활성화 (활성화가 완료될때까지 기다린다. 최대 2초)*/
 fun User32.winActive(hwnd : WinDef.HWND): Boolean {
 
