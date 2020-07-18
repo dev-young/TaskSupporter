@@ -41,7 +41,6 @@ open class BaseTaskManager {
             notifyTaskStateChanged()
         }
 
-        println("$id 실행 완료2.  jobMapSize: ${jobMap.size}")
     }
 
     fun toggle(){

@@ -137,6 +137,30 @@ class HelperCore : Robot() {
         smartClick(point.x, point.y, keyCode)
     }
 
+    fun imageSearch(source:Mat, template:Mat, accuracy: Double = 50.0):Boolean {
+        var notFoundMMR = 1000000    // 적당한 값을 입력해야하는데 여러 수치를 테스트해본 결과 500000이 적당한듯 하다.
+        notFoundMMR -= (notFoundMMR / 100 * accuracy).toInt()
+        val outputImage = Mat()
+        try {
+            Imgproc.matchTemplate(source, template, outputImage, Imgproc.TM_SQDIFF)
+        } catch (e: Exception) {
+//            print("[Error] 2" + e.message)
+//            logI("사진 파일 확인 필요. error: ${e.message}")
+            logI("오류 발생. (예상 원인: 이미지 파일 없음")
+            return false
+        }
+
+        val mmr = Core.minMaxLoc(outputImage)
+//        log("정확도: " + mmr.minVal + ",  " + mmr.maxVal + ", notFoundMMR: " + notFoundMMR)
+        if (accuracy > 0 && mmr.minVal > notFoundMMR) {
+            return false
+        }
+
+//        val matchLoc: org.opencv.core.Point = mmr.minLoc
+//        return Point(leftTop.x + matchLoc.x.toInt(), leftTop.y + matchLoc.y.toInt())
+        return true
+    }
+
     /**
      *@param accuracy 0~100 사이의 정확성 (100인 경우 정확히 일치하는것만 찾고 0인 경우에는 일치하지 않더라도 가장 비슷한 위치를 찾는다.) */
     fun imageSearch(leftTop: Point, width: Int, height: Int, imgName: String, accuracy: Double): Point? {
@@ -153,7 +177,7 @@ class HelperCore : Robot() {
             Imgproc.matchTemplate(source, template, outputImage, machMethod)
         } catch (e: Exception) {
 //            print("[Error] 2" + e.message)
-            logI("사진 파일 확인 필요. error: ${e.message}")
+            logI("사진 파일 확인 필요 ($imgName). error: ${e.message}")
             return null
         }
 

@@ -17,6 +17,7 @@ import winActive
 import winIsForeground
 import winMove
 import java.awt.Point
+import java.io.File
 import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
@@ -92,6 +93,31 @@ class MapleTaskManager : BaseTaskManager() {
 
     var winTarget = SimpleStringProperty()
 
+    fun loadAccountList(): List<List<String>> {
+        val list = ArrayList<List<String>>()
+        val file = File("AccountList.txt")
+        if (file.exists()) {
+            file.readLines().forEach {
+//                    log(it)
+                if (it.startsWith("//") || it.isEmpty()) {
+                    //공백 혹은 주석처리된 line
+                } else {
+                    val s = it.split(" ", limit = 3)
+                    if (s.size < 2) {
+                        logI("올바르지 않은 형식입니다. -> $it")
+                    } else {
+                        list.add(s)
+                    }
+
+                }
+
+
+            }
+
+        }
+        return list
+    }
+
     fun login(id: String, pw: String) {
         runTask("login") {
             if(activateTargetWindow())
@@ -125,29 +151,18 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    private val MAX_TITLE_LENGTH = 1024
-    private val user32 = User32.INSTANCE
-    fun test() {
-        User32.INSTANCE.apply {
-            if(winActive("MapleStory"))
-                winMove(Point(0, 0))
+    fun cubeItem(targetOptions: HashMap<String, Int>, count:Int = 1) {
+        runTask("cube") {
+            if(activateTargetWindow())
+                UpgradeItemTask().useCube(targetOptions, count)
         }
+    }
+
+    fun test() {
+
 
     }
 
-    fun test2() {
-
-        logI("소요시간: " + measureNanoTime {
-            val buffer = CharArray(MAX_TITLE_LENGTH * 2)
-            val hwnd = User32.INSTANCE.GetForegroundWindow()
-            User32.INSTANCE.GetWindowText(hwnd, buffer, MAX_TITLE_LENGTH)
-            println("Active window title: " + Native.toString(buffer))
-            val rect = WinDef.RECT()
-            User32.INSTANCE.GetWindowRect(hwnd, rect)
-            println("rect = $rect")
-        })
-
-    }
 
     fun activateTargetWindow(): Boolean {
         return User32.INSTANCE.winActive(winTarget.value)

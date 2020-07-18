@@ -2,15 +2,23 @@ import helper.BaseTaskManager.Companion.STATE_IDEL
 import helper.BaseTaskManager.Companion.STATE_PAUSED
 import helper.BaseTaskManager.Companion.STATE_WORKING
 import javafx.application.Platform
+import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
+import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
 import maple_tasks.MapleTaskManager
+import maple_tasks.UpgradeItemTask
+import maple_tasks.UpgradeItemTask.Companion.DEX
+import maple_tasks.UpgradeItemTask.Companion.HP
+import maple_tasks.UpgradeItemTask.Companion.INT
+import maple_tasks.UpgradeItemTask.Companion.LUC
+import maple_tasks.UpgradeItemTask.Companion.STR
 import tornadofx.*
-import java.io.File
+import java.lang.Exception
 
 class MainView : View() {
     private val defaultItemSpacing = 8.0
@@ -34,7 +42,7 @@ class MainView : View() {
                 isSelected = true
                 text = "단축키 활성화"
                 action {
-                    text = if(isSelected) "단축키 활성화" else "단축키 비활성"
+                    text = if (isSelected) "단축키 활성화" else "단축키 비활성"
                     taskManager.isHotkeyEnable = isSelected
                 }
             }
@@ -50,7 +58,7 @@ class MainView : View() {
                 vbox {
                     paddingAll = defaultItemSpacing
                     spacing = defaultItemSpacing
-                    val accountList = loadAccountList()
+                    val accountList = taskManager.loadAccountList()
                     accountList.forEach {
                         hbox {
                             alignment = Pos.CENTER_LEFT
@@ -96,7 +104,7 @@ class MainView : View() {
                             }
                         }
 
-                        textfield(input){
+                        textfield(input) {
                             text = "0"
                             maxWidth = 50.0
                         }
@@ -147,10 +155,122 @@ class MainView : View() {
             tab("강화/큐브") {
                 isClosable = false
 
+                val str = SimpleIntegerProperty()
+                val dex = SimpleIntegerProperty()
+                val int = SimpleIntegerProperty()
+                val luc = SimpleIntegerProperty()
+                val hp = SimpleIntegerProperty()
+
                 vbox {
                     paddingAll = defaultItemSpacing
-                    spacing = defaultItemSpacing
-                    button("수큐 에픽 띄우기")
+                    spacing = 5.0
+
+                    val labelWidth = 40.0
+                    val inputWidth = 45.0
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        label(STR) {
+                            minWidth = labelWidth
+                        }
+                        textfield(str) {
+                            text = "9"
+                            maxWidth = inputWidth
+                        }
+                    }
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        label(DEX) {
+                            minWidth = labelWidth
+                        }
+                        textfield(dex) {
+                            text = "9"
+                            maxWidth = inputWidth
+                        }
+                    }
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        label(INT) {
+                            minWidth = labelWidth
+                        }
+                        textfield(int) {
+                            text = "9"
+                            maxWidth = inputWidth
+                        }
+                    }
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        label(LUC) {
+                            minWidth = labelWidth
+                        }
+                        textfield(luc) {
+                            text = "9"
+                            maxWidth = inputWidth
+                        }
+                    }
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        label(HP) {
+                            minWidth = labelWidth
+                        }
+                        textfield(hp) {
+                            text = "12"
+                            maxWidth = inputWidth
+                        }
+                    }
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = 5.0
+                        button("초기화") {
+                            action {
+                                str.value = 9
+                                dex.value = 9
+                                int.value = 9
+                                luc.value = 9
+                                hp.value = 12
+                            }
+                        }
+                        button("clear") {
+                            action {
+                                str.value = 0
+                                dex.value = 0
+                                int.value = 0
+                                luc.value = 0
+                                hp.value = 0
+                            }
+                        }
+                        label("0: 해당 옵션 확인 안함")
+                    }
+
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = 5.0
+                        val cubeCount = SimpleStringProperty()
+                        button("큐브 작업 수행하기") {
+                            action {
+                                val targetOptions = hashMapOf<String, Int>()
+                                targetOptions[STR] = str.let { it.value }
+                                targetOptions[DEX] = dex.let { it.value }
+                                targetOptions[LUC] = luc.let { it.value }
+                                targetOptions[INT] = int.let { it.value }
+                                targetOptions[HP] = hp.let { it.value }
+//                                targetOptions[UpgradeItemTask.ATT] = 9
+//                                targetOptions[UpgradeItemTask.SPELL] = 9
+                                taskManager.cubeItem(targetOptions, cubeCount.value.toInt())
+                            }
+                        }
+
+                        textfield(cubeCount) {
+                            text = "1"
+                            maxWidth = 40.0
+                        }
+
+                        label("0: 빈칸 나올때까지 수행")
+                    }
+
+
                 }
             }
 
@@ -164,12 +284,38 @@ class MainView : View() {
                     hbox {
                         alignment = Pos.CENTER_LEFT
                         spacing = defaultItemSpacing
-                        textfield(taskManager.winTarget){
+                        textfield(taskManager.winTarget) {
                             text = "MapleStory"
                             maxWidth = 90.0
                         }
 
                         label("활성화")
+                    }
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+
+                        label("큐브 딜레이")
+
+                        val min = SimpleStringProperty()
+                        val max = SimpleStringProperty()
+                        textfield(min) {
+                            text = UpgradeItemTask.cubeDelayMin.toString()
+                            maxWidth = 50.0
+                        }
+                        label("~")
+                        textfield(max) {
+                            text = UpgradeItemTask.cubeDelayMax.toString()
+                            maxWidth = 50.0
+                        }
+                        button("적용") {
+                            action {
+                                UpgradeItemTask.cubeDelayMin = min.value.toInt()
+                                UpgradeItemTask.cubeDelayMax = max.value.toInt()
+                            }
+                        }
+
                     }
 
 
@@ -183,7 +329,6 @@ class MainView : View() {
                     button("테스트2") {
                         action {
                             logI("")
-                            taskManager.test2()
                         }
                     }
                 }
@@ -198,32 +343,16 @@ class MainView : View() {
         bottom = infoLabel
     }
 
-    private fun loadAccountList(): List<List<String>> {
-        val list = ArrayList<List<String>>()
-        val file = File("AccountList.txt")
-        if (file.exists()) {
-            file.readLines().forEach {
-//                    log(it)
-                if (it.startsWith("//") || it.isEmpty()) {
-                    //공백 혹은 주석처리된 line
-                } else {
-                    val s = it.split(" ", limit = 3)
-                    if (s.size < 2) {
-                        logI("올바르지 않은 형식입니다. -> $it")
-                    } else {
-                        list.add(s)
-                    }
-
-                }
-
-
-            }
-
-        }
-        return list
-    }
 
     init {
+        root.titledpane {
+            title = "GHelper"
+            try {
+                addStageIcon(Image("https://upload2.inven.co.kr/upload/2019/10/14/bbs/i15774573889.png"))
+            } catch (e: Exception) {
+                println(e.message)
+            }
+        }
         primaryStage.isAlwaysOnTop = true
 
         taskManager.setOnTaskStateChangeListener {
@@ -256,6 +385,7 @@ class MainView : View() {
 
 
     }
+
 
     override fun onDock() {
         currentWindow?.setOnCloseRequest {

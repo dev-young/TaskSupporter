@@ -48,6 +48,7 @@ class AuctionTask : MapleBaseTask() {
                     if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
                         // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
                         logI("구매슬롯 가득참")
+                        delayRandom(200, 400)
                         val success = getAllItems()
                         if (success) {
                             logI("모두받기 완료.")
@@ -127,6 +128,7 @@ class AuctionTask : MapleBaseTask() {
                         if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
                             // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
                             logI("구매슬롯 가득참")
+                            delayRandom(200, 400)
                             val success = getAllItems()
                             if (success) {
                                 logI("모두받기 완료.")

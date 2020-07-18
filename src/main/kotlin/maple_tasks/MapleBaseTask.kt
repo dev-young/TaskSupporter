@@ -180,4 +180,11 @@ open class MapleBaseTask {
             autoDelay = 0
         }
     }
+
+    /**소비 탭 클릭*/
+    suspend fun clickConsumeTab(): Point? {
+        helper.apply {
+            return imageSearchAndClick("img\\consumeTab.png", 150)
+        }
+    }
 }
