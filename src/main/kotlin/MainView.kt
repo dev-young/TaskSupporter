@@ -7,6 +7,8 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
+import javafx.scene.control.ListView
+import javafx.scene.control.SelectionMode
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
@@ -21,12 +23,15 @@ import tornadofx.*
 import java.lang.Exception
 
 class MainView : View() {
+    companion object {
+        val logList = arrayListOf<String>().asObservable()
+        val lastLogLabel = Label()
+    }
     private val defaultItemSpacing = 8.0
     private lateinit var infoLabel: Label
     val taskManager = MapleTaskManager()
 
     override val root = borderpane {
-
         top = hbox {
 
             spacing = defaultItemSpacing
@@ -333,14 +338,32 @@ class MainView : View() {
                     }
                 }
             }
+
+            tab("로그") {
+                isClosable = false
+
+                listview (logList) {
+                    useMaxWidth = true
+                    prefHeight = 200.0
+                    selectionModel.selectionMode = SelectionMode.SINGLE
+                }
+            }
         }
 
-        infoLabel = label(STATE_IDEL) {
-            paddingAll = defaultItemSpacing
-            useMaxWidth = true
-        }
+        bottom = vbox {
+            label(STATE_IDEL) {
+                paddingAll = defaultItemSpacing
+                useMaxWidth = true
+                infoLabel = this
+            }
 
-        bottom = infoLabel
+            add(lastLogLabel)
+            lastLogLabel.apply {
+                useMaxWidth = true
+                paddingLeft = 5.0
+            }
+
+        }
     }
 
 

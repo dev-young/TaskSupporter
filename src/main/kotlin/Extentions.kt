@@ -1,6 +1,7 @@
 import com.sun.jna.Native
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
+import javafx.application.Platform
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyEvent.getKeyText
 import org.opencv.core.CvType
@@ -21,8 +22,13 @@ import kotlin.system.measureTimeMillis
 val dateFormat = SimpleDateFormat("HH:mm:ss")
 
 fun logI(message: Any?){
-    print("[${dateFormat.format(Date())}] ")
-    println(message)
+    val msg = "[${dateFormat.format(Date())}] $message"
+    println(msg)
+    Platform.runLater {
+        MainView.logList.add(msg)
+        MainView.lastLogLabel.text = msg
+    }
+
 }
 
 fun NativeKeyEvent.print() {

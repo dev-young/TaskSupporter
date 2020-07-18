@@ -14,8 +14,8 @@ import kotlin.system.measureTimeMillis
 class UpgradeItemTask : MapleBaseTask() {
 
     companion object {
-        var cubeDelayMin = 1700
-        var cubeDelayMax = 1800
+        var cubeDelayMin = 1600
+        var cubeDelayMax = 1700
 
         const val STR = "STR"
         const val DEX = "DEX"
@@ -106,10 +106,9 @@ class UpgradeItemTask : MapleBaseTask() {
                 }
 
                 startCube(Point(vx, vy))
+                delayRandom(100, 200)
 
-                delayRandom(cubeDelayMin, cubeDelayMax)
                 val targetOptions = targetOptionsList[i-1]
-
                 while (!checkOption(targetOptions) && !checkCubeDisable()) {
                     val delay = random.get(cubeDelayMin, cubeDelayMax) - 1500L
                     if (delay > 0)
@@ -176,7 +175,8 @@ class UpgradeItemTask : MapleBaseTask() {
             targetOptions.remove(it)
         }
 
-        for (i in 1..itemCount) {
+        val count = if(itemCount == 0) 128 else itemCount
+        for (i in 1..count) {
             targetOptionsList.add(targetOptions)
         }
 
@@ -230,7 +230,12 @@ class UpgradeItemTask : MapleBaseTask() {
                     if (imageSearch(source, template)) {
                         optionValueTemplates.forEach { (value, template) ->
                             if (imageSearch(source, template)) {
-                                resultOption[name] = resultOption[name]?.plus(value) ?: value
+                                val v = when(value) {
+                                    2 -> 3
+                                    4 -> 6
+                                    else -> value
+                                }
+                                resultOption[name] = resultOption[name]?.plus(v) ?: v
 
 //                                logI("${index+1}줄 값 추가! $name = ${resultOption[name]}  (+$value)")
                                 return@forEach
@@ -318,7 +323,7 @@ class UpgradeItemTask : MapleBaseTask() {
             sendEnter()
             delayRandom(10, 30)
 
-            kotlinx.coroutines.delay(1200)
+            kotlinx.coroutines.delay(1500)
 
             println("소요시간" + measureTimeMillis {
                 resultWindowLeftTop = findResultWindow()
