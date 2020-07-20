@@ -17,6 +17,7 @@ import winActive
 import winIsForeground
 import winMove
 import java.awt.Point
+import java.awt.event.KeyEvent
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.LogManager
@@ -72,6 +73,19 @@ class MapleTaskManager : BaseTaskManager() {
                         true
                 }
 
+                NativeKeyEvent.VC_F1 -> {
+                    if (isSimpleTaskEnable) {
+                        if(!User32.INSTANCE.winIsForeground(winTarget.value)){
+                            logI("타겟 윈도우가 Foreground에 있지 않습니다.")
+                            return@setPressedListener true
+                        }
+                        startSimpleTask(selectedSimpleTask.value)
+
+                        false
+                    } else
+                        true
+                }
+
                 else -> {
                     true
                 }
@@ -90,8 +104,54 @@ class MapleTaskManager : BaseTaskManager() {
 
     private var mapleBaseTask: MapleBaseTask? = null
     var isItemCheckerEnable = false
-
+    var isSimpleTaskEnable = false  // 간단한 작업 사용 여부
     var winTarget = SimpleStringProperty()
+
+    val selectedSimpleTask = SimpleStringProperty()
+
+    /**광클같은 간단한 작업 수행 */
+    private fun startSimpleTask(simpleTask: String) {
+        logI("$simpleTask 수행 시작")
+        if(jobMap["simpleTask"] != null) {
+            resetTask()
+            return
+        }
+        runTask("simpleTask") {
+            if(activateTargetWindow()){
+                if (mapleBaseTask == null)
+                    mapleBaseTask = MapleBaseTask()
+
+
+                mapleBaseTask?.apply {
+                    when(simpleTask){
+                        SIMPLE_TASK_AUTOCLICK -> startAutoClick(winTarget.value)
+                        SIMPLE_TASK_AUTOSPACE -> startAutoSend(winTarget.value, KeyEvent.VK_SPACE)
+                        SIMPLE_TASK_AUTOSPACEANDENTER -> startAutoSpaceAndEnter(winTarget.value)
+                        else -> {
+                            logI("$simpleTask 알수없는 명령")
+                        }
+                    }
+
+                }
+            }
+
+
+        }
+    }
+
+    fun test() {
+
+
+    }
+
+    fun activateTargetWindow(): Boolean {
+        return User32.INSTANCE.winActive(winTarget.value)
+    }
+
+    override fun resetTask() {
+        super.resetTask()
+        mapleBaseTask = null
+    }
 
     fun loadAccountList(): List<List<String>> {
         val list = ArrayList<List<String>>()
@@ -158,19 +218,17 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun test() {
-
-
+    fun upgradeItem() {
+        runTask("upgrade") {
+            if(activateTargetWindow())
+                UpgradeItemTask().upgradeAndStarforce()
+        }
     }
 
-
-    fun activateTargetWindow(): Boolean {
-        return User32.INSTANCE.winActive(winTarget.value)
-    }
-
-    override fun resetTask() {
-        super.resetTask()
-        mapleBaseTask = null
+    companion object {
+        const val SIMPLE_TASK_AUTOCLICK = "마우스 광클"
+        const val SIMPLE_TASK_AUTOSPACE = "스페이스바 광클"
+        const val SIMPLE_TASK_AUTOSPACEANDENTER = "스페이스바, 엔터 광클"
     }
 
 }

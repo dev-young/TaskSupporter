@@ -3,9 +3,11 @@ package maple_tasks
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
 import helper.HelperCore
+import kotlinx.coroutines.delay
 import logI
 import moveMouseSmoothly
 import winActive
+import winIsForeground
 import java.awt.Point
 import java.awt.event.KeyEvent
 
@@ -186,5 +188,34 @@ open class MapleBaseTask {
         helper.apply {
             return imageSearchAndClick("img\\consumeTab.png", 150)
         }
+    }
+
+    /**광클*/
+    suspend fun startAutoClick(windowTitle:String) {
+        logI("광클 시작!")
+        while (User32.INSTANCE.winIsForeground(windowTitle)){
+            helper.simpleClick()
+        }
+        logI("광클 종료!")
+    }
+
+    /**광클*/
+    suspend fun startAutoSend(windowTitle:String, keyCode:Int) {
+        logI("광클 시작!")
+        while (User32.INSTANCE.winIsForeground(windowTitle)){
+            delay(10)
+            helper.send(keyCode)
+        }
+        logI("광클 종료!")
+    }
+
+    suspend fun startAutoSpaceAndEnter(windowTitle:String) {
+        logI("광클 시작!")
+        while (User32.INSTANCE.winIsForeground(windowTitle)){
+            delay(10)
+            helper.send(KeyEvent.VK_SPACE)
+            helper.sendEnter()
+        }
+        logI("광클 종료!")
     }
 }

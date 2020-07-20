@@ -82,6 +82,12 @@ class UpgradeItemTask : MapleBaseTask() {
         }
     }
 
+
+
+    suspend fun upgradeAndStarforce(starforceCount: Int = 0) {
+        logI("개발중인 기능입니다.")
+    }
+
     suspend fun runCubeTask(targetOptionsList: List<Map<String, Int>>){
         logI("큐브 작업 시작")
         targetOptionsList.forEach { logI(it.toString()) }
@@ -345,6 +351,5 @@ class UpgradeItemTask : MapleBaseTask() {
             return imageSearch("img\\cube\\result.png")
         }
     }
-
 
 }

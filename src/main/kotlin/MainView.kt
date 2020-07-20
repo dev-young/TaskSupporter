@@ -4,10 +4,10 @@ import helper.BaseTaskManager.Companion.STATE_WORKING
 import javafx.application.Platform
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.collections.FXCollections
 import javafx.geometry.Pos
 import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
-import javafx.scene.control.ListView
 import javafx.scene.control.SelectionMode
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
@@ -27,6 +27,7 @@ class MainView : View() {
         val logList = arrayListOf<String>().asObservable()
         val lastLogLabel = Label()
     }
+
     private val defaultItemSpacing = 8.0
     private lateinit var infoLabel: Label
     val taskManager = MapleTaskManager()
@@ -157,7 +158,7 @@ class MainView : View() {
                 }
             }
 
-            tab("강화/큐브") {
+            tab("큐브") {
                 isClosable = false
 
                 val str = SimpleIntegerProperty()
@@ -279,6 +280,54 @@ class MainView : View() {
                 }
             }
 
+            tab("강화") {
+                isClosable = false
+
+                vbox {
+                    paddingAll = defaultItemSpacing
+                    spacing = 5.0
+
+                    val labelWidth = 40.0
+                    val inputWidth = 45.0
+
+                    button("강화 및 스타포스") {
+                        action {
+                            taskManager.upgradeItem()
+                        }
+                    }
+
+
+                }
+            }
+
+            tab("기타") {
+                isClosable = false
+
+                vbox {
+                    paddingAll = defaultItemSpacing
+                    spacing = 5.0
+
+                    val labelWidth = 40.0
+                    val inputWidth = 45.0
+
+                    checkbox {
+                        text = "F1 버튼으로 아래 작업 수행"
+                        action {
+                            taskManager.isSimpleTaskEnable = isSelected
+                        }
+                    }
+
+                    val tasks = listOf(
+                        MapleTaskManager.SIMPLE_TASK_AUTOCLICK,
+                        MapleTaskManager.SIMPLE_TASK_AUTOSPACE,
+                        MapleTaskManager.SIMPLE_TASK_AUTOSPACEANDENTER )
+                    combobox(taskManager.selectedSimpleTask, tasks) {
+                        selectionModelProperty().get().select(0)
+                    }
+
+                }
+            }
+
             tab("설정") {
                 isClosable = false
 
@@ -342,7 +391,7 @@ class MainView : View() {
             tab("로그") {
                 isClosable = false
 
-                listview (logList) {
+                listview(logList) {
                     useMaxWidth = true
                     prefHeight = 200.0
                     selectionModel.selectionMode = SelectionMode.SINGLE
