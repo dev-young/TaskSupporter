@@ -383,6 +383,7 @@ class MainView : View() {
                     button("테스트2") {
                         action {
                             logI("")
+                            taskManager.test2()
                         }
                     }
                 }

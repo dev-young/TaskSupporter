@@ -4,8 +4,18 @@ import helper.HelperCore
 import logI
 import moveMouseSmoothly
 import java.awt.Point
+import java.awt.event.KeyEvent
+import kotlin.math.log
 
 class MeisterTask : MapleBaseTask() {
+
+    val imgpathMakebtn = "img\\meister\\makeBtn.png"
+    val imgpathOkBtn = "img\\meister\\okBtn.png"
+    val imgpathCancelBtn = "img\\meister\\cancelBtn.png"
+    val imgpathExpandBtn = "img\\meister\\expandBtn.png"
+    val imgpathSynthesizeOKBtn = "img\\synthesizeOK.png"
+    val imgpathExtractBtn1 = "img\\meister\\extractBtn2.png"
+    val imgpathExtractBtn2 = "img\\meister\\extractBtn.png"
 
     /**빈칸이 나오거나 모든 아이템을 합성할때까지 합성을 반복한다. */
     suspend fun synthesizeItemSmartly() {
@@ -95,18 +105,18 @@ class MeisterTask : MapleBaseTask() {
             var successCounter = 0
             while(maxCount == 0 || successCounter != maxCount) {
                 kotlinx.coroutines.delay(1)
-                val point = imageSearchAndClick("img\\meister\\makeBtn.png")
+                val point = imageSearchAndClick(imgpathMakebtn)
                 point?.let {
                     delayRandom(20,40)
                     simpleClick()
                     delayRandom(600, 700)
-                    val okBtn = imageSearchAndClick("img\\meister\\okBtn.png")
+                    val okBtn = imageSearchAndClick(imgpathOkBtn)
                     if (okBtn== null){
                         logI("확인버튼 찾을 수 없음")
                         moveMouseSmoothly(Point(0, 0))
                     }
                     delayRandom(4000, 4500)
-                    imageSearchAndClick("img\\meister\\okBtn.png")
+                    imageSearchAndClick(imgpathOkBtn)
                     successCounter++
                     logI("장비 제작 성공 ($successCounter)")
                 }
@@ -116,9 +126,242 @@ class MeisterTask : MapleBaseTask() {
         }
     }
 
+    /**장비 제작후 일반등급 아이템이면 분해한다. */
+    suspend fun makeItemAndExtractIfNormal(itemName: String){
+        val success = makeItem(itemName)
+        if(success) {
+            helper.apply {
+                //신규 아이템 표시 제거
+                openInventory()
+                delayRandom(100, 200)
+                closeInventory()
+                delayRandom(100, 200)
+                openInventory()
+                delayRandom(100, 200)
+
+                val lastItem = findLastItem()
+                if(lastItem == null) {
+
+                } else {
+                    if(checkItemIsNormal(lastItem)){
+                        //일반 아이템인 경우 분해
+                        extractItem(lastItem)
+
+                        //분해창 닫기
+                        clickCancelBtn()
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun loopMakeItemAndExtractIfNormal(itemName: String){
+        val success = makeItem(itemName)
+        if(success) {
+            helper.apply {
+                //신규 아이템 표시 제거
+                openInventory()
+                delayRandom(100, 200)
+                closeInventory()
+                delayRandom(100, 200)
+                openInventory()
+                delayRandom(100, 200)
+
+                val lastItem = findLastItem()
+                if(lastItem == null) {
+
+                } else {
+                    if(checkItemIsNormal(lastItem)){
+                        //일반 아이템인 경우 분해
+                        extractItem(lastItem)
+
+                        //분해창 닫기
+                        clickCancelBtn()
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun makeItem(itemName: String): Boolean {
+        val searchBtn = openProductionSkill()
+        if(searchBtn == null) {
+            logI("전문기술 창을 열 수 없습니다.")
+            return false
+        }
+
+        val searchArea = Point(searchBtn.x-50, searchBtn.y+2)
+        val searchedItem = Point(searchBtn.x-10, searchBtn.y+45)
+        helper.apply {
+            smartClickTimeMax = 200
+            smartClick(searchArea, 10, 5)
+            simpleClick()
+            delayRandom(200, 300)
+            clearText()
+            delayRandom(100, 200)
+            clearText()
+
+            delayRandom(100, 200)
+            copyToClipboard(itemName)
+            delayRandom(100, 200)
+            paste()
+
+            smartClick(searchBtn, 5, 5)
+            simpleClick()
+
+            clickExpandBtn(searchBtn)
+            delayRandom(100, 150)
+
+            moveMouseSmoothly(searchBtn, 100)
+
+            clickExpandBtn(searchBtn)
+            delayRandom(100, 150)
+
+            smartClick(searchedItem, 10,4)
+            simpleClick()
+            delayRandom(100, 150)
+
+            moveMouseSmoothly(searchBtn, 100)
+
+            val point = imageSearchAndClick(imgpathMakebtn)
+            if(point == null) {
+                logI("제작 불가능한 아이템 입니다.")
+                return false
+            }
+            point?.let {
+                delayRandom(20,40)
+                simpleClick()
+                delayRandom(600, 700)
+                val okBtn = imageSearchAndClick(imgpathOkBtn)
+                if (okBtn== null){
+                    logI("확인버튼 찾을 수 없음")
+                    moveMouseSmoothly(Point(0, 0), 100)
+                }
+                delayRandom(4000, 4500)
+                imageSearchAndClick(imgpathOkBtn)
+            }
+
+        }
+        return true
+    }
+
+    /**제작하기 버튼을 눌러 제작을 한 뒤 완료 버튼까지 누른다. (전문기술 창을 열고 사용해야한다.)*/
+    suspend fun makeItem(): Boolean {
+
+        helper.apply {
+
+            val point = imageSearchAndClick(imgpathMakebtn)
+            if(point == null) {
+                logI("제작 불가능한 아이템 입니다.")
+                return false
+            }
+            point?.let {
+                delayRandom(20,40)
+                simpleClick()
+                delayRandom(600, 700)
+                val okBtn = imageSearchAndClick(imgpathOkBtn)
+                if (okBtn== null){
+                    logI("확인버튼 찾을 수 없음")
+                    moveMouseSmoothly(Point(0, 0), 100)
+                }
+                delayRandom(4000, 4500)
+                imageSearchAndClick(imgpathOkBtn)
+            }
+
+        }
+        return true
+    }
+
+    /**아이템 분해하기*/
+    suspend fun extractItem(itemPosList: List<Point>) {
+        logI("${itemPosList.size}개의 아이템 분해 시작")
+        //인벤토리 열기
+        openInventory()
+        //분해창 열기
+        openExtract()
+
+        var maxCount = 5    //한번에 분해할 수 있는 아이템 최대 수
+
+        //아이템 클릭
+        itemPosList.forEachIndexed { index, point ->
+            helper.apply {
+                smartClickTimeMax = 100
+                smartClick(point, 10, 10, keyCode = KeyEvent.BUTTON3_MASK)
+                simpleClick(KeyEvent.BUTTON3_MASK)
+                if((index+1)%maxCount == 0 || index == itemPosList.lastIndex) {
+                    //분해창 가득 찼거나 마지막 남은 아이템이 없을때
+                    clickOkBtn()
+                    delayRandom(100, 150)
+                    sendEnter()
+                    delayRandom(4000, 4100)
+                    sendEnter()
+                    sendEnter()
+                    delayRandom(200, 300)
+                }
+            }
+        }
+
+
+
+    }
+
+    suspend fun clickOkBtn() {
+        val ok = helper.imageSearchAndClick(imgpathOkBtn)
+        if(ok == null) {
+            logI("확인버튼을 찾을 수 없습니다.")
+        } else {
+            helper.simpleClick()
+        }
+    }
+
+    suspend fun clickCancelBtn() {
+        val cancel = helper.imageSearchAndClick(imgpathCancelBtn)
+        if(cancel == null) {
+            logI("취소버튼을 찾을 수 없습니다.")
+        } else {
+            helper.simpleClick()
+        }
+    }
+
+    /**분해창을 연다.
+     * @param moveWindow 분해창을 인벤토리 옆으로 이동시킨다.*/
+    suspend fun openExtract(moveWindow: Boolean = true) {
+        helper.apply {
+            var extractBtn = imageSearch(imgpathExtractBtn1) ?: imageSearch(imgpathExtractBtn2)
+            if(extractBtn == null) {
+                logI("분해버튼을 찾을 수 없습니다.")
+                return
+            }
+            smartClick(extractBtn)
+            simpleClick()
+            delayRandom(200, 300)
+
+            if (moveWindow) {
+                val okBtn = imageSearch(imgpathSynthesizeOKBtn)
+                val mesoBtn = findInventory()
+                if(okBtn == null || mesoBtn == null) {
+                    logI("분해창을 찾지 못해 옮기기에 실패했습니다")
+                } else {
+                    val extractWindowTitle = Point(okBtn.x, okBtn.y-173)
+                    val dragDestination = Point(mesoBtn.x-180, mesoBtn.y-386)
+                    smartDrag(extractWindowTitle, dragDestination)
+                }
+            }
+
+        }
+    }
+
+    suspend fun extractItem(item: Point) {
+        extractItem(listOf(item))
+    }
+
+    private suspend fun clickExpandBtn(searchBtn: Point) {
+        helper.imageSearchAndClick(Point(searchBtn.x-180, searchBtn.y), 100, 60, imgpathExpandBtn, 90.0)
+    }
+
     /**합성/분해 확인 버튼 */
     private suspend fun findSynOkBtn(moveMouse: Boolean = false): Point? {
-        val p = helper.imageSearch("img\\synthesizeOK.png")
+        val p = helper.imageSearch(imgpathSynthesizeOKBtn)
         if (p == null) {
             logI("합성창을 찾을 수 없습니다.")
         } else {
@@ -128,6 +371,5 @@ class MeisterTask : MapleBaseTask() {
         }
         return p
     }
-
 
 }

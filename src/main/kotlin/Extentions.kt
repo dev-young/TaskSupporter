@@ -116,7 +116,8 @@ fun User32.winIsForeground(title: String): Boolean {
     return title == Native.toString(target)
 }
 
-/**윈도우 활성화 (활성화가 완료될때까지 기다린다. 최대 2초)*/
+/**윈도우 활성화 (활성화가 완료될때까지 기다린다. 최대 2초)
+ * @return 활성화에 실패하면 false 반환 */
 fun User32.winActive(hwnd : WinDef.HWND): Boolean {
 
     val target = CharArray(MAX_TITLE_LENGTH * 2)

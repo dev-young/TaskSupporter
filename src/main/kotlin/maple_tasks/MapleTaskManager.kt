@@ -11,12 +11,16 @@ import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import logI
+import moveMouseSmoothly
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
+import toFile
+import toMat
 import winActive
 import winIsForeground
 import winMove
 import java.awt.Point
+import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.io.File
 import java.util.logging.Level
@@ -140,7 +144,41 @@ class MapleTaskManager : BaseTaskManager() {
     }
 
     fun test() {
+        runTask("test") {
+            if(activateTargetWindow()){
 
+                MeisterTask().apply {
+                    makeItemAndExtractIfNormal("리스 문라이트")
+                }
+            }
+
+
+        }
+
+    }
+
+    fun test2() {
+        runTask("test2") {
+            if(activateTargetWindow()){
+                if (mapleBaseTask == null)
+                    mapleBaseTask = MapleBaseTask()
+
+
+                mapleBaseTask?.apply {
+                    val p = findLastItem()
+                    p?.let {
+                        if(checkItemIsNormal(p)){
+                            logI("잠재능력이 없는 아이템 입니다.")
+                        } else {
+                            logI("잠재능력이 있는 아이템 입니다.")
+                        }
+                        helper.moveMouseSmoothly(it)
+                    }
+                }
+            }
+
+
+        }
 
     }
 

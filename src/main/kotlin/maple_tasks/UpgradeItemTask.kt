@@ -231,6 +231,7 @@ class UpgradeItemTask : MapleBaseTask() {
                 createScreenCapture(Rectangle(option3LT.x, option3LT.y, 150, 20)).toMat()
             )
 
+            //TODO: 각 루프에서 return@forEach 가 제대로 동작하는지 확인 필요
             sourceList.forEachIndexed { _, source ->
                 optionNameTemplates.forEach { (name, template) ->
                     if (imageSearch(source, template)) {

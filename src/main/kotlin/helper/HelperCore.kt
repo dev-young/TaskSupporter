@@ -35,7 +35,7 @@ class HelperCore : Robot() {
     var smartClickRange = 5
     var smartClickTimeMin = 50
     var smartClickTimeMax = 500
-    var defaultClickKey = KeyEvent.BUTTON1_MASK //마우스 클릭시 KeyCode (BUTTON1_MASK == 왼쪽버튼)
+    var defaultClickKey = KeyEvent.BUTTON1_MASK //마우스 클릭시 KeyCode (BUTTON1_MASK == 왼쪽버튼, BUTTON3_MASK == 오쪽버튼)
 
     val defaultAccuracy = 10.0    // 0~100 이미지서치 정확도
     var searchedImgWidth = 0    //가장 최근에 검색된 이미지의 넓이
@@ -223,6 +223,23 @@ class HelperCore : Robot() {
         return point
     }
 
+    /**이미지를 찾고 찾은 이미지 범위 내에서 클릭을 한다.
+     * 이미지를 찾은경우 찾은 좌상단 좌표를 반환하고 못찾으면 null 반환*/
+    suspend fun imageSearchAndClick(
+        startPoint: Point,
+        width: Int,
+        height: Int,
+        imgName: String,
+        accuracy: Double = defaultAccuracy,
+        minTime: Int = smartClickTimeMin,
+        maxTime: Int = smartClickTimeMax,
+        keyCode: Int = defaultClickKey
+    ): Point? {
+        val point = imageSearch(startPoint, width, height, imgName, accuracy) ?: return null
+        smartClick(point, searchedImgWidth, searchedImgHeight, minTime, maxTime, keyCode)
+        return point
+    }
+
     fun soundBeep() {
         toolkit.beep()
     }
@@ -262,6 +279,13 @@ class HelperCore : Robot() {
 
     suspend fun delayRandom(min: Int, max: Int) {
         delay(random.get(min, max).toLong())
+    }
+
+    suspend fun smartDrag(from: Point, to: Point, keyCode: Int = defaultClickKey) {
+        moveMouseSmoothly(from, 100)
+        mousePress(keyCode)
+        moveMouseSmoothly(to, random.get(200, 300))
+        mouseRelease(keyCode)
     }
 
 
