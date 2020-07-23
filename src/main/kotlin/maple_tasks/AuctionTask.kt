@@ -454,7 +454,6 @@ class AuctionTask : MapleBaseTask() {
                 simpleClick()
                 send(KeyEvent.VK_DELETE)
 
-                clearText()
                 delayRandom(20, 30)
                 clearText()
                 copyToClipboard(itemName)
@@ -472,7 +471,6 @@ class AuctionTask : MapleBaseTask() {
                 simpleClick()
                 send(KeyEvent.VK_DELETE)
 
-                clearText()
                 delayRandom(20, 30)
                 clearText()
                 copyToClipboard(itemPrice)

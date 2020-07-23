@@ -198,8 +198,6 @@ class MeisterTask : MapleBaseTask() {
             simpleClick()
             delayRandom(200, 300)
             clearText()
-            delayRandom(100, 200)
-            clearText()
 
             delayRandom(100, 200)
             copyToClipboard(itemName)

@@ -186,10 +186,10 @@ open class MapleBaseTask {
     suspend fun clearText(){
         helper.apply {
             keyPress(KeyEvent.VK_DELETE)
-            send(KeyEvent.VK_HOME)
-            repeat(50) {
-                kotlinx.coroutines.delay(2)
-                send(KeyEvent.VK_DELETE)
+            send(KeyEvent.VK_END)
+            repeat(100) {
+                kotlinx.coroutines.delay(1)
+                send(KeyEvent.VK_BACK_SPACE)
 //                keyPress(KeyEvent.VK_DELETE)
 
             }
