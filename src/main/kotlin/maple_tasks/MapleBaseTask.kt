@@ -350,10 +350,14 @@ open class MapleBaseTask {
 
     suspend fun startAutoSpaceAndEnter(windowTitle:String) {
         logI("광클 시작!")
+        var count = 0
         while (User32.INSTANCE.winIsForeground(windowTitle)){
+            count++
             delay(10)
             helper.send(KeyEvent.VK_SPACE)
-            helper.sendEnter()
+
+            if(count % 15 == 0)
+                helper.sendEnter()
         }
         logI("광클 종료!")
     }

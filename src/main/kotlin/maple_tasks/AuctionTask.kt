@@ -456,6 +456,7 @@ class AuctionTask : MapleBaseTask() {
 
                 delayRandom(20, 30)
                 clearText()
+                delayRandom(100, 130)
                 copyToClipboard(itemName)
                 delayRandom(200, 300)
                 paste()
@@ -473,6 +474,7 @@ class AuctionTask : MapleBaseTask() {
 
                 delayRandom(20, 30)
                 clearText()
+                delayRandom(100, 130)
                 copyToClipboard(itemPrice)
                 delayRandom(100, 120)
                 paste()
