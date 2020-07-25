@@ -17,7 +17,11 @@ class MeisterTask : MapleBaseTask() {
     val imgpathExtractBtn1 = "img\\meister\\extractBtn2.png"
     val imgpathExtractBtn2 = "img\\meister\\extractBtn.png"
 
-    /**빈칸이 나오거나 모든 아이템을 합성할때까지 합성을 반복한다. */
+    val meisterPosition1 = Point(87, 158)   // 장비제작 위치 (미니맵 좌상단, 최대 확장시 상대좌표)
+    val meisterPosition2 = Point(140, 158)   // 장신구제작 위치 (미니맵 좌상단, 최대 확장시 상대좌표)
+    val meisterPosition3 = Point(60, 158)   // 연금술 위치 (미니맵 좌상단, 최대 확장시 상대좌표)
+
+   /**빈칸이 나오거나 모든 아이템을 합성할때까지 합성을 반복한다. */
     suspend fun synthesizeItemSmartly() {
         logI("합성 시작!")
         HelperCore().apply {
@@ -127,7 +131,7 @@ class MeisterTask : MapleBaseTask() {
     }
 
     /**장비 제작후 일반등급 아이템이면 분해한다. */
-    suspend fun makeItemAndExtractIfNormal(itemName: String){
+    suspend fun makeItemAndExtractIfNormal(itemName: String): Boolean{
         val success = makeItem(itemName)
         if(success) {
             helper.apply {
@@ -141,7 +145,6 @@ class MeisterTask : MapleBaseTask() {
 
                 val lastItem = findLastItem()
                 if(lastItem == null) {
-
                 } else {
                     if(checkItemIsNormal(lastItem)){
                         //일반 아이템인 경우 분해
@@ -152,6 +155,9 @@ class MeisterTask : MapleBaseTask() {
                     }
                 }
             }
+            return true
+        } else {
+            return false
         }
     }
 

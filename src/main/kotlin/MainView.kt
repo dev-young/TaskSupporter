@@ -2,6 +2,8 @@ import helper.BaseTaskManager.Companion.STATE_IDEL
 import helper.BaseTaskManager.Companion.STATE_PAUSED
 import helper.BaseTaskManager.Companion.STATE_WORKING
 import javafx.application.Platform
+import javafx.beans.property.BooleanProperty
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
@@ -13,6 +15,9 @@ import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
 import maple_tasks.MapleTaskManager
+import maple_tasks.MapleTaskManager.Companion.MEISTER_1
+import maple_tasks.MapleTaskManager.Companion.MEISTER_2
+import maple_tasks.MapleTaskManager.Companion.MEISTER_3
 import maple_tasks.UpgradeItemTask
 import maple_tasks.UpgradeItemTask.Companion.DEX
 import maple_tasks.UpgradeItemTask.Companion.HP
@@ -86,46 +91,113 @@ class MainView : View() {
 
                 vbox {
                     paddingAll = defaultItemSpacing
-                    spacing = defaultItemSpacing
-                    button("자동합성") {
-                        action {
-                            runAsync {
-                                taskManager.synthesizeItem()
-                            }
-                        }
-                    }
-                    button("자동분해") {
-                        action {
-                            infoLabel
-                        }
-                    }
+                    spacing = 10.0
 
-                    val input = SimpleStringProperty()
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
-                        spacing = defaultItemSpacing
-                        button("반복제작") {
+                    vbox {
+                        spacing = 4.0
+                        button("자동합성") {
                             action {
-                                taskManager.makeItemInfinitely(input.value.toInt())
+                                runAsync {
+                                    taskManager.synthesizeItem()
+                                }
+                            }
+                        }
+                        button("자동분해") {
+                            action {
+                                infoLabel
                             }
                         }
 
-                        textfield(input) {
-                            text = "0"
-                            maxWidth = 50.0
+                        val input = SimpleStringProperty()
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = defaultItemSpacing
+                            button("반복제작") {
+                                action {
+                                    taskManager.makeItemInfinitely(input.value.toInt())
+                                }
+                            }
+
+                            textfield(input) {
+                                text = "0"
+                                maxWidth = 50.0
+                            }
+
+                            label("0=무한반복")
                         }
 
-                        label("0=무한반복")
+                        checkbox {
+                            text = "스페이스바로 아이템 확인하기 (F3:위치 초기화)"
+                            action {
+                                taskManager.isItemCheckerEnable = isSelected
+                            }
+                        }
+
                     }
 
+                    vbox {
+                        spacing = 4.0
+                        val name1 = SimpleStringProperty()
+                        val name2 = SimpleStringProperty()
+                        val name3 = SimpleStringProperty()
+                        val extract1 = SimpleBooleanProperty()
+                        val extract2 = SimpleBooleanProperty()
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = 4.0
+                            button(MEISTER_1) {
+                                action {
+                                    taskManager.makeItem(MEISTER_1, name1.value, extract1.value)
+                                }
+                                minWidth = 80.0
+                            }
 
-                    checkbox {
-                        text = "스페이스바로 아이템 확인하기 (F3:위치 초기화)"
-                        action {
-                            taskManager.isItemCheckerEnable = isSelected
+                            textfield(name1) {
+                                text = "리스 문라이트"
+                                maxWidth = 100.0
+                            }
+
+                            checkbox ("일반템인경우 분해하기", extract1){
+                                isSelected = true
+                            }
+                        }
+
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = 4.0
+                            button(MEISTER_2) {
+                                action {
+                                    taskManager.makeItem(MEISTER_2, name2.value, extract2.value)
+                                }
+                                minWidth = 80.0
+                            }
+
+                            textfield(name2) {
+                                text = "리스 이어링"
+                                maxWidth = 100.0
+                            }
+
+                            checkbox ("일반템인경우 분해하기", extract2){
+                                isSelected = false
+                            }
+                        }
+
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = 4.0
+                            button(MEISTER_3) {
+                                action {
+                                    taskManager.makeItem(MEISTER_3, name3.value)
+                                }
+                                minWidth = 80.0
+                            }
+
+                            textfield(name3) {
+                                text = ""
+                                maxWidth = 100.0
+                            }
                         }
                     }
-
                 }
             }
 
@@ -134,14 +206,24 @@ class MainView : View() {
                 vbox {
                     paddingAll = defaultItemSpacing
                     spacing = defaultItemSpacing
+
+                    val fileName = SimpleStringProperty()
                     var buyAll: CheckBox? = null
-                    val useItemList = checkbox {
-                        text = "ItemList.txt 사용"
-                        isSelected = true
-                        action {
-                            buyAll?.let {
-                                it.isDisable = isSelected
+                    val useItemList = SimpleBooleanProperty()
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+                        checkbox ("파일로부터 목록 불러오기", useItemList ) {
+                            isSelected = true
+                            action {
+                                buyAll?.let {
+                                    it.isDisable = isSelected
+                                }
                             }
+                        }
+
+                        textfield (fileName){
+                            text = "ItemList.txt"
                         }
                     }
 
@@ -152,7 +234,7 @@ class MainView : View() {
 
                     button("아이템 검색 및 구매") {
                         action {
-                            taskManager.buyItem(useItemList.isSelected, buyAll.isSelected)
+                            taskManager.buyItem(useItemList.value, buyAll.isSelected, fileName.value)
                         }
                     }
                 }

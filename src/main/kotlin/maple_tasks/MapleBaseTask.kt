@@ -1,15 +1,16 @@
 package maple_tasks
 
 import com.sun.jna.platform.win32.User32
-import com.sun.jna.platform.win32.WinDef
 import helper.HelperCore
 import kotlinx.coroutines.delay
 import logI
 import moveMouseSmoothly
 import winActive
+import winGetPos
 import winIsForeground
 import java.awt.Point
 import java.awt.event.KeyEvent
+import kotlin.math.absoluteValue
 
 open class MapleBaseTask {
     val helper: HelperCore = HelperCore()
@@ -248,7 +249,7 @@ open class MapleBaseTask {
 
         if (searchBtn == null) {
             helper.send(productionSkillKey)
-            delay(3000) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
+            delay(8000) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
             return openProductionSkill()
         } else {
             return searchBtn
@@ -327,6 +328,105 @@ open class MapleBaseTask {
             return itemPosList[lastPosition]
         }
 
+    }
+
+    /**캐릭터의 현재 좌표를 찾는다. (상대 좌표) */
+    fun findCharacter(): Point? {
+        helper.apply {
+            // TODO: 상대좌표 반환 기능을 코어에 포함시키자
+            //미니맵 위치에서 검색 수행
+            val startPoint = User32.INSTANCE.winGetPos().toRectangle().location
+            val myPosition = imageSearch(startPoint, 300, 200,"img\\myChar.png")
+//            logI("abs: ${myPosition.toString()}")
+            myPosition?.apply {
+                x -= startPoint.x
+                y -= startPoint.y
+            }
+
+//            logI("rel: ${myPosition.toString()}")
+
+            return myPosition
+        }
+
+        return null
+
+    }
+
+    /**캐릭터의 위치를 미니맵의 좌표로 이동시킨다.
+     * @param destination 캐릭터의 상대 좌표
+     * @param range 오차범위 지정 (픽셀)  ex) range = 3 -> x-3 ~ x+3 */
+    suspend fun moveCharacter(destination: Point, range: Int = 1): Boolean {
+        helper.apply {
+            //y좌표 이동
+            while (true) {
+                var current = findCharacter()
+                if(current != null){
+                    val dy = destination.y - current.y
+                    if(dy.absoluteValue <= range) {
+                        break
+                    }
+
+                    if(dy > 0) {    //밑으로 가야하는 경우
+                        moveDownFloor()
+                    } else {    //위로 가야하는 경우
+                        moveUpFloor()
+                    }
+                }
+            }
+
+            //x좌표 이동
+            while (true) {
+                var current = findCharacter()
+                if(current != null){
+                    val dx = destination.x - current.x
+                    if(dx.absoluteValue <= range) {
+                        keyRelease(KeyEvent.VK_LEFT)
+                        keyRelease(KeyEvent.VK_RIGHT)
+                        break
+                    }
+
+                    if(dx < 0) {    //왼쪽으로 가야하는 경우
+                        keyPress(KeyEvent.VK_LEFT)
+                    } else {    //오른쪽으로 가야하는 경우
+                        keyPress(KeyEvent.VK_RIGHT)
+                    }
+                    kotlinx.coroutines.delay(5)
+                }
+            }
+
+        }
+
+        return false
+    }
+
+    /**밑점프 사용*/
+    suspend fun moveDownFloor(afterDelay: Int = 500){
+        helper.apply {
+            keyPress(KeyEvent.VK_DOWN)
+            delayRandom(200, 300)
+            send(KeyEvent.VK_ALT)
+            delayRandom(100, 200)
+            keyRelease(KeyEvent.VK_DOWN)
+            delayRandom(afterDelay, afterDelay+100)
+        }
+    }
+
+    /**윗점프 사용*/
+    suspend fun moveUpFloor(afterDelay: Int = 200){
+        helper.apply {
+            keyPress(KeyEvent.VK_ALT)
+            delayRandom(50, 60)   //첫 점프에서 키간 딜레이가 있어야한다.
+            keyRelease(KeyEvent.VK_ALT)
+            delayRandom(50, 100)
+            keyPress(KeyEvent.VK_UP)
+            delayRandom(50, 100)
+            keyPress(KeyEvent.VK_ALT)
+            delayRandom(800, 1000)
+            keyRelease(KeyEvent.VK_ALT)
+            delayRandom(50, 100)
+            keyRelease(KeyEvent.VK_UP)
+            delayRandom(afterDelay, afterDelay+100)
+        }
     }
 
     /**광클*/

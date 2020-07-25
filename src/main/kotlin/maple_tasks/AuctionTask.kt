@@ -73,8 +73,10 @@ class AuctionTask : MapleBaseTask() {
 
     /**파일에 작성된 아이템들을 바탕으로 검색어 바꿔가며 구매
      * */
-    suspend fun buyItemListUntilEnd(){
-        val itemList = loadItemList()
+    suspend fun buyItemListUntilEnd(filePath: String){
+        val itemList = loadItemList(filePath) ?: let {
+            logI("파일을 찾을 수 없습니다.")
+            return }
         var targetIndex = 0 //검색 대상 인덱스
 
         var buyCount = 0
@@ -307,10 +309,10 @@ class AuctionTask : MapleBaseTask() {
      * 템이름 = 공백없이 작성
      * buyAll = 구매시 갯수 입력할때 최대치로 할지 여부 (true, false)
      * */
-    private fun loadItemList(): ArrayList<Array<String>> {
+    private fun loadItemList(filePath: String): ArrayList<Array<String>>? {
         val list = arrayListOf<Array<String>>()
 
-        val file = File("itemList.txt")
+        val file = File(filePath)
         if(file.exists()){
             file.readLines().forEach {
 //                    log(it)
@@ -335,19 +337,7 @@ class AuctionTask : MapleBaseTask() {
             }
 
         } else {
-
-
-//        list.add(arrayOf("소비", "한큐브", "85000", "false"))
-            list.add(arrayOf("방어구", "성배", "2200000", "false"))
-//        list.add(arrayOf("기타", "꺼지지", "9990000", "false"))
-            list.add(arrayOf("방어구", "아쿠아틱", "2100000", "false"))
-            list.add(arrayOf("방어구", "골든클", "1900000", "false"))
-            list.add(arrayOf("방어구", "응축된", "2200000", "false"))
-            list.add(arrayOf("방어구", "데아", "900000", "false"))
-
-            list.add(arrayOf("방어구", "이글아이", "1400000", "false"))
-            list.add(arrayOf("방어구", "트릭스터", "1400000", "false"))
-            list.add(arrayOf("방어구", "하이네스", "780000", "false"))
+            return null
         }
 
         return list

@@ -165,6 +165,12 @@ fun User32.winGetPos(hwnd: WinDef.HWND): WinDef.RECT {
     return rect
 }
 
+fun User32.winGetPos(): WinDef.RECT {
+    val rect = WinDef.RECT()
+    GetWindowRect(GetForegroundWindow(), rect)
+    return rect
+}
+
 fun WinDef.RECT.leftTop() = Point(left, top)
 fun WinDef.RECT.rightBottom() = Point(right, bottom)
 fun WinDef.RECT.width() = right - left

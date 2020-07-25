@@ -9,6 +9,7 @@ import helper.ConsumeEvent
 import helper.HelperCore
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
 import moveMouseSmoothly
@@ -163,17 +164,24 @@ class MapleTaskManager : BaseTaskManager() {
                 if (mapleBaseTask == null)
                     mapleBaseTask = MapleBaseTask()
 
+                MeisterTask().apply {
+                    moveCharacter(meisterPosition1)
+                }
+                return@runTask
 
                 mapleBaseTask?.apply {
-                    val p = findLastItem()
-                    p?.let {
-                        if(checkItemIsNormal(p)){
-                            logI("잠재능력이 없는 아이템 입니다.")
-                        } else {
-                            logI("잠재능력이 있는 아이템 입니다.")
-                        }
-                        helper.moveMouseSmoothly(it)
-                    }
+                    delay(300)
+                    findCharacter()
+
+//                    val p = findLastItem()
+//                    p?.let {
+//                        if(checkItemIsNormal(p)){
+//                            logI("잠재능력이 없는 아이템 입니다.")
+//                        } else {
+//                            logI("잠재능력이 있는 아이템 입니다.")
+//                        }
+//                        helper.moveMouseSmoothly(it)
+//                    }
                 }
             }
 
@@ -230,11 +238,11 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun buyItem(useItemList: Boolean, buyAll: Boolean) {
+    fun buyItem(useItemList: Boolean, buyAll: Boolean, fileName:String = "") {
         runTask("buyItem") {
             if(activateTargetWindow()){
                 if (useItemList)
-                    AuctionTask().buyItemListUntilEnd()
+                    AuctionTask().buyItemListUntilEnd(fileName)
                 else
                     AuctionTask().buyOneItemUntilEnd(buyAll)
             }
@@ -263,10 +271,40 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
+    fun makeItem(type:String, name:String, extractIfNormal: Boolean = true){
+        runTask("makeItem") {
+            if(activateTargetWindow())
+                MeisterTask().apply {
+                    val targetPosition = when(type) {
+                        MEISTER_1 -> meisterPosition1
+                        MEISTER_2 -> meisterPosition2
+                        MEISTER_3 -> meisterPosition3
+                        else -> null
+                    }
+                    if(targetPosition == null){
+                        logI("잘못된 타겟입니다.")
+                        return@apply
+                    }
+
+                    moveCharacter(targetPosition)
+                    if(extractIfNormal) {
+                        makeItemAndExtractIfNormal(name)
+                    } else {
+                        makeItem(name)
+                    }
+
+                }
+        }
+    }
+
     companion object {
         const val SIMPLE_TASK_AUTOCLICK = "마우스 광클"
         const val SIMPLE_TASK_AUTOSPACE = "스페이스바 광클"
         const val SIMPLE_TASK_AUTOSPACEANDENTER = "스페이스바, 엔터 광클"
+
+        const val MEISTER_1 = "장비제작"
+        const val MEISTER_2 = "장신구제작"
+        const val MEISTER_3 = "연금술"
     }
 
 }

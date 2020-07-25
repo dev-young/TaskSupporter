@@ -199,7 +199,7 @@ class HelperCore : Robot() {
     /**@param findOnForeground 활성화된 윈도우 범위 내에서만 찾을지 여부*/
     fun imageSearch(imgName: String, accuracy: Double, findOnForeground : Boolean = true): Point? {
         return if(findOnForeground){
-            val rect = user32.winGetPos(user32.GetForegroundWindow())
+            val rect = user32.winGetPos()
             imageSearch(rect.leftTop(), rect.width(), rect.getHeight(), imgName, accuracy)
         } else {
             imageSearch(Point(0, 0), 1920, 1080, imgName, accuracy)
