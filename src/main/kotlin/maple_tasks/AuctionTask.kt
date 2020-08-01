@@ -21,7 +21,7 @@ class AuctionTask : MapleBaseTask() {
     //여러개의 아이템 검색시 다음 아이템으로 넘어가기까지 필요한 검색 수 (결과가 없을경우에만 넘어감)
     private val noResultCountMax = 3
 
-   /**한가지 아이템을 계속 구매*/
+    /**한가지 아이템을 계속 구매*/
     suspend fun buyOneItemUntilEnd(buyAll: Boolean) {
         logI("아이템 구매 작업 시작! #####")
         helper.apply {
@@ -45,7 +45,7 @@ class AuctionTask : MapleBaseTask() {
                         logI("구매 성공 ($buyCount)")
                     }
 
-                    if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
+                    if (buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
                         // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
                         logI("구매슬롯 가득참")
                         delayRandom(200, 400)
@@ -72,30 +72,34 @@ class AuctionTask : MapleBaseTask() {
     }
 
     /**파일에 작성된 아이템들을 바탕으로 검색어 바꿔가며 구매
-     * */
-    suspend fun buyItemListUntilEnd(filePath: String){
+     * 장비 제작 및 일정 시간마다 특정 장비아이템 제작 */
+    suspend fun buyItemListUntilEnd(filePath: String, itemName: String? = null, waitingTime: Long = 900000) {
         val itemList = loadItemList(filePath) ?: let {
             logI("파일을 찾을 수 없습니다.")
-            return }
+            return
+        }
+        openAuction()
+
         var targetIndex = 0 //검색 대상 인덱스
 
         var buyCount = 0
         var buyStack = 0 //구매슬롯 꽉찾는지 여부 판별을 위한 변수
         logI("아이템 구매 작업 시작! #####")
 
-        if(itemList.isEmpty()){
-            itemList.add(arrayOf("","","","",""))
-        }
+        if (itemList.isEmpty()) itemList.add(arrayOf("", "", "", "", ""))
+
+        var lastMakeTime = System.currentTimeMillis()
+        val meisterTask = MeisterTask()
 
         itemList.forEach { logI(it.contentToString()) }
         helper.apply {
-            root@while (isAuctionAvailable() && itemList.isNotEmpty()) {
+            root@ while (isAuctionAvailable() && itemList.isNotEmpty()) {
                 val itemInfo = itemList[targetIndex]
                 val targetCategory = itemInfo[0]
                 val targetName = itemInfo[1]
                 val targetPrice = itemInfo[2]
-                val targetBuyAll = if(itemInfo.size>3) itemInfo[3].contains("t") else false
-                val targetClickReset= if(itemInfo.size>4) !itemInfo[4].contains("f") else true
+                val targetBuyAll = if (itemInfo.size > 3) itemInfo[3].contains("t") else false
+                val targetClickReset = if (itemInfo.size > 4) !itemInfo[4].contains("f") else true
                 var noResultCount = 0
 
                 clickSearchTab()
@@ -104,7 +108,7 @@ class AuctionTask : MapleBaseTask() {
                 delayRandom(30, 50)
 
                 val success = inputItemInfo(targetName, targetPrice, targetClickReset)
-                if(!success){
+                if (!success) {
                     logI("아이템 정보 입력을 실패했습니다. [$targetName, $targetPrice]")
                     logI("다음 아이템으로 건너뜁니다.")
                     targetIndex = (targetIndex + 1) % itemList.size
@@ -112,7 +116,7 @@ class AuctionTask : MapleBaseTask() {
                 }
                 delayRandom(30, 50)
 
-                sub@while (noResultCount < noResultCountMax){
+                sub@ while (noResultCount < noResultCountMax) {
                     clickSearchTab()
                     delayRandom(30, 50)
                     searchItem()
@@ -127,7 +131,7 @@ class AuctionTask : MapleBaseTask() {
                         }
 
 
-                        if( buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
+                        if (buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
                             // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
                             logI("구매슬롯 가득참")
                             delayRandom(200, 400)
@@ -135,7 +139,6 @@ class AuctionTask : MapleBaseTask() {
                             if (success) {
                                 logI("모두받기 완료.")
                                 sendEnter() //완료창 종료
-
 
                                 buyStack = 0
                                 targetIndex = (targetIndex + itemList.size - 1) % itemList.size // 이전 아이템
@@ -152,6 +155,24 @@ class AuctionTask : MapleBaseTask() {
                     noResultCount++
                 }
 
+                //아이템 제작 사용하는 경우
+                itemName?.let {
+                    //시간 확인 및 장비 제작
+                    if (System.currentTimeMillis() - lastMakeTime > waitingTime) {
+                        //지정한 시간이 지난경우 아이템 제작
+                        exitAuction()
+                        delayRandom(2000, 3000)
+                        moveCharacter(meisterTask.meisterPosition1)
+                        if (meisterTask.makeItemAndExtractIfNormal(itemName))
+                            lastMakeTime = System.currentTimeMillis()
+
+                        delayRandom(500, 700)
+                        openAuction()
+                    }
+                }
+
+
+
                 targetIndex = (targetIndex + 1) % itemList.size
 
             }
@@ -161,6 +182,43 @@ class AuctionTask : MapleBaseTask() {
 
         helper.soundBeep()
         logI("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
+    }
+
+    suspend fun openAuction() {
+        while (!isAuctionAvailable()) {
+            helper.apply {
+                val menu = imageSearchAndClick("img\\menu.png", maxTime = 300)?.also {
+                    delayRandom(1000, 1500)
+                    //옥션 클릭
+                    smartClick(Point(it.x - 60, it.y - 180), 60, 10, 100, 200)
+                    delayRandom(2000, 3000)
+                }
+
+                if(menu == null) {
+                    imageSearchAndClick("img\\menuCollapse.png", maxTime = 300)?.let {
+                        delayRandom(1000, 1500)
+                    }
+                }
+
+                kotlinx.coroutines.delay(300)
+
+            }
+        }
+    }
+
+    suspend fun exitAuction() {
+        while (isAuctionAvailable()) {
+            helper.apply {
+                moveMouseOnForeground(1, 10)
+
+                imageSearchAndClick("$defaultImgPath\\exit.png", maxTime = 200)?.let {
+                    delayRandom(4000, 5000)
+                }
+
+                delayRandom(300, 500)
+            }
+        }
+
     }
 
     /**완료 탭으로 이동하여 '모두받기' 수행
@@ -179,9 +237,9 @@ class AuctionTask : MapleBaseTask() {
             delayRandom(100, 200)
             val success = waitGetAll()
 
-            if(success){
+            if (success) {
                 delayRandom(100, 200)
-                if(imageSearch("$defaultImgPath\\getAllComplete.png") != null){
+                if (imageSearch("$defaultImgPath\\getAllComplete.png") != null) {
                     return true
                 } else {
                     logI("인벤토리가 가득 찼습니다.")
@@ -205,7 +263,7 @@ class AuctionTask : MapleBaseTask() {
                 kotlinx.coroutines.delay(1000)
                 waitCount++
 
-                if(waitCount > 300)
+                if (waitCount > 300)
                     return false
             }
         }
@@ -314,14 +372,14 @@ class AuctionTask : MapleBaseTask() {
         val list = arrayListOf<Array<String>>()
 
         val file = File(filePath)
-        if(file.exists()){
+        if (file.exists()) {
             file.readLines().forEach {
 //                    log(it)
-                if(it.startsWith("//") || it.isEmpty()) {
+                if (it.startsWith("//") || it.isEmpty()) {
                     //공백 혹은 주석처리된 line
                 } else {
                     val s = it.split("/").toTypedArray()
-                    if(s.size < 3) {
+                    if (s.size < 3) {
                         logI("올바르지 않은 형식입니다. -> $it")
                     } else {
                         s.apply {
@@ -408,8 +466,8 @@ class AuctionTask : MapleBaseTask() {
         }
     }
 
-    suspend fun clickCategory(category: String){
-        var imgName = when(category){
+    suspend fun clickCategory(category: String) {
+        var imgName = when (category) {
             "방어", "방어구" -> "categoryDefence.png"
             "무기" -> "categoryWeapon.png"
             "소비" -> "categoryConsume.png"
@@ -418,7 +476,7 @@ class AuctionTask : MapleBaseTask() {
             else -> ""
         }
 
-        if(imgName.isEmpty()) return
+        if (imgName.isEmpty()) return
         helper.apply {
             imageSearchAndClick("$defaultImgPath\\$imgName", maxTime = 200) ?: return
             simpleClick()
@@ -437,10 +495,10 @@ class AuctionTask : MapleBaseTask() {
                 }
             }
 
-            if(itemName != "_"){
+            if (itemName != "_") {
                 val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
                 pointName.let {
-                    it.setLocation(it.x+120, it.y+5)
+                    it.setLocation(it.x + 120, it.y + 5)
                     smartClick(it, randomRangeX = 20, randomRangeY = 5, maxTime = 300)
                     delayRandom(50, 100)
                     simpleClick()
@@ -456,10 +514,10 @@ class AuctionTask : MapleBaseTask() {
                 }
             }
 
-            if(itemPrice != "_"){
+            if (itemPrice != "_") {
                 val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
                 pointPrice.let {
-                    it.setLocation(it.x+170, it.y+5)
+                    it.setLocation(it.x + 170, it.y + 5)
                     smartClick(it, randomRangeX = 30, randomRangeY = 5, maxTime = 300)
                     delayRandom(50, 100)
                     simpleClick()

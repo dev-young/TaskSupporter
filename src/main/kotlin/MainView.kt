@@ -2,10 +2,7 @@ import helper.BaseTaskManager.Companion.STATE_IDEL
 import helper.BaseTaskManager.Companion.STATE_PAUSED
 import helper.BaseTaskManager.Companion.STATE_WORKING
 import javafx.application.Platform
-import javafx.beans.property.BooleanProperty
-import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.*
 import javafx.collections.FXCollections
 import javafx.geometry.Pos
 import javafx.scene.control.CheckBox
@@ -216,6 +213,7 @@ class MainView : View() {
                     val fileName = SimpleStringProperty()
                     var buyAll: CheckBox? = null
                     val useItemList = SimpleBooleanProperty()
+                    val waitingTime = SimpleLongProperty()
                     hbox {
                         alignment = Pos.CENTER_LEFT
                         spacing = defaultItemSpacing
@@ -242,6 +240,22 @@ class MainView : View() {
                         action {
                             taskManager.buyItem(useItemList.value, buyAll.isSelected, fileName.value)
                         }
+                    }
+
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = 4.0
+                        button("아이템 구매 및 장비제작") {
+                            action {
+                                taskManager.buyItemAndMakeItem(fileName.value, waitingTime = (waitingTime.value * 1000))
+                            }
+                        }
+
+                        textfield (waitingTime){
+                            text = "900"
+                        }
+                        label("초마다 제작")
                     }
                 }
             }

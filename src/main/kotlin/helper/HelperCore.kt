@@ -291,6 +291,21 @@ class HelperCore : Robot() {
         mouseRelease(keyCode)
     }
 
+    /**현재 활성화된 윈도우 내에서 상대좌표로 이동 */
+    suspend fun moveMouseOnForeground(point:Point){
+        point.apply {
+            val rect = user32.winGetPos()
+            x += rect.left
+            y += rect.top
+        }
+        moveMouseSmoothly(point, 100)
+    }
+
+    suspend fun moveMouseOnForeground(x: Int, y: Int){
+        val rect = user32.winGetPos()
+        moveMouseSmoothly(Point(x+rect.left, y+rect.top), 100)
+    }
+
 
     enum class HelperState {
         PLAY,

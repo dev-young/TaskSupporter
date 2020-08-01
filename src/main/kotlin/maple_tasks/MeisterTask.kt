@@ -200,6 +200,7 @@ class MeisterTask : MapleBaseTask() {
 
             smartClick(searchBtn, 5, 5)
             simpleClick()
+            sendEnter()
 
             clickExpandBtn(searchBtn)
             delayRandom(100, 150)

@@ -147,10 +147,7 @@ class MapleTaskManager : BaseTaskManager() {
     fun test() {
         runTask("test") {
             if(activateTargetWindow()){
-
-                MeisterTask().apply {
-                    makeItemAndExtractIfNormal("리스 문라이트")
-                }
+                AuctionTask().openAuction()
             }
 
 
@@ -161,31 +158,8 @@ class MapleTaskManager : BaseTaskManager() {
     fun test2() {
         runTask("test2") {
             if(activateTargetWindow()){
-                if (mapleBaseTask == null)
-                    mapleBaseTask = MapleBaseTask()
-
-                MeisterTask().apply {
-                    moveCharacter(meisterPosition1)
-                }
-                return@runTask
-
-                mapleBaseTask?.apply {
-                    delay(300)
-                    findCharacter()
-
-//                    val p = findLastItem()
-//                    p?.let {
-//                        if(checkItemIsNormal(p)){
-//                            logI("잠재능력이 없는 아이템 입니다.")
-//                        } else {
-//                            logI("잠재능력이 있는 아이템 입니다.")
-//                        }
-//                        helper.moveMouseSmoothly(it)
-//                    }
-                }
+                AuctionTask().exitAuction()
             }
-
-
         }
 
     }
@@ -306,6 +280,17 @@ class MapleTaskManager : BaseTaskManager() {
                     } else
                         extractItemAll()
                 }
+        }
+    }
+
+    /**아이템 구매 및 15분마다 타임리스 제작하기 */
+    fun buyItemAndMakeItem(fileName:String = "", name:String = "타임리스 문라이트", waitingTime: Long = 900000) {
+        runTask("BuyAndMake") {
+            if(activateTargetWindow()){
+                val auctionTask = AuctionTask()
+                auctionTask.buyItemListUntilEnd(fileName, name, waitingTime)
+            }
+
         }
     }
 
