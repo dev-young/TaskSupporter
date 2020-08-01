@@ -5,7 +5,6 @@ import logI
 import moveMouseSmoothly
 import java.awt.Point
 import java.awt.event.KeyEvent
-import kotlin.math.log
 
 class MeisterTask : MapleBaseTask() {
 
@@ -14,6 +13,8 @@ class MeisterTask : MapleBaseTask() {
     val imgpathCancelBtn = "img\\meister\\cancelBtn.png"
     val imgpathExpandBtn = "img\\meister\\expandBtn.png"
     val imgpathSynthesizeOKBtn = "img\\synthesizeOK.png"
+    val imgpathExtractWindow = "img\\meister\\extractWindow.png"
+    val imgpathExtractType = "img\\meister\\extractType.png"
     val imgpathExtractBtn1 = "img\\meister\\extractBtn2.png"
     val imgpathExtractBtn2 = "img\\meister\\extractBtn.png"
 
@@ -109,21 +110,7 @@ class MeisterTask : MapleBaseTask() {
             var successCounter = 0
             while(maxCount == 0 || successCounter != maxCount) {
                 kotlinx.coroutines.delay(1)
-                val point = imageSearchAndClick(imgpathMakebtn)
-                point?.let {
-                    delayRandom(20,40)
-                    simpleClick()
-                    delayRandom(600, 700)
-                    val okBtn = imageSearchAndClick(imgpathOkBtn)
-                    if (okBtn== null){
-                        logI("확인버튼 찾을 수 없음")
-                        moveMouseSmoothly(Point(0, 0))
-                    }
-                    delayRandom(4000, 4500)
-                    imageSearchAndClick(imgpathOkBtn)
-                    successCounter++
-                    logI("장비 제작 성공 ($successCounter)")
-                }
+                if(makeItem()) successCounter++
 
                 kotlinx.coroutines.delay(500)
             }
@@ -189,6 +176,7 @@ class MeisterTask : MapleBaseTask() {
         }
     }
 
+    /**아이템을 검색후 제작한다. */
     suspend fun makeItem(itemName: String): Boolean {
         val searchBtn = openProductionSkill()
         if(searchBtn == null) {
@@ -227,26 +215,9 @@ class MeisterTask : MapleBaseTask() {
 
             moveMouseSmoothly(searchBtn, 100)
 
-            val point = imageSearchAndClick(imgpathMakebtn)
-            if(point == null) {
-                logI("제작 불가능한 아이템 입니다.")
-                return false
-            }
-            point?.let {
-                delayRandom(20,40)
-                simpleClick()
-                delayRandom(600, 700)
-                val okBtn = imageSearchAndClick(imgpathOkBtn)
-                if (okBtn== null){
-                    logI("확인버튼 찾을 수 없음")
-                    moveMouseSmoothly(Point(0, 0), 100)
-                }
-                delayRandom(4000, 4500)
-                imageSearchAndClick(imgpathOkBtn)
-            }
+            return makeItem()
 
         }
-        return true
     }
 
     /**제작하기 버튼을 눌러 제작을 한 뒤 완료 버튼까지 누른다. (전문기술 창을 열고 사용해야한다.)*/
@@ -254,26 +225,40 @@ class MeisterTask : MapleBaseTask() {
 
         helper.apply {
 
-            val point = imageSearchAndClick(imgpathMakebtn)
+            val point = imageSearchAndClick(imgpathMakebtn, maxTime = 150)
             if(point == null) {
                 logI("제작 불가능한 아이템 입니다.")
                 return false
             }
-            point?.let {
-                delayRandom(20,40)
-                simpleClick()
-                delayRandom(600, 700)
-                val okBtn = imageSearchAndClick(imgpathOkBtn)
-                if (okBtn== null){
-                    logI("확인버튼 찾을 수 없음")
-                    moveMouseSmoothly(Point(0, 0), 100)
-                }
-                delayRandom(4000, 4500)
-                imageSearchAndClick(imgpathOkBtn)
+            delayRandom(20,40)
+            simpleClick()
+            delayRandom(200, 250)
+            val okBtn = imageSearchAndClick(imgpathOkBtn, maxTime = 150)
+            if (okBtn== null){
+                logI("확인버튼 찾을 수 없음")
+                moveMouseSmoothly(Point(0, 0))
             }
+            delayRandom(2800, 2950)
+            imageSearchAndClick(imgpathOkBtn, maxTime = 150)
 
         }
         return true
+    }
+
+    /**인벤토리 빈칸이 나오기 전까지 있는 아이템들을 분해한다.*/
+    suspend fun extractItemUntilBlank(){
+        openInventory()
+
+        val items = findItems()
+        extractItem(items)
+    }
+
+    /**인벤토리에 보이는 모든 아이템을 분해한다. */
+    suspend fun extractItemAll(){
+        openInventory()
+
+        val items = findItems(false)
+        extractItem(items)
     }
 
     /**아이템 분해하기*/
@@ -284,20 +269,19 @@ class MeisterTask : MapleBaseTask() {
         //분해창 열기
         openExtract()
 
-        var maxCount = 5    //한번에 분해할 수 있는 아이템 최대 수
+        var maxCount = getMasExtractSize()    //한번에 분해할 수 있는 아이템 최대 수
 
         //아이템 클릭
         itemPosList.forEachIndexed { index, point ->
             helper.apply {
-                smartClickTimeMax = 100
-                smartClick(point, 10, 10, keyCode = KeyEvent.BUTTON3_MASK)
+                smartClick(point, 10, 10, keyCode = KeyEvent.BUTTON3_MASK, minTime = 1, maxTime = 20)
                 simpleClick(KeyEvent.BUTTON3_MASK)
                 if((index+1)%maxCount == 0 || index == itemPosList.lastIndex) {
                     //분해창 가득 찼거나 마지막 남은 아이템이 없을때
                     clickOkBtn()
                     delayRandom(100, 150)
                     sendEnter()
-                    delayRandom(4000, 4100)
+                    delayRandom(2800, 2950)
                     sendEnter()
                     sendEnter()
                     delayRandom(200, 300)
@@ -305,12 +289,18 @@ class MeisterTask : MapleBaseTask() {
             }
         }
 
+    }
 
-
+    /**분해창 10칸인지 5칸인지 확인*/
+    private fun getMasExtractSize(): Int {
+        helper.imageSearch(imgpathExtractType)?.let {
+            return 10
+        }
+        return 5
     }
 
     suspend fun clickOkBtn() {
-        val ok = helper.imageSearchAndClick(imgpathOkBtn)
+        val ok = helper.imageSearchAndClick(imgpathOkBtn, maxTime = 200)
         if(ok == null) {
             logI("확인버튼을 찾을 수 없습니다.")
         } else {
@@ -331,14 +321,17 @@ class MeisterTask : MapleBaseTask() {
      * @param moveWindow 분해창을 인벤토리 옆으로 이동시킨다.*/
     suspend fun openExtract(moveWindow: Boolean = true) {
         helper.apply {
-            var extractBtn = imageSearch(imgpathExtractBtn1) ?: imageSearch(imgpathExtractBtn2)
-            if(extractBtn == null) {
-                logI("분해버튼을 찾을 수 없습니다.")
-                return
+            val window = imageSearch(imgpathExtractWindow)
+            if(window == null) {
+                var extractBtn = imageSearch(imgpathExtractBtn1) ?: imageSearch(imgpathExtractBtn2)
+                if(extractBtn == null) {
+                    logI("분해버튼을 찾을 수 없습니다.")
+                    return
+                }
+                smartClick(extractBtn)
+                simpleClick()
+                delayRandom(200, 300)
             }
-            smartClick(extractBtn)
-            simpleClick()
-            delayRandom(200, 300)
 
             if (moveWindow) {
                 val okBtn = imageSearch(imgpathSynthesizeOKBtn)
@@ -347,7 +340,7 @@ class MeisterTask : MapleBaseTask() {
                     logI("분해창을 찾지 못해 옮기기에 실패했습니다")
                 } else {
                     val extractWindowTitle = Point(okBtn.x, okBtn.y-173)
-                    val dragDestination = Point(mesoBtn.x-180, mesoBtn.y-386)
+                    val dragDestination = Point(mesoBtn.x-160, mesoBtn.y-386)
                     smartDrag(extractWindowTitle, dragDestination)
                 }
             }

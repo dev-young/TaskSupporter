@@ -248,8 +248,17 @@ open class MapleBaseTask {
         val searchBtn = helper.imageSearch("img\\meister\\searchBtn.png")
 
         if (searchBtn == null) {
-            helper.send(productionSkillKey)
-            delay(8000) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
+            helper.apply {
+                send(productionSkillKey)
+                delayRandom(200, 400)
+                val p = imageSearch("img\\meister\\productionSkill.png")?.let {
+                    smartClick(Point(it.x+4, it.y+21), 28, 10, maxTime = 150)
+                    it
+                }
+            }
+
+
+            delay(7000) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
             return openProductionSkill()
         } else {
             return searchBtn
@@ -270,11 +279,22 @@ open class MapleBaseTask {
     /**마지막 아이템의 위치를 찾는다. */
     suspend fun findLastItem(): Point? {
         helper.apply {
+            val items = findItems()
+            return if (items.isEmpty()) null
+            else items.last()
+        }
+    }
+
+    /**인벤토리 첫칸부터 빈칸이 나오기 전까지 아이템의 목록을 반환한다.
+     * @param untilBlank false로 할 경우 모든 아이템의 위치를 반환한다. */
+    suspend fun findItems(untilBlank:Boolean = true): List<Point>{
+        val items = arrayListOf<Point>()
+        helper.apply {
             var vx: Int //현재 아이템 x
             var vy: Int  //현재 아이템 y
-            val point: Point = findFirstItemInInventory() ?: return soundBeep().let {
+            val point: Point = findFirstItemInInventory() ?: return@apply soundBeep().also {
                 logI("인벤토리 첫칸을 찾는데 실패했습니다.")
-                null }
+            }
             point.let {
                 vx = it.x + 2
                 vy = it.y + 2
@@ -309,25 +329,23 @@ open class MapleBaseTask {
             kotlin.run {
                 itemPosList.forEachIndexed { index, point ->
                     kotlinx.coroutines.delay(1)
-                    logI("${index+1}번째 : 일반아이템? ${checkItemIsNormal(point)}")
-//                moveMouseSmoothly(point)
+//                    logI("${index+1}번째 : 일반아이템? ${checkItemIsNormal(point)}")
                     if(checkEmptyOrDisable(point)) {
                         lastPosition = index-1
                         logI("lastPosition: $lastPosition")
-                        return@run
+                        if(untilBlank)
+                            return@run
+                    } else {
+                        items.add(point)
                     }
                 }
             }
 
             if(lastPosition < 0){
                 logI("아이템을 찾을 수 없습니다.")
-                return null
             }
-
-
-            return itemPosList[lastPosition]
         }
-
+        return items
     }
 
     /**캐릭터의 현재 좌표를 찾는다. (상대 좌표) */

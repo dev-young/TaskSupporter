@@ -164,6 +164,9 @@ class HelperCore : Robot() {
     /**
      *@param accuracy 0~100 사이의 정확성 (100인 경우 정확히 일치하는것만 찾고 0인 경우에는 일치하지 않더라도 가장 비슷한 위치를 찾는다.) */
     fun imageSearch(leftTop: Point, width: Int, height: Int, imgName: String, accuracy: Double): Point? {
+        if(width == 0 || height == 0){
+            return null
+        }
         var notFoundMMR = 1000000    // 적당한 값을 입력해야하는데 여러 수치를 테스트해본 결과 500000이 적당한듯 하다.
         notFoundMMR -= (notFoundMMR / 100 * accuracy).toInt()
         val bi = createScreenCapture(Rectangle(leftTop.x, leftTop.y, width, height))

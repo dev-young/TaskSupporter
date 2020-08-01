@@ -304,10 +304,11 @@ class AuctionTask : MapleBaseTask() {
     }
 
     /**파일로부터 구매할 아이템 목록을 가져온다.
-     * Array<String> = {분류, 템이름, 가격, buyAll}
+     * Array<String> = {분류, 템이름, 가격, buyAll, reset}
      * 분류 = 방어구, 무기, 소비, 캐시, 기타
      * 템이름 = 공백없이 작성
      * buyAll = 구매시 갯수 입력할때 최대치로 할지 여부 (true, false)
+     * reset = 초기화버튼 클릭 여부
      * */
     private fun loadItemList(filePath: String): ArrayList<Array<String>>? {
         val list = arrayListOf<Array<String>>()
@@ -436,39 +437,42 @@ class AuctionTask : MapleBaseTask() {
                 }
             }
 
-            val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
-            pointName.let {
-                it.setLocation(it.x+120, it.y+5)
-                smartClick(it, randomRangeX = 20, randomRangeY = 5, maxTime = 300)
-                delayRandom(50, 100)
-                simpleClick()
-                send(KeyEvent.VK_DELETE)
+            if(itemName != "_"){
+                val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
+                pointName.let {
+                    it.setLocation(it.x+120, it.y+5)
+                    smartClick(it, randomRangeX = 20, randomRangeY = 5, maxTime = 300)
+                    delayRandom(50, 100)
+                    simpleClick()
+                    send(KeyEvent.VK_DELETE)
 
-                delayRandom(20, 30)
-                clearText()
-                delayRandom(100, 130)
-                copyToClipboard(itemName)
-                delayRandom(200, 300)
-                paste()
-                delayRandom(50, 60)
+                    delayRandom(20, 30)
+                    clearText()
+                    delayRandom(100, 130)
+                    copyToClipboard(itemName)
+                    delayRandom(200, 300)
+                    paste()
+                    delayRandom(50, 60)
+                }
             }
 
+            if(itemPrice != "_"){
+                val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
+                pointPrice.let {
+                    it.setLocation(it.x+170, it.y+5)
+                    smartClick(it, randomRangeX = 30, randomRangeY = 5, maxTime = 300)
+                    delayRandom(50, 100)
+                    simpleClick()
+                    send(KeyEvent.VK_DELETE)
 
-            val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
-            pointPrice.let {
-                it.setLocation(it.x+170, it.y+5)
-                smartClick(it, randomRangeX = 30, randomRangeY = 5, maxTime = 300)
-                delayRandom(50, 100)
-                simpleClick()
-                send(KeyEvent.VK_DELETE)
-
-                delayRandom(20, 30)
-                clearText()
-                delayRandom(100, 130)
-                copyToClipboard(itemPrice)
-                delayRandom(100, 120)
-                paste()
-                delayRandom(50, 60)
+                    delayRandom(20, 30)
+                    clearText()
+                    delayRandom(100, 130)
+                    copyToClipboard(itemPrice)
+                    delayRandom(100, 120)
+                    paste()
+                    delayRandom(50, 60)
+                }
             }
 
             return true

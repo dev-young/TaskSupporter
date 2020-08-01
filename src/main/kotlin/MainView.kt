@@ -104,7 +104,13 @@ class MainView : View() {
                         }
                         button("자동분해") {
                             action {
-                                infoLabel
+                                taskManager.extractItems(true)
+                            }
+                        }
+
+                        button("모두분해") {
+                            action {
+                                taskManager.extractItems(false)
                             }
                         }
 

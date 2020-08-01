@@ -297,6 +297,18 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
+    fun extractItems(untilBlank:Boolean) {
+        runTask("extract") {
+            if(activateTargetWindow())
+                MeisterTask().apply {
+                    if(untilBlank) {
+                        extractItemUntilBlank()
+                    } else
+                        extractItemAll()
+                }
+        }
+    }
+
     companion object {
         const val SIMPLE_TASK_AUTOCLICK = "마우스 광클"
         const val SIMPLE_TASK_AUTOSPACE = "스페이스바 광클"
