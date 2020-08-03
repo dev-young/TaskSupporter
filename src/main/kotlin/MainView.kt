@@ -441,6 +441,38 @@ class MainView : View() {
                         selectionModelProperty().get().select(0)
                     }
 
+                    val dropDelay = SimpleIntegerProperty()
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        button("첫번째 빈칸까지 아이템 버리기") {
+                            action {
+                                taskManager.dropItem(dropDelay.value)
+                            }
+                        }
+
+                        textfield(dropDelay) {
+                            text = "340"
+                            maxWidth = inputWidth
+                        }
+                        label("delay")
+                    }
+
+                    val duration = SimpleLongProperty()
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        button("z버튼 누르고 있기") {
+                            action {
+                                taskManager.pressZ(duration.value)
+                            }
+                        }
+
+                        textfield(duration) {
+                            text = "40"
+                            maxWidth = inputWidth
+                        }
+                        label("초간 지속")
+                    }
+
                 }
             }
 

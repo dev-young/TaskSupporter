@@ -294,6 +294,29 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
+    /**첫번째 빈칸까지 아이템을 버린다. */
+    fun dropItem(delay: Int) {
+        runTask("dropItem") {
+            if(activateTargetWindow()){
+                MapleBaseTask().apply {
+                    dropItemUntilBlank(delay)
+                }
+            }
+        }
+    }
+
+    fun pressZ(time: Long) {
+        runTask("getDropItem") {
+            if(activateTargetWindow()){
+                delay(1000)
+                MapleBaseTask().apply {
+                    this.pressZ(time)
+                }
+            }
+        }
+    }
+
+
     companion object {
         const val SIMPLE_TASK_AUTOCLICK = "마우스 광클"
         const val SIMPLE_TASK_AUTOSPACE = "스페이스바 광클"

@@ -100,7 +100,7 @@ class AuctionTask : MapleBaseTask() {
                 val targetPrice = itemInfo[2]
                 val targetBuyAll = if (itemInfo.size > 3) itemInfo[3].contains("t") else false
                 val targetClickReset = if (itemInfo.size > 4) !itemInfo[4].contains("f") else true
-                var noResultCount = 0
+                var noResultCount = 1
 
                 clickSearchTab()
                 delayRandom(30, 50)
@@ -508,7 +508,7 @@ class AuctionTask : MapleBaseTask() {
                     clearText()
                     delayRandom(100, 130)
                     copyToClipboard(itemName)
-                    delayRandom(200, 300)
+                    delayRandom(400, 500)
                     paste()
                     delayRandom(50, 60)
                 }
@@ -527,7 +527,7 @@ class AuctionTask : MapleBaseTask() {
                     clearText()
                     delayRandom(100, 130)
                     copyToClipboard(itemPrice)
-                    delayRandom(100, 120)
+                    delayRandom(400, 500)
                     paste()
                     delayRandom(50, 60)
                 }

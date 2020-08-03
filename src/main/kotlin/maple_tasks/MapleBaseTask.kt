@@ -479,4 +479,35 @@ open class MapleBaseTask {
         }
         logI("광클 종료!")
     }
+
+    /**첫번째 빈칸이 나올때까지 아이템 버리기 */
+    suspend fun dropItemUntilBlank(dropDelay:Int) {
+        openInventory()
+        helper.apply {
+            delayRandom(100, 150)
+            val items = findItems()
+            if(items.isNotEmpty()) {
+                val dropPoint = Point(items[0].x-70, items[0].y)
+                items.forEach {
+                    smartClick(it, 20, 20, maxTime = 80)
+                    smartClick(dropPoint, 20, 20, maxTime = 80)
+                    moveMouseSmoothly(it, 50)
+                    delayRandom(dropDelay, dropDelay)
+                }
+            }
+
+        }
+    }
+
+    suspend fun pressZ(time: Long) {
+         val t = time.toInt() * 1000
+        helper.apply {
+            val startTime = System.currentTimeMillis()
+            while (System.currentTimeMillis() - startTime < t) {
+                send(KeyEvent.VK_Z)
+                delayRandom(50, 150)
+            }
+
+        }
+    }
 }
