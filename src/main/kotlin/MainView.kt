@@ -54,11 +54,25 @@ class MainView : View() {
                     taskManager.isHotkeyEnable = isSelected
                 }
             }
+
+            button {
+                text = "일시정지"
+                action {
+                    taskManager.toggle()
+                }
+            }
+
+            button {
+                text = "초기화"
+                action {
+                    taskManager.resetTask()
+                }
+            }
         }
 
         center = tabpane {
             selectionModel.selectedItemProperty().addListener { observable, oldTab, newTab ->
-                logI("선택된 탭: ${newTab.text}")
+//                logI("선택된 탭: ${newTab.text}")
             }
 
             tab("로그인") {
@@ -156,7 +170,7 @@ class MainView : View() {
                             }
 
                             textfield(name1) {
-                                text = "리스 문라이트"
+                                text = "임리스 문라"
                                 maxWidth = 100.0
                             }
 

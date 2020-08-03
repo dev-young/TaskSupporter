@@ -110,7 +110,10 @@ class MeisterTask : MapleBaseTask() {
             var successCounter = 0
             while(maxCount == 0 || successCounter != maxCount) {
                 kotlinx.coroutines.delay(1)
-                if(makeItem()) successCounter++
+                if(makeItem()) {
+                    successCounter++
+                    logI("제작 성공")
+                }
 
                 kotlinx.coroutines.delay(500)
             }
@@ -144,6 +147,7 @@ class MeisterTask : MapleBaseTask() {
             }
             return true
         } else {
+            logI("제작 불가능한 아이템 입니다.")
             return false
         }
     }
@@ -226,11 +230,7 @@ class MeisterTask : MapleBaseTask() {
 
         helper.apply {
 
-            val point = imageSearchAndClick(imgpathMakebtn, maxTime = 150)
-            if(point == null) {
-                logI("제작 불가능한 아이템 입니다.")
-                return false
-            }
+            val point = imageSearchAndClick(imgpathMakebtn, maxTime = 150) ?: return false
             delayRandom(20,40)
             simpleClick()
             delayRandom(200, 250)

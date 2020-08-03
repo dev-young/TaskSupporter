@@ -284,7 +284,7 @@ class MapleTaskManager : BaseTaskManager() {
     }
 
     /**아이템 구매 및 15분마다 타임리스 제작하기 */
-    fun buyItemAndMakeItem(fileName:String = "", name:String = "타임리스 문라이트", waitingTime: Long = 900000) {
+    fun buyItemAndMakeItem(fileName:String = "", name:String = "임리스 문라", waitingTime: Long = 900000) {
         runTask("BuyAndMake") {
             if(activateTargetWindow()){
                 val auctionTask = AuctionTask()

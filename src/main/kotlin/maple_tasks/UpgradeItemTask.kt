@@ -14,8 +14,8 @@ import kotlin.system.measureTimeMillis
 class UpgradeItemTask : MapleBaseTask() {
 
     companion object {
-        var cubeDelayMin = 1600
-        var cubeDelayMax = 1700
+        var cubeDelayMin = 1500 // 최소 1500 이상
+        var cubeDelayMax = 1600
 
         const val STR = "STR"
         const val DEX = "DEX"
@@ -94,8 +94,8 @@ class UpgradeItemTask : MapleBaseTask() {
 
         helper.apply {
             var isInventoryExpanded = isInventoryExpanded()
-            var vx: Int //현재 합성할 아이템 x
-            var vy: Int  //현재 합성할 아이템 y
+            var vx: Int //현재 아이템 x
+            var vy: Int  //현재 아이템 y
             val point: Point = findFirstItemInInventory() ?: return soundBeep()
             point.let {
                 vx = it.x + 2
@@ -104,14 +104,17 @@ class UpgradeItemTask : MapleBaseTask() {
 //                moveMouseSmoothly(Point(vx, vy), 50)
             }
 
+            var usedCubeCounter = 0
+
             for (i in 1..targetOptionsList.size) {
                 if (checkEmptyOrDisable(Point(vx, vy))) {
-                    logI("큐브 작업 완료 (${i-1} 회 수행)")
+                    logI("큐브 ${usedCubeCounter}개 사용 (${i-1}회 완료)")
                     soundBeep()
                     return
                 }
 
                 startCube(Point(vx, vy))
+                usedCubeCounter++
                 delayRandom(100, 200)
 
                 val targetOptions = targetOptionsList[i-1]
@@ -119,7 +122,8 @@ class UpgradeItemTask : MapleBaseTask() {
                     val delay = random.get(cubeDelayMin, cubeDelayMax) - 1500L
                     if (delay > 0)
                         kotlinx.coroutines.delay(delay)
-                    oneMoreCube()
+                    if(oneMoreCube())
+                        usedCubeCounter++
                     kotlinx.coroutines.delay(1500)
                 }
 
@@ -278,10 +282,10 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
     /**큐브 한번 더 사용하기 */
-    private suspend fun oneMoreCube() {
+    private suspend fun oneMoreCube(): Boolean {
         if (oneMoreCubeLeftTop == null) {
             logI("큐브 창을 못찾았습니다.")
-            return
+            return false
         }
 
         helper.apply {
@@ -297,6 +301,7 @@ class UpgradeItemTask : MapleBaseTask() {
             sendEnter()
             delayRandom(10, 30)
         }
+        return true
     }
 
 
