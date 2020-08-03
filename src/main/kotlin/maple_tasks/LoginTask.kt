@@ -19,6 +19,16 @@ class LoginTask : MapleBaseTask() {
                 return false
             }
 
+            if(id.contains('@')){
+                imageSearchAndClick("img\\emailId.png", maxTime = 100)?.let {
+                    delayRandom(200, 300)
+                }
+            } else {
+                imageSearchAndClick("img\\mapleId.png", maxTime = 100)?.let {
+                    delayRandom(200, 300)
+                }
+            }
+
             val idPoint = Point(loginBtn.x - 30, loginBtn.y-10)
             val pwPoint = Point(loginBtn.x - 30, loginBtn.y+15)
 
