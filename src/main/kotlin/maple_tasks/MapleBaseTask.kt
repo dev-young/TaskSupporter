@@ -217,7 +217,7 @@ open class MapleBaseTask {
     /**소비 탭 클릭*/
     suspend fun clickConsumeTab(): Point? {
         helper.apply {
-            return imageSearchAndClick("img\\consumeTab.png", 150)
+            return imageSearchAndClick("img\\consumeTab.png", maxTime = 100)
         }
     }
 

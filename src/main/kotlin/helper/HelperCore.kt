@@ -217,11 +217,12 @@ class HelperCore : Robot() {
      * 이미지를 찾은경우 찾은 좌상단 좌표를 반환하고 못찾으면 null 반환*/
     suspend fun imageSearchAndClick(
         imgName: String,
+        accuracy: Double = defaultAccuracy,
         minTime: Int = smartClickTimeMin,
         maxTime: Int = smartClickTimeMax,
         keyCode: Int = defaultClickKey
     ): Point? {
-        val point = imageSearch(imgName) ?: return null
+        val point = imageSearch(imgName, accuracy) ?: return null
         smartClick(point, searchedImgWidth, searchedImgHeight, minTime, maxTime, keyCode)
         return point
     }

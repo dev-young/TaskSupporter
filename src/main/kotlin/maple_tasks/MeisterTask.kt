@@ -22,13 +22,13 @@ class MeisterTask : MapleBaseTask() {
     val meisterPosition2 = Point(140, 158)   // 장신구제작 위치 (미니맵 좌상단, 최대 확장시 상대좌표)
     val meisterPosition3 = Point(60, 158)   // 연금술 위치 (미니맵 좌상단, 최대 확장시 상대좌표)
 
-   /**빈칸이 나오거나 모든 아이템을 합성할때까지 합성을 반복한다. */
+    /**빈칸이 나오거나 모든 아이템을 합성할때까지 합성을 반복한다. */
     suspend fun synthesizeItemSmartly() {
         logI("합성 시작!")
         HelperCore().apply {
 
-            smartClickTimeMin = 100
-            smartClickTimeMax = 300
+            smartClickTimeMin = 75
+            smartClickTimeMax = 150
             var isInventoryExpanded = isInventoryExpanded()
             var vx: Int //현재 합성할 아이템 x
             var vy: Int  //현재 합성할 아이템 y
@@ -54,7 +54,7 @@ class MeisterTask : MapleBaseTask() {
             val repeatCount = if (isInventoryExpanded) 128 else 24
             for (i in 1..repeatCount) {
                 if (checkEmptyOrDisable(Point(vx, vy))) {
-                    logI("합성 완료 (${i/2}회 수행)")
+                    logI("합성 완료 (${i / 2}회 수행)")
                     soundBeep()
                     return
                 }
@@ -98,7 +98,7 @@ class MeisterTask : MapleBaseTask() {
 
 
             }
-            logI("합성 완료 (${repeatCount/2}회 수행)")
+            logI("합성 완료 (${repeatCount / 2}회 수행)")
             soundBeep()
             return
         }
@@ -108,9 +108,9 @@ class MeisterTask : MapleBaseTask() {
         logI("제작 시작!")
         helper.apply {
             var successCounter = 0
-            while(maxCount == 0 || successCounter != maxCount) {
+            while (maxCount == 0 || successCounter != maxCount) {
                 kotlinx.coroutines.delay(1)
-                if(makeItem()) {
+                if (makeItem()) {
                     successCounter++
                     logI("제작 성공")
                 }
@@ -121,9 +121,9 @@ class MeisterTask : MapleBaseTask() {
     }
 
     /**장비 제작후 일반등급 아이템이면 분해한다. */
-    suspend fun makeItemAndExtractIfNormal(itemName: String): Boolean{
+    suspend fun makeItemAndExtractIfNormal(itemName: String): Boolean {
         val success = makeItem(itemName)
-        if(success) {
+        if (success) {
             helper.apply {
                 //신규 아이템 표시 제거
                 openInventory()
@@ -134,9 +134,9 @@ class MeisterTask : MapleBaseTask() {
                 delayRandom(100, 200)
 
                 val lastItem = findLastItem()
-                if(lastItem == null) {
+                if (lastItem == null) {
                 } else {
-                    if(checkItemIsNormal(lastItem)){
+                    if (checkItemIsNormal(lastItem)) {
                         //일반 아이템인 경우 분해
                         extractItem(lastItem)
 
@@ -152,9 +152,9 @@ class MeisterTask : MapleBaseTask() {
         }
     }
 
-    suspend fun loopMakeItemAndExtractIfNormal(itemName: String){
+    suspend fun loopMakeItemAndExtractIfNormal(itemName: String) {
         val success = makeItem(itemName)
-        if(success) {
+        if (success) {
             helper.apply {
                 //신규 아이템 표시 제거
                 openInventory()
@@ -165,10 +165,10 @@ class MeisterTask : MapleBaseTask() {
                 delayRandom(100, 200)
 
                 val lastItem = findLastItem()
-                if(lastItem == null) {
+                if (lastItem == null) {
 
                 } else {
-                    if(checkItemIsNormal(lastItem)){
+                    if (checkItemIsNormal(lastItem)) {
                         //일반 아이템인 경우 분해
                         extractItem(lastItem)
 
@@ -183,13 +183,13 @@ class MeisterTask : MapleBaseTask() {
     /**아이템을 검색후 제작한다. */
     suspend fun makeItem(itemName: String): Boolean {
         val searchBtn = openProductionSkill()
-        if(searchBtn == null) {
+        if (searchBtn == null) {
             logI("전문기술 창을 열 수 없습니다.")
             return false
         }
 
-        val searchArea = Point(searchBtn.x-50, searchBtn.y+2)
-        val searchedItem = Point(searchBtn.x-10, searchBtn.y+45)
+        val searchArea = Point(searchBtn.x - 50, searchBtn.y + 2)
+        val searchedItem = Point(searchBtn.x - 10, searchBtn.y + 45)
         helper.apply {
             smartClickTimeMax = 200
             smartClick(searchArea, 10, 5)
@@ -214,7 +214,7 @@ class MeisterTask : MapleBaseTask() {
             clickExpandBtn(searchBtn)
             delayRandom(100, 150)
 
-            smartClick(searchedItem, 10,4)
+            smartClick(searchedItem, 10, 4)
             simpleClick()
             delayRandom(100, 150)
 
@@ -231,11 +231,11 @@ class MeisterTask : MapleBaseTask() {
         helper.apply {
 
             val point = imageSearchAndClick(imgpathMakebtn, maxTime = 150) ?: return false
-            delayRandom(20,40)
+            delayRandom(20, 40)
             simpleClick()
             delayRandom(200, 250)
             val okBtn = imageSearchAndClick(imgpathOkBtn, maxTime = 150)
-            if (okBtn== null){
+            if (okBtn == null) {
                 logI("확인버튼 찾을 수 없음")
                 moveMouseSmoothly(Point(0, 0))
             }
@@ -247,7 +247,7 @@ class MeisterTask : MapleBaseTask() {
     }
 
     /**인벤토리 빈칸이 나오기 전까지 있는 아이템들을 분해한다.*/
-    suspend fun extractItemUntilBlank(){
+    suspend fun extractItemUntilBlank() {
         openInventory()
 
         val items = findItems()
@@ -255,7 +255,7 @@ class MeisterTask : MapleBaseTask() {
     }
 
     /**인벤토리에 보이는 모든 아이템을 분해한다. */
-    suspend fun extractItemAll(){
+    suspend fun extractItemAll() {
         openInventory()
 
         val items = findItems(false)
@@ -277,7 +277,8 @@ class MeisterTask : MapleBaseTask() {
             helper.apply {
                 smartClick(point, 10, 10, keyCode = KeyEvent.BUTTON3_MASK, minTime = 1, maxTime = 20)
                 simpleClick(KeyEvent.BUTTON3_MASK)
-                if((index+1)%maxCount == 0 || index == itemPosList.lastIndex) {
+                sendEnter() //분해 불가능한 아이템 있을경우 넘어가기 위해 사용
+                if ((index + 1) % maxCount == 0 || index == itemPosList.lastIndex) {
                     //분해창 가득 찼거나 마지막 남은 아이템이 없을때
                     clickOkBtn()
                     delayRandom(100, 150)
@@ -302,7 +303,7 @@ class MeisterTask : MapleBaseTask() {
 
     suspend fun clickOkBtn() {
         val ok = helper.imageSearchAndClick(imgpathOkBtn, maxTime = 200)
-        if(ok == null) {
+        if (ok == null) {
             logI("확인버튼을 찾을 수 없습니다.")
         } else {
             helper.simpleClick()
@@ -311,7 +312,7 @@ class MeisterTask : MapleBaseTask() {
 
     suspend fun clickCancelBtn() {
         val cancel = helper.imageSearchAndClick(imgpathCancelBtn)
-        if(cancel == null) {
+        if (cancel == null) {
             logI("취소버튼을 찾을 수 없습니다.")
         } else {
             helper.simpleClick()
@@ -323,25 +324,25 @@ class MeisterTask : MapleBaseTask() {
     suspend fun openExtract(moveWindow: Boolean = true) {
         helper.apply {
             val window = imageSearch(imgpathExtractWindow)
-            if(window == null) {
-                var extractBtn = imageSearch(imgpathExtractBtn1) ?: imageSearch(imgpathExtractBtn2)
-                if(extractBtn == null) {
+            val mesoBtn = findInventory()
+            if (window == null) {
+
+                var extractBtn = imageSearchAndClick(imgpathExtractBtn1, maxTime = 100)
+                    ?: imageSearchAndClick(imgpathExtractBtn2, maxTime = 100)
+                if (extractBtn == null) {
                     logI("분해버튼을 찾을 수 없습니다.")
                     return
                 }
-                smartClick(extractBtn)
                 simpleClick()
                 delayRandom(200, 300)
             }
-
             if (moveWindow) {
                 val okBtn = imageSearch(imgpathSynthesizeOKBtn)
-                val mesoBtn = findInventory()
-                if(okBtn == null || mesoBtn == null) {
+                if (okBtn == null || mesoBtn == null) {
                     logI("분해창을 찾지 못해 옮기기에 실패했습니다")
                 } else {
-                    val extractWindowTitle = Point(okBtn.x, okBtn.y-173)
-                    val dragDestination = Point(mesoBtn.x-160, mesoBtn.y-386)
+                    val extractWindowTitle = Point(okBtn.x, okBtn.y - 173)
+                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 386)
                     smartDrag(extractWindowTitle, dragDestination)
                 }
             }
@@ -354,7 +355,7 @@ class MeisterTask : MapleBaseTask() {
     }
 
     private suspend fun clickExpandBtn(searchBtn: Point) {
-        helper.imageSearchAndClick(Point(searchBtn.x-180, searchBtn.y), 100, 60, imgpathExpandBtn, 90.0)
+        helper.imageSearchAndClick(Point(searchBtn.x - 180, searchBtn.y), 100, 60, imgpathExpandBtn, 90.0)
     }
 
     /**합성/분해 확인 버튼 */

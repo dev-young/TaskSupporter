@@ -147,7 +147,7 @@ class MapleTaskManager : BaseTaskManager() {
     fun test() {
         runTask("test") {
             if(activateTargetWindow()){
-                AuctionTask().openAuction()
+                AuctionTask().clickCompletePurchasedTab()
             }
 
 
@@ -212,13 +212,13 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun buyItem(useItemList: Boolean, buyAll: Boolean, fileName:String = "") {
+    fun buyItem(useItemList: Boolean, buyAll: Boolean, fileName:String = "", usePurchasedTab: Boolean) {
         runTask("buyItem") {
             if(activateTargetWindow()){
                 if (useItemList)
-                    AuctionTask().buyItemListUntilEnd(fileName)
+                    AuctionTask().buyItemListUntilEnd(fileName, usePurchasedTab = usePurchasedTab)
                 else
-                    AuctionTask().buyOneItemUntilEnd(buyAll)
+                    AuctionTask().buyOneItemUntilEnd(buyAll, usePurchasedTab = usePurchasedTab)
             }
 
         }
@@ -284,11 +284,11 @@ class MapleTaskManager : BaseTaskManager() {
     }
 
     /**아이템 구매 및 15분마다 타임리스 제작하기 */
-    fun buyItemAndMakeItem(fileName:String = "", name:String = "임리스 문라", waitingTime: Long = 900000) {
+    fun buyItemAndMakeItem(fileName:String = "", usePurchasedTab: Boolean, name:String = "임리스 문라", waitingTime: Long = 900000) {
         runTask("BuyAndMake") {
             if(activateTargetWindow()){
                 val auctionTask = AuctionTask()
-                auctionTask.buyItemListUntilEnd(fileName, name, waitingTime)
+                auctionTask.buyItemListUntilEnd(fileName, name, waitingTime, usePurchasedTab = usePurchasedTab)
             }
 
         }
@@ -313,6 +313,16 @@ class MapleTaskManager : BaseTaskManager() {
                     this.pressZ(time)
                 }
             }
+        }
+    }
+
+    fun buyItemAndExtract(fileName: String, usePurchasedTab: Boolean) {
+        runTask("BuyAndMakeExtract") {
+            if(activateTargetWindow()){
+                val auctionTask = AuctionTask()
+                auctionTask.buyItemListUntilEnd(fileName, extract = true, usePurchasedTab = usePurchasedTab)
+            }
+
         }
     }
 

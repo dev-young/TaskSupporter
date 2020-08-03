@@ -22,7 +22,7 @@ class AuctionTask : MapleBaseTask() {
     private val noResultCountMax = 3
 
     /**한가지 아이템을 계속 구매*/
-    suspend fun buyOneItemUntilEnd(buyAll: Boolean) {
+    suspend fun buyOneItemUntilEnd(buyAll: Boolean, usePurchasedTab: Boolean = true) {
         logI("아이템 구매 작업 시작! #####")
         helper.apply {
             var buyCount = 0
@@ -49,7 +49,7 @@ class AuctionTask : MapleBaseTask() {
                         // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
                         logI("구매슬롯 가득참")
                         delayRandom(200, 400)
-                        val success = getAllItems()
+                        val success = getAllItems(usePurchasedTab)
                         if (success) {
                             logI("모두받기 완료.")
                             sendEnter()
@@ -73,7 +73,13 @@ class AuctionTask : MapleBaseTask() {
 
     /**파일에 작성된 아이템들을 바탕으로 검색어 바꿔가며 구매
      * 장비 제작 및 일정 시간마다 특정 장비아이템 제작 */
-    suspend fun buyItemListUntilEnd(filePath: String, itemName: String? = null, waitingTime: Long = 900000) {
+    suspend fun buyItemListUntilEnd(
+        filePath: String,
+        itemName: String? = null,
+        waitingTime: Long = 900000,
+        extract: Boolean = false,
+        usePurchasedTab: Boolean = true
+    ) {
         val itemList = loadItemList(filePath) ?: let {
             logI("파일을 찾을 수 없습니다.")
             return
@@ -82,8 +88,10 @@ class AuctionTask : MapleBaseTask() {
 
         var targetIndex = 0 //검색 대상 인덱스
 
-        var buyCount = 0
+        var buyCount = 0    //전체 구매 횟수
+        var itemInInventoryCount = 0 //현재 수령한 아이템 수 (분해시 0으로 초기화)
         var buyStack = 0 //구매슬롯 꽉찾는지 여부 판별을 위한 변수
+        var noResultItemCount = 0   // 해당 아이템 검색 결과가 없는 경우 (1개의 아이템에 대해 회만 증가한다.)
         logI("아이템 구매 작업 시작! #####")
 
         if (itemList.isEmpty()) itemList.add(arrayOf("", "", "", "", ""))
@@ -127,25 +135,31 @@ class AuctionTask : MapleBaseTask() {
                             buyCount++
                             buyStack++
                             noResultCount = 0
+                            noResultItemCount = 0
                             logI("구매 성공 ($buyCount) [ $targetName ]")
                         }
 
-
                         if (buyStack >= purchaseSlotCount || (!success && isPurchaseSlotFull())) {
-                            // buyStack이 슬롯보다 크거나 구매슬롯이 꽉 찬 경우
                             logI("구매슬롯 가득참")
                             delayRandom(200, 400)
-                            val success = getAllItems()
+                            val success = getAllItems(usePurchasedTab)
+                            itemInInventoryCount += buyStack
+                            buyStack = 0
+                            targetIndex = (targetIndex + itemList.size - 1) % itemList.size // 이전 아이템
                             if (success) {
                                 logI("모두받기 완료.")
                                 sendEnter() //완료창 종료
-
-                                buyStack = 0
-                                targetIndex = (targetIndex + itemList.size - 1) % itemList.size // 이전 아이템
                                 break@sub
                             } else {
                                 logI("모두받기 실패.")
-                                break@root
+                                //분해하기 사용하는 경우
+                                if (extract) {
+                                    extractItem(meisterTask)
+                                    itemInInventoryCount = 0
+                                    break@sub
+                                } else {
+                                    break@root
+                                }
                             }
                         } else {
                             // 가득 안찼지만 구매 실패한 경우 (메소 부족, 이미 팔린 물건)
@@ -172,8 +186,32 @@ class AuctionTask : MapleBaseTask() {
                 }
 
 
-
                 targetIndex = (targetIndex + 1) % itemList.size
+
+                noResultItemCount++
+                if (noResultItemCount >= itemList.size && buyStack > 0) {
+                    //오랜시간 구매한 아이템이 없을때 수령가능한 템이 있을경우
+
+                    itemInInventoryCount += buyStack
+                    buyStack = 0
+                    if (getAllItems(usePurchasedTab)) {
+                        logI("모두받기 완료.")
+                        sendEnter() //완료창 종료
+                    } else {
+                        logI("모두받기 실패.")
+                        //분해하기 사용하는 경우
+                        if (!extract) {
+                            break@root
+                        }
+                    }
+
+                    if (extract && (itemInInventoryCount > 0)) {
+                        extractItem(meisterTask)
+                        itemInInventoryCount = 0
+                    }
+
+                    noResultItemCount = 0
+                }
 
             }
 
@@ -182,6 +220,17 @@ class AuctionTask : MapleBaseTask() {
 
         helper.soundBeep()
         logI("##### 아이템 구매 작업 종료 (구매횟수: $buyCount)")
+    }
+
+    private suspend fun extractItem(meisterTask: MeisterTask) {
+        helper.apply {
+            exitAuction()
+            delayRandom(2000, 3000)
+            meisterTask.extractItemUntilBlank()
+            meisterTask.clickCancelBtn()
+            delayRandom(500, 700)
+            openAuction()
+        }
     }
 
     suspend fun openAuction() {
@@ -194,7 +243,7 @@ class AuctionTask : MapleBaseTask() {
                     delayRandom(2000, 3000)
                 }
 
-                if(menu == null) {
+                if (menu == null) {
                     imageSearchAndClick("img\\menuCollapse.png", maxTime = 300)?.let {
                         delayRandom(1000, 1500)
                     }
@@ -223,11 +272,15 @@ class AuctionTask : MapleBaseTask() {
 
     /**완료 탭으로 이동하여 '모두받기' 수행
      * 정상적으로 수행된 경우 true
-     * 인벤토리가 가득 찼거나 수령할 수 없는 물건이 있을경우 경우 false*/
-    private suspend fun getAllItems(): Boolean {
+     * 인벤토리가 가득 찼거나 수령할 수 없는 물건이 있을경우 경우 false
+     * @param usePurchasedTab 구매완료 탭을 사용할지 여부*/
+    private suspend fun getAllItems(usePurchasedTab: Boolean): Boolean {
         clickCompleteTab()
 
         helper.delayRandom(100, 200)
+        if (usePurchasedTab) {
+            clickCompletePurchasedTab()
+        }
         clickGetAll()
 
         helper.apply {
@@ -448,6 +501,16 @@ class AuctionTask : MapleBaseTask() {
             val point = imageSearchAndClick("$defaultImgPath\\completeTab.png", maxTime = 300)
             if (point == null) {
 //                log("완료탭을 찾을 수 없습니다.")
+                return
+            }
+            simpleClick()
+        }
+    }
+
+    suspend fun clickCompletePurchasedTab() {
+        helper.apply {
+            val point = imageSearchAndClick("$defaultImgPath\\completedPurchased.png", 95.0, maxTime = 200)
+            if (point == null) {
                 return
             }
             simpleClick()

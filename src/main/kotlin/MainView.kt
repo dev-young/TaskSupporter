@@ -174,7 +174,7 @@ class MainView : View() {
                                 maxWidth = 100.0
                             }
 
-                            checkbox ("일반템인경우 분해하기", extract1){
+                            checkbox("일반템인경우 분해하기", extract1) {
                                 isSelected = true
                             }
                         }
@@ -194,7 +194,7 @@ class MainView : View() {
                                 maxWidth = 100.0
                             }
 
-                            checkbox ("일반템인경우 분해하기", extract2){
+                            checkbox("일반템인경우 분해하기", extract2) {
                                 isSelected = false
                             }
                         }
@@ -227,11 +227,12 @@ class MainView : View() {
                     val fileName = SimpleStringProperty()
                     var buyAll: CheckBox? = null
                     val useItemList = SimpleBooleanProperty()
+                    val useCompletedPurchaseTab = SimpleBooleanProperty()
                     val waitingTime = SimpleLongProperty()
                     hbox {
                         alignment = Pos.CENTER_LEFT
                         spacing = defaultItemSpacing
-                        checkbox ("파일로부터 목록 불러오기", useItemList ) {
+                        checkbox("파일로부터 목록 불러오기", useItemList) {
                             isSelected = true
                             action {
                                 buyAll?.let {
@@ -240,7 +241,7 @@ class MainView : View() {
                             }
                         }
 
-                        textfield (fileName){
+                        textfield(fileName) {
                             text = "ItemList.txt"
                         }
                     }
@@ -250,26 +251,44 @@ class MainView : View() {
                         text = "구매수량 최대치 입력"
                     }
 
-                    button("아이템 검색 및 구매") {
-                        action {
-                            taskManager.buyItem(useItemList.value, buyAll.isSelected, fileName.value)
-                        }
+                    checkbox("구매 완료탭 클릭하여 수령하기", useCompletedPurchaseTab) {
+                        isSelected = true
                     }
 
+                    button("아이템 검색 및 구매") {
+                        action {
+                            taskManager.buyItem(
+                                useItemList.value,
+                                buyAll.isSelected,
+                                fileName.value,
+                                useCompletedPurchaseTab.value
+                            )
+                        }
+                    }
 
                     hbox {
                         alignment = Pos.CENTER_LEFT
                         spacing = 4.0
                         button("아이템 구매 및 장비제작") {
                             action {
-                                taskManager.buyItemAndMakeItem(fileName.value, waitingTime = (waitingTime.value * 1000))
+                                taskManager.buyItemAndMakeItem(
+                                    fileName.value,
+                                    useCompletedPurchaseTab.value,
+                                    waitingTime = (waitingTime.value * 1000)
+                                )
                             }
                         }
 
-                        textfield (waitingTime){
+                        textfield(waitingTime) {
                             text = "900"
                         }
                         label("초마다 제작")
+                    }
+
+                    button("아이템 구매 및 분해") {
+                        action {
+                            taskManager.buyItemAndExtract(fileName.value, useCompletedPurchaseTab.value)
+                        }
                     }
                 }
             }
@@ -436,7 +455,8 @@ class MainView : View() {
                     val tasks = listOf(
                         MapleTaskManager.SIMPLE_TASK_AUTOCLICK,
                         MapleTaskManager.SIMPLE_TASK_AUTOSPACE,
-                        MapleTaskManager.SIMPLE_TASK_AUTOSPACEANDENTER )
+                        MapleTaskManager.SIMPLE_TASK_AUTOSPACEANDENTER
+                    )
                     combobox(taskManager.selectedSimpleTask, tasks) {
                         selectionModelProperty().get().select(0)
                     }
@@ -520,7 +540,6 @@ class MainView : View() {
 
                     }
 
-
                     button("테스트1") {
                         action {
                             logI("")
@@ -532,6 +551,13 @@ class MainView : View() {
                         action {
                             logI("")
                             taskManager.test2()
+                        }
+                    }
+
+                    button {
+                        text = "로그 초기화화"
+                       action {
+                            logList.clear()
                         }
                     }
                 }

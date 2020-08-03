@@ -149,7 +149,7 @@ class UpgradeItemTask : MapleBaseTask() {
             }
 
 
-            logI("큐브 작업 완료 (${targetOptionsList.size} 회 수행)")
+            logI("큐브 ${usedCubeCounter}개 사용 (${targetOptionsList.size}회 완료)")
             soundBeep()
         }
     }
@@ -312,7 +312,7 @@ class UpgradeItemTask : MapleBaseTask() {
         helper.apply {
             //소비창 클릭
             val point = clickConsumeTab()
-            delayRandom(300, 500)
+            delayRandom(200, 300)
 //        helper.moveMouseSmoothly(point)
             //큐브 더블클릭
             val cubePoint = imageSearch("img\\cube\\cube.png")
