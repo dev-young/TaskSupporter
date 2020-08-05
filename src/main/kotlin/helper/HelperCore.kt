@@ -18,6 +18,7 @@ import width
 import winGetPos
 import java.awt.*
 import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
 import java.awt.event.KeyEvent.*
@@ -253,10 +254,31 @@ class HelperCore : Robot() {
         logI("dialog: $msg")
     }
 
-    fun copyToClipboard(str: String) {
+    private fun getStringFromClipboard() : String {
+        val data = toolkit.systemClipboard.getContents(this)
+        return try {
+            data.getTransferData(DataFlavor.stringFlavor) as String
+        } catch(e:Exception) {
+            ""
+        }
+    }
+
+    suspend fun copyToClipboard(str: String) {
         val selection = StringSelection(str)
         val clipboard: Clipboard = toolkit.systemClipboard
-        clipboard.setContents(selection, selection)
+        var tryCount = 0
+        while(getStringFromClipboard() != str) {
+            tryCount++
+            clipboard.setContents(selection, selection)
+            delay(100L)
+
+            if(tryCount > 100){
+                logI("$str 을 클립보드에 복사하는데 실패했습니다.")
+                return
+            }
+        }
+        logI("복사된 내용:${getStringFromClipboard()}, 대상:$str")
+
     }
 
     // Ctrl+V
