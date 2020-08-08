@@ -277,7 +277,7 @@ class HelperCore : Robot() {
                 return
             }
         }
-        logI("복사된 내용:${getStringFromClipboard()}, 대상:$str")
+//        logI("복사된 내용:${getStringFromClipboard()}, 대상:$str")
 
     }
 

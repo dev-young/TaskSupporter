@@ -342,7 +342,7 @@ class MeisterTask : MapleBaseTask() {
                     logI("분해창을 찾지 못해 옮기기에 실패했습니다")
                 } else {
                     val extractWindowTitle = Point(okBtn.x, okBtn.y - 173)
-                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 386)
+                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 286)
                     smartDrag(extractWindowTitle, dragDestination)
                 }
             }

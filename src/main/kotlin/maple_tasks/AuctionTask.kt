@@ -205,7 +205,7 @@ class AuctionTask : MapleBaseTask() {
                         }
                     }
 
-                    if (extract && (itemInInventoryCount > 0)) {
+                    if (extract && (itemInInventoryCount > 10)) {
                         extractItem(meisterTask)
                         itemInInventoryCount = 0
                     }
