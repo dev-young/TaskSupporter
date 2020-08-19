@@ -283,6 +283,16 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
+    fun appraiseItems(untilBlank:Boolean) {
+        runTask("appraise") {
+            if(activateTargetWindow())
+                MapleBaseTask().apply {
+                    appraiseItems(untilBlank)
+                }
+        }
+    }
+
+
     /**아이템 구매 및 15분마다 타임리스 제작하기 */
     fun buyItemAndMakeItem(fileName:String = "", usePurchasedTab: Boolean, name:String = "임리스 문라", waitingTime: Long = 900000) {
         runTask("BuyAndMake") {

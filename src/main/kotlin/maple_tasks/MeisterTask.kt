@@ -13,7 +13,10 @@ class MeisterTask : MapleBaseTask() {
     val imgpathCancelBtn = "img\\meister\\cancelBtn.png"
     val imgpathExpandBtn = "img\\meister\\expandBtn.png"
     val imgpathSynthesizeOKBtn = "img\\synthesizeOK.png"
+    val imgpathSynthesizeWindow = "img\\meister\\synthesizeWindow.png"
     val imgpathExtractWindow = "img\\meister\\extractWindow.png"
+    val imgpathSynthesizeBtn1 = "img\\meister\\synthesizeBtn.png"
+    val imgpathSynthesizeBtn2 = "img\\meister\\synthesizeBtn2.png"
     val imgpathExtractType = "img\\meister\\extractType.png"
     val imgpathExtractBtn1 = "img\\meister\\extractBtn2.png"
     val imgpathExtractBtn2 = "img\\meister\\extractBtn.png"
@@ -27,6 +30,7 @@ class MeisterTask : MapleBaseTask() {
         logI("합성 시작!")
         HelperCore().apply {
 
+            openSynthesize()
             smartClickTimeMin = 75
             smartClickTimeMax = 150
             var isInventoryExpanded = isInventoryExpanded()
@@ -316,6 +320,37 @@ class MeisterTask : MapleBaseTask() {
             logI("취소버튼을 찾을 수 없습니다.")
         } else {
 //            helper.simpleClick()
+        }
+    }
+
+    /**합성창을 연다.*/
+    suspend fun openSynthesize(moveWindow: Boolean = true) {
+        helper.apply {
+            val window = imageSearch(imgpathSynthesizeWindow)
+            val mesoBtn = findInventory()
+            if (window == null) {
+
+                var synthesizeBtn = imageSearchAndClick(imgpathSynthesizeBtn1, maxTime = 100)
+                    ?: imageSearchAndClick(imgpathSynthesizeBtn2, maxTime = 100)
+                if (synthesizeBtn == null) {
+                    logI("합성버튼을 찾을 수 없습니다.")
+                    return
+                }
+                simpleClick()
+                delayRandom(200, 300)
+            }
+            if (moveWindow) {
+                val okBtn = imageSearch(imgpathSynthesizeOKBtn)
+                if (okBtn == null || mesoBtn == null) {
+                    logI("합성창을 찾지 못해 옮기기에 실패했습니다")
+                } else {
+                    delayRandom(200, 300)
+                    val synthesizeWindowTitle = Point(okBtn.x, okBtn.y - 165)
+                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 286)
+                    smartDrag(synthesizeWindowTitle, dragDestination)
+                }
+            }
+
         }
     }
 

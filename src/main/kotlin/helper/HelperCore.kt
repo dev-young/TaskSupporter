@@ -254,7 +254,7 @@ class HelperCore : Robot() {
         logI("dialog: $msg")
     }
 
-    private fun getStringFromClipboard() : String {
+    fun getStringFromClipboard() : String {
         val data = toolkit.systemClipboard.getContents(this)
         return try {
             data.getTransferData(DataFlavor.stringFlavor) as String

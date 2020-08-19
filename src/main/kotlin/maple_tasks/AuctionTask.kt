@@ -556,7 +556,7 @@ class AuctionTask : MapleBaseTask() {
 
         helper.apply {
             if (reset) {
-                val p = imageSearchAndClick("$defaultImgPath\\resetConditionBtn.png")
+                val p = imageSearchAndClick("$defaultImgPath\\resetConditionBtn.png", maxTime = 100)
                 p?.let {
                     simpleClick()
                 }
@@ -566,16 +566,17 @@ class AuctionTask : MapleBaseTask() {
                 copyToClipboard(itemName)
                 val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
                 pointName.let {
+                    val searchLT = Point(it.x, it.y-5)
                     it.setLocation(it.x + 120, it.y + 5)
-                    smartClick(it, randomRangeX = 20, randomRangeY = 3, minTime = 200, maxTime = 300)
-                    delayRandom(50, 100)
-                    simpleClick()
-                    send(KeyEvent.VK_DELETE)
-                    delayRandom(20, 30)
-                    clearText()
-//                    delayRandom(300, 330)
-                    paste()
-                    delayRandom(350, 360)
+                    inputText(it)
+
+                    if(itemName.isNotEmpty())
+                        while (imageSearch(searchLT, 200, 30,"$defaultImgPath\\itemNameEmpty.png", accuracy = 90.0) != null) {
+                            logI("아이템명 입력 실패: $itemName 클립보드:${getStringFromClipboard()}")
+                            copyToClipboard(itemName)
+                            inputText(it)
+                        }
+
                 }
             }
 
@@ -583,17 +584,19 @@ class AuctionTask : MapleBaseTask() {
                 copyToClipboard(itemPrice)
                 val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
                 pointPrice.let {
+                    val searchLT = Point(it.x+50, it.y-8)
                     it.setLocation(it.x + 170, it.y + 5)
-                    smartClick(it, randomRangeX = 30, randomRangeY = 3, maxTime = 300)
-                    delayRandom(50, 100)
-                    simpleClick()
-                    send(KeyEvent.VK_DELETE)
+                    val pointPriceMin = Point(it.x-80, it.y)
+                    inputText(it)
+                    smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
+                    if(itemPrice.isNotEmpty())
+                        while (imageSearch(searchLT, 150, 25,"$defaultImgPath\\itemPriceEmpty.png", accuracy = 90.0) != null) {
+                            logI("가격 입력 실패: $itemPrice 클립보드:${getStringFromClipboard()}")
+                            copyToClipboard(itemPrice)
+                            inputText(it)
+                            smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
+                        }
 
-                    delayRandom(20, 30)
-                    clearText()
-//                    delayRandom(300, 330)
-                    paste()
-                    delayRandom(350, 360)
                 }
             }
 
@@ -601,6 +604,25 @@ class AuctionTask : MapleBaseTask() {
 
         }
 
+    }
+
+    /**텍스트를 입력*/
+    private suspend fun inputText(targetPoint: Point) {
+        helper.apply {
+            smartClick(targetPoint, randomRangeX = 20, randomRangeY = 3, minTime = 200, maxTime = 300)
+            delayRandom(50, 100)
+            simpleClick()
+            delayRandom(20, 30)
+            clearText()
+//                    delayRandom(300, 330)
+            paste()
+            delay(80L)
+            send(KeyEvent.VK_SPACE)
+            send(KeyEvent.VK_SPACE)
+            send(KeyEvent.VK_SPACE)
+            send(KeyEvent.VK_SPACE)
+            delay(40L)
+        }
     }
 
 }

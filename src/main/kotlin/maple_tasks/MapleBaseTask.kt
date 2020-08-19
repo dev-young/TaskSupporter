@@ -348,6 +348,28 @@ open class MapleBaseTask {
         return items
     }
 
+    /**미확인 아이템 감정하기*/
+    suspend fun appraiseItems(untilBlank: Boolean) {
+        val items = findItems(untilBlank)
+        helper.apply {
+            val appraiseBtn = imageSearch("img\\appraiseBtn.png") ?: imageSearch("img\\appraiseBtn2.png") ?: return
+
+            items.forEach {
+                smartClick(appraiseBtn, randomRangeX = 10, randomRangeY = 10, maxTime = 100)
+                delayRandom(30, 60)
+                simpleClick()
+                smartClick(it, randomRangeY = 15, randomRangeX = 15, minTime = 400, maxTime = 450)
+                sendEnter()
+                delayRandom(30, 60)
+                sendEnter()
+                delayRandom(30, 60)
+                sendEnter()
+                delayRandom(30, 60)
+                sendEnter()
+            }
+        }
+    }
+
     /**캐릭터의 현재 좌표를 찾는다. (상대 좌표) */
     fun findCharacter(): Point? {
         helper.apply {

@@ -100,12 +100,15 @@ class MainView : View() {
             tab("전문기술") {
                 isClosable = false
 
+
                 vbox {
                     paddingAll = defaultItemSpacing
                     spacing = 10.0
 
-                    vbox {
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
                         spacing = 4.0
+
                         button("자동합성") {
                             action {
                                 runAsync {
@@ -113,17 +116,31 @@ class MainView : View() {
                                 }
                             }
                         }
+                        button("자동감정") {
+                            action {
+                                taskManager.appraiseItems(true)
+                            }
+                        }
+                    }
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = 4.0
+
                         button("자동분해") {
                             action {
                                 taskManager.extractItems(true)
                             }
                         }
-
                         button("모두분해") {
                             action {
                                 taskManager.extractItems(false)
                             }
                         }
+                    }
+
+                    vbox {
+                        spacing = 4.0
 
                         val input = SimpleStringProperty()
                         hbox {
