@@ -315,7 +315,7 @@ class MeisterTask : MapleBaseTask() {
         if (cancel == null) {
             logI("취소버튼을 찾을 수 없습니다.")
         } else {
-            helper.simpleClick()
+//            helper.simpleClick()
         }
     }
 
@@ -341,6 +341,7 @@ class MeisterTask : MapleBaseTask() {
                 if (okBtn == null || mesoBtn == null) {
                     logI("분해창을 찾지 못해 옮기기에 실패했습니다")
                 } else {
+                    delayRandom(200, 300)
                     val extractWindowTitle = Point(okBtn.x, okBtn.y - 173)
                     val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 286)
                     smartDrag(extractWindowTitle, dragDestination)

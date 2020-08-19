@@ -280,7 +280,7 @@ class MainView : View() {
                         }
 
                         textfield(waitingTime) {
-                            text = "900"
+                            text = "899"
                         }
                         label("초마다 제작")
                     }

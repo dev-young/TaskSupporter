@@ -266,10 +266,10 @@ class HelperCore : Robot() {
     suspend fun copyToClipboard(str: String) {
         val selection = StringSelection(str)
         val clipboard: Clipboard = toolkit.systemClipboard
-        var tryCount = 0
+        var tryCount = 1
+        clipboard.setContents(selection, selection)
         while(getStringFromClipboard() != str) {
             tryCount++
-            clipboard.setContents(selection, selection)
             delay(100L)
 
             if(tryCount > 100){

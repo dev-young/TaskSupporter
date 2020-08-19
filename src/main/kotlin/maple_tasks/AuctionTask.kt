@@ -108,7 +108,7 @@ class AuctionTask : MapleBaseTask() {
                 val targetPrice = itemInfo[2]
                 val targetBuyAll = if (itemInfo.size > 3) itemInfo[3].contains("t") else false
                 val targetClickReset = if (itemInfo.size > 4) !itemInfo[4].contains("f") else true
-                var noResultCount = 1
+                var noResultCount = 2
 
                 clickSearchTab()
                 delayRandom(30, 50)
@@ -166,6 +166,9 @@ class AuctionTask : MapleBaseTask() {
                             // TODO: 메소부족시 현재 아이템을 구매 리스트에서 제외시키고 다음 아이템으로 넘어가기
                         }
                     }
+                    //결과 없는 경우 엔터 클릭
+                    delay(500L)
+                    sendEnter()
                     noResultCount++
                 }
 
@@ -228,6 +231,7 @@ class AuctionTask : MapleBaseTask() {
             delayRandom(2000, 3000)
             meisterTask.extractItemUntilBlank()
             meisterTask.clickCancelBtn()
+            send(KeyEvent.VK_ESCAPE)
             delayRandom(500, 700)
             openAuction()
         }
@@ -362,7 +366,7 @@ class AuctionTask : MapleBaseTask() {
                 smartClick(it, 20, 20, 50, 150)
                 simpleClick()
                 sendEnter()
-                delayRandom(40, 80)
+                delayRandom(140, 180)
                 sendEnter()
                 lastSearchTime = System.currentTimeMillis()
 
@@ -559,40 +563,37 @@ class AuctionTask : MapleBaseTask() {
             }
 
             if (itemName != "_") {
+                copyToClipboard(itemName)
                 val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
                 pointName.let {
                     it.setLocation(it.x + 120, it.y + 5)
-                    smartClick(it, randomRangeX = 20, randomRangeY = 5, maxTime = 300)
+                    smartClick(it, randomRangeX = 20, randomRangeY = 3, minTime = 200, maxTime = 300)
                     delayRandom(50, 100)
                     simpleClick()
                     send(KeyEvent.VK_DELETE)
-
                     delayRandom(20, 30)
                     clearText()
-                    delayRandom(100, 130)
-                    copyToClipboard(itemName)
-                    delayRandom(400, 500)
+//                    delayRandom(300, 330)
                     paste()
-                    delayRandom(50, 60)
+                    delayRandom(350, 360)
                 }
             }
 
             if (itemPrice != "_") {
+                copyToClipboard(itemPrice)
                 val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
                 pointPrice.let {
                     it.setLocation(it.x + 170, it.y + 5)
-                    smartClick(it, randomRangeX = 30, randomRangeY = 5, maxTime = 300)
+                    smartClick(it, randomRangeX = 30, randomRangeY = 3, maxTime = 300)
                     delayRandom(50, 100)
                     simpleClick()
                     send(KeyEvent.VK_DELETE)
 
                     delayRandom(20, 30)
                     clearText()
-                    delayRandom(100, 130)
-                    copyToClipboard(itemPrice)
-                    delayRandom(400, 500)
+//                    delayRandom(300, 330)
                     paste()
-                    delayRandom(50, 60)
+                    delayRandom(350, 360)
                 }
             }
 
