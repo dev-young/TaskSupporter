@@ -3,7 +3,6 @@ import helper.BaseTaskManager.Companion.STATE_PAUSED
 import helper.BaseTaskManager.Companion.STATE_WORKING
 import javafx.application.Platform
 import javafx.beans.property.*
-import javafx.collections.FXCollections
 import javafx.geometry.Pos
 import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
@@ -19,7 +18,7 @@ import maple_tasks.UpgradeItemTask
 import maple_tasks.UpgradeItemTask.Companion.DEX
 import maple_tasks.UpgradeItemTask.Companion.HP
 import maple_tasks.UpgradeItemTask.Companion.INT
-import maple_tasks.UpgradeItemTask.Companion.LUC
+import maple_tasks.UpgradeItemTask.Companion.LUK
 import maple_tasks.UpgradeItemTask.Companion.STR
 import tornadofx.*
 import java.lang.Exception
@@ -310,6 +309,42 @@ class MainView : View() {
                 }
             }
 
+            tab("추가옵션") {
+                isClosable = false
+                vbox {
+                    paddingAll = defaultItemSpacing
+                    spacing = defaultItemSpacing
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+
+                        val untilBlank = SimpleBooleanProperty()
+                        button ("추옵 확인") {
+                            action {
+                                taskManager.checkAdditionalOption(untilBlank.value)
+                            }
+                        }
+
+                        checkbox("빈칸까지 수행", untilBlank) {
+                            isSelected = false
+                        }
+
+                    }
+
+                    listview(taskManager.goodItemList) {
+                        useMaxWidth = true
+                        prefHeight = 180.0
+                        selectionModel.selectionMode = SelectionMode.SINGLE
+                        onUserSelect {
+                            taskManager.moveMouseToGoodItem(it)
+                        }
+                    }
+
+
+                }
+            }
+
             tab("큐브") {
                 isClosable = false
 
@@ -358,7 +393,7 @@ class MainView : View() {
                     }
                     hbox {
                         alignment = Pos.CENTER_LEFT
-                        label(LUC) {
+                        label(LUK) {
                             minWidth = labelWidth
                         }
                         textfield(luc) {
@@ -411,7 +446,7 @@ class MainView : View() {
                                 val targetOptions = hashMapOf<String, Int>()
                                 targetOptions[STR] = str.let { it.value }
                                 targetOptions[DEX] = dex.let { it.value }
-                                targetOptions[LUC] = luc.let { it.value }
+                                targetOptions[LUK] = luc.let { it.value }
                                 targetOptions[INT] = int.let { it.value }
                                 targetOptions[HP] = hp.let { it.value }
 //                                targetOptions[UpgradeItemTask.ATT] = 9

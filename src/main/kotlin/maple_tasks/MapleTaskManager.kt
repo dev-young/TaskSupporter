@@ -7,6 +7,7 @@ import com.sun.jna.platform.win32.WinDef
 import helper.BaseTaskManager
 import helper.ConsumeEvent
 import helper.HelperCore
+import javafx.application.Platform
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -17,6 +18,7 @@ import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import toFile
 import toMat
+import tornadofx.asObservable
 import winActive
 import winIsForeground
 import winMove
@@ -108,9 +110,11 @@ class MapleTaskManager : BaseTaskManager() {
 
 
     private var mapleBaseTask: MapleBaseTask? = null
+    private var additionalOptionTask : AdditionalOptionTask? = null
     var isItemCheckerEnable = false
     var isSimpleTaskEnable = false  // 간단한 작업 사용 여부
     var winTarget = SimpleStringProperty()
+    val goodItemList = arrayListOf<String>().asObservable()
 
     val selectedSimpleTask = SimpleStringProperty()
 
@@ -334,6 +338,44 @@ class MapleTaskManager : BaseTaskManager() {
             }
 
         }
+    }
+
+    fun checkAdditionalOption(untilBlank: Boolean) {
+        runTask("additionalOption") {
+            if(activateTargetWindow()){
+                if(additionalOptionTask == null)
+                    additionalOptionTask = AdditionalOptionTask()
+
+                val goodItems = additionalOptionTask?.checkItems(untilBlank)
+                goodItems?.let {
+                    Platform.runLater {
+                        goodItemList.clear()
+                        goodItemList.addAll(it)
+                    }
+
+                }
+            }
+
+        }
+    }
+
+    fun moveMouseToGoodItem(key: String) {
+        runTask("additionalOption") {
+            if(activateTargetWindow()){
+                additionalOptionTask?.let {
+                    val index = goodItemList.indexOf(key)
+                    val goodItems = additionalOptionTask?.goodItems
+                    goodItems?.let {
+                        val itemPoint = it[index]
+                        additionalOptionTask?.helper?.smartClick(itemPoint, 15, 15, maxTime = 70)
+                    }
+                }
+
+
+            }
+
+        }
+
     }
 
 

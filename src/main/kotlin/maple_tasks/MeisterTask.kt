@@ -57,7 +57,7 @@ class MeisterTask : MapleBaseTask() {
             // 인벤토리 상태에 따라 반복 횟수 다르게 설정
             val repeatCount = if (isInventoryExpanded) 128 else 24
             for (i in 1..repeatCount) {
-                if (checkEmptyOrDisable(Point(vx, vy))) {
+                if (isEmptyOrDisable(Point(vx, vy))) {
                     logI("합성 완료 (${i / 2}회 수행)")
                     soundBeep()
                     return

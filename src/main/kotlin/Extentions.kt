@@ -56,12 +56,17 @@ fun BufferedImage.toFile(fileName: String) {
     logI("A screenshot is captured to: " + file.path)
 }
 
-suspend fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {
+/**대비 증가시키기*/
+fun Mat.changeContract(){
+    convertTo(this, -1, 1.5, -110.0)
+}
+
+fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {
     //t의 60% 정도로 n을 사용해야 t만큼의 시간동안 마우스가 움직인다.
     moveMouseSmoothly(x1, y1, x2, y2, t, (t * 0.6).toInt())
 }
 
-suspend fun Robot.moveMouseSmoothly(point: Point, t: Int) {
+fun Robot.moveMouseSmoothly(point: Point, t: Int) {
     //t의 60% 정도로 n을 사용해야 t만큼의 시간동안 마우스가 움직인다.
     val pf = MouseInfo.getPointerInfo()
     moveMouseSmoothly(pf.location.x, pf.location.y, point.x, point.y, t, (t * 0.6).toInt())
@@ -72,7 +77,7 @@ suspend fun Robot.moveMouseSmoothly(point: Point) {
     moveMouseSmoothly(pf.location.x, pf.location.y, point.x, point.y, 100, 60)
 }
 
-suspend fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int, n: Int) {
+fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int, n: Int) {
     try {
         val dx = (x2 - x1) / n.toDouble()
         val dy = (y2 - y1) / n.toDouble()

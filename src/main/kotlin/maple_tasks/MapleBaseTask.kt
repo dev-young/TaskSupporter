@@ -42,20 +42,35 @@ open class MapleBaseTask {
     }
 
     /**해당 좌표의 아이템이 빈칸 혹은 사용불가능한 칸인지 확인*/
-    fun checkEmptyOrDisable(leftTop: Point): Boolean {
-        val x1 = leftTop.x - 7
-        val y1 = leftTop.y - 7
-        helper.imageSearch(Point(x1, y1), 39, 39, "img\\emptyItem.png")?.let {
+    fun isEmptyOrDisable(leftTop: Point): Boolean {
+        val p = Point(leftTop.x - 7, leftTop.y - 7)
+        helper.imageSearch(p, 39, 39, "img\\emptyItem.png")?.let {
             logI("빈칸 발견!")
             return true
         }
 
-        helper.imageSearch(Point(x1, y1), 39, 39, "img\\disableItem.png")?.let {
+        helper.imageSearch(p, 39, 39, "img\\disableItem.png")?.let {
             logI("사용할 수 없는 칸 확인")
             return true
         }
 
         return false
+    }
+
+    /**해당 좌표의 아이템이 빈칸 혹은 사용불가능한 칸인지 확인*/
+    fun checkEmptyOrDisable(leftTop: Point): Int {
+        val p = Point(leftTop.x - 7, leftTop.y - 7)
+        helper.imageSearch(p, 39, 39, "img\\emptyItem.png")?.let {
+            logI("빈칸 발견!")
+            return 1
+        }
+
+        helper.imageSearch(p, 39, 39, "img\\disableItem.png")?.let {
+            logI("사용할 수 없는 칸 확인")
+            return 2
+        }
+
+        return 0
     }
 
     /**해당 좌표의 아이템이 일반 아이템인지 잠재능력이 있는 아이템인지 확인 확인
@@ -78,9 +93,9 @@ open class MapleBaseTask {
     }
 
     /**수행시 인벤토리에 첫칸부터 수행될때마다 다음칸으로 마우스를 이동시킨다.*/
-    suspend fun findNextItem(){
+    suspend fun findNextItem() {
         HelperCore().apply {
-            if(nextItemPoint == null) {
+            if (nextItemPoint == null) {
                 isNextItemInventoryExpanded = isInventoryExpanded()
                 nextItemPoint = findFirstItemInInventory() ?: return
                 nextItemPoint!!.apply {
@@ -96,7 +111,7 @@ open class MapleBaseTask {
                 //확장된 인벤토리인 경우
                 if (nextItemPosition % 32 == 0) {
                     nextItemPoint?.apply {
-                        setLocation(x+itemDistance, y-(itemDistance * 7))
+                        setLocation(x + itemDistance, y - (itemDistance * 7))
                     }
                     return@apply
                 }
@@ -130,9 +145,9 @@ open class MapleBaseTask {
     suspend fun findFirstItemInInventory(moveMouse: Boolean = false): Point? {
         var point: Point? = null
         val collapseBtn = helper.imageSearch("img\\collapseBtn.png")
-        if( collapseBtn == null) {
+        if (collapseBtn == null) {
             val mesoBtn = helper.imageSearch("img\\meso.png")
-            if(mesoBtn == null){
+            if (mesoBtn == null) {
                 logI("인벤토리를 찾을 수 없습니다.")
                 return null
             } else {
@@ -149,7 +164,7 @@ open class MapleBaseTask {
             }
             point = collapseBtn
         }
-        if(moveMouse)
+        if (moveMouse)
             helper.moveMouseSmoothly(point, 100)
 
         return point
@@ -184,7 +199,7 @@ open class MapleBaseTask {
     }
 
     /**텍스트를 입력을 할 수 있는 곳에서 텍스트를 지운다.*/
-    suspend fun clearText(){
+    suspend fun clearText() {
         helper.apply {
             keyPress(KeyEvent.VK_DELETE)
             send(KeyEvent.VK_END)
@@ -197,9 +212,9 @@ open class MapleBaseTask {
         }
     }
 
-    fun clearText2(){
+    fun clearText2() {
         helper.apply {
-            if(isNumberLock){
+            if (isNumberLock) {
                 toolkit.setLockingKeyState(KeyEvent.VK_NUM_LOCK, false)
                 isNumberLock = false
             }
@@ -222,7 +237,7 @@ open class MapleBaseTask {
     }
 
     /**인벤토리창을 연다. */
-    suspend fun openInventory(){
+    suspend fun openInventory() {
         val mesoBtn = findInventory()
 
         if (mesoBtn == null) {
@@ -233,7 +248,7 @@ open class MapleBaseTask {
     }
 
     /**인벤토리창을 닫는다. */
-    suspend fun closeInventory(){
+    suspend fun closeInventory() {
         val mesoBtn = findInventory()
 
         if (mesoBtn != null) {
@@ -252,7 +267,7 @@ open class MapleBaseTask {
                 send(productionSkillKey)
                 delayRandom(200, 400)
                 val p = imageSearch("img\\meister\\productionSkill.png")?.let {
-                    smartClick(Point(it.x+4, it.y+21), 28, 10, maxTime = 150)
+                    smartClick(Point(it.x + 4, it.y + 21), 28, 10, maxTime = 150)
                     it
                 }
             }
@@ -266,7 +281,7 @@ open class MapleBaseTask {
     }
 
     /**전문기술 창을 닫는다.*/
-    suspend fun closeProductionSkill(){
+    suspend fun closeProductionSkill() {
         val searchBtn = helper.imageSearch("img\\meister\\searchBtn.png")
 
         if (searchBtn != null) {
@@ -287,8 +302,9 @@ open class MapleBaseTask {
 
     /**인벤토리 첫칸부터 빈칸이 나오기 전까지 아이템의 목록을 반환한다.
      * @param untilBlank false로 할 경우 모든 아이템의 위치를 반환한다. */
-    suspend fun findItems(untilBlank:Boolean = true): List<Point>{
+    suspend fun findItems(untilBlank: Boolean = true, blankList: ArrayList<Point> = arrayListOf()): List<Point> {
         val items = arrayListOf<Point>()
+        blankList.clear()
         helper.apply {
             var vx: Int //현재 아이템 x
             var vy: Int  //현재 아이템 y
@@ -330,18 +346,24 @@ open class MapleBaseTask {
                 itemPosList.forEachIndexed { index, point ->
                     kotlinx.coroutines.delay(1)
 //                    logI("${index+1}번째 : 일반아이템? ${checkItemIsNormal(point)}")
-                    if(checkEmptyOrDisable(point)) {
-                        lastPosition = index-1
+                    val checkResult = checkEmptyOrDisable(point)
+                    if (checkResult > 0) {
+                        lastPosition = index - 1
                         logI("lastPosition: $lastPosition")
-                        if(untilBlank)
+
+                        if (checkResult == 2 || untilBlank)
                             return@run
+
+                        if(checkResult == 1) {
+                            blankList.add(point)
+                        }
                     } else {
                         items.add(point)
                     }
                 }
             }
 
-            if(lastPosition < 0){
+            if (lastPosition < 0) {
                 logI("아이템을 찾을 수 없습니다.")
             }
         }
@@ -376,7 +398,7 @@ open class MapleBaseTask {
             // TODO: 상대좌표 반환 기능을 코어에 포함시키자
             //미니맵 위치에서 검색 수행
             val startPoint = User32.INSTANCE.winGetPos().toRectangle().location
-            val myPosition = imageSearch(startPoint, 300, 200,"img\\myChar.png")
+            val myPosition = imageSearch(startPoint, 300, 200, "img\\myChar.png")
 //            logI("abs: ${myPosition.toString()}")
             myPosition?.apply {
                 x -= startPoint.x
@@ -400,13 +422,13 @@ open class MapleBaseTask {
             //y좌표 이동
             while (true) {
                 var current = findCharacter()
-                if(current != null){
+                if (current != null) {
                     val dy = destination.y - current.y
-                    if(dy.absoluteValue <= range) {
+                    if (dy.absoluteValue <= range) {
                         break
                     }
 
-                    if(dy > 0) {    //밑으로 가야하는 경우
+                    if (dy > 0) {    //밑으로 가야하는 경우
                         moveDownFloor()
                     } else {    //위로 가야하는 경우
                         moveUpFloor()
@@ -417,15 +439,15 @@ open class MapleBaseTask {
             //x좌표 이동
             while (true) {
                 var current = findCharacter()
-                if(current != null){
+                if (current != null) {
                     val dx = destination.x - current.x
-                    if(dx.absoluteValue <= range) {
+                    if (dx.absoluteValue <= range) {
                         keyRelease(KeyEvent.VK_LEFT)
                         keyRelease(KeyEvent.VK_RIGHT)
                         break
                     }
 
-                    if(dx < 0) {    //왼쪽으로 가야하는 경우
+                    if (dx < 0) {    //왼쪽으로 가야하는 경우
                         keyPress(KeyEvent.VK_LEFT)
                     } else {    //오른쪽으로 가야하는 경우
                         keyPress(KeyEvent.VK_RIGHT)
@@ -440,19 +462,19 @@ open class MapleBaseTask {
     }
 
     /**밑점프 사용*/
-    suspend fun moveDownFloor(afterDelay: Int = 500){
+    suspend fun moveDownFloor(afterDelay: Int = 500) {
         helper.apply {
             keyPress(KeyEvent.VK_DOWN)
             delayRandom(200, 300)
             send(KeyEvent.VK_ALT)
             delayRandom(100, 200)
             keyRelease(KeyEvent.VK_DOWN)
-            delayRandom(afterDelay, afterDelay+100)
+            delayRandom(afterDelay, afterDelay + 100)
         }
     }
 
     /**윗점프 사용*/
-    suspend fun moveUpFloor(afterDelay: Int = 200){
+    suspend fun moveUpFloor(afterDelay: Int = 200) {
         helper.apply {
             keyPress(KeyEvent.VK_ALT)
             delayRandom(50, 60)   //첫 점프에서 키간 딜레이가 있어야한다.
@@ -465,51 +487,51 @@ open class MapleBaseTask {
             keyRelease(KeyEvent.VK_ALT)
             delayRandom(50, 100)
             keyRelease(KeyEvent.VK_UP)
-            delayRandom(afterDelay, afterDelay+100)
+            delayRandom(afterDelay, afterDelay + 100)
         }
     }
 
     /**광클*/
-    suspend fun startAutoClick(windowTitle:String) {
+    suspend fun startAutoClick(windowTitle: String) {
         logI("광클 시작!")
-        while (User32.INSTANCE.winIsForeground(windowTitle)){
+        while (User32.INSTANCE.winIsForeground(windowTitle)) {
             helper.simpleClick()
         }
         logI("광클 종료!")
     }
 
     /**광클*/
-    suspend fun startAutoSend(windowTitle:String, keyCode:Int) {
+    suspend fun startAutoSend(windowTitle: String, keyCode: Int) {
         logI("광클 시작!")
-        while (User32.INSTANCE.winIsForeground(windowTitle)){
+        while (User32.INSTANCE.winIsForeground(windowTitle)) {
             delay(10)
             helper.send(keyCode)
         }
         logI("광클 종료!")
     }
 
-    suspend fun startAutoSpaceAndEnter(windowTitle:String) {
+    suspend fun startAutoSpaceAndEnter(windowTitle: String) {
         logI("광클 시작!")
         var count = 0
-        while (User32.INSTANCE.winIsForeground(windowTitle)){
+        while (User32.INSTANCE.winIsForeground(windowTitle)) {
             count++
             delay(10)
             helper.send(KeyEvent.VK_SPACE)
 
-            if(count % 15 == 0)
+            if (count % 15 == 0)
                 helper.sendEnter()
         }
         logI("광클 종료!")
     }
 
     /**첫번째 빈칸이 나올때까지 아이템 버리기 */
-    suspend fun dropItemUntilBlank(dropDelay:Int) {
+    suspend fun dropItemUntilBlank(dropDelay: Int) {
         openInventory()
         helper.apply {
             delayRandom(100, 150)
             val items = findItems()
-            if(items.isNotEmpty()) {
-                val dropPoint = Point(items[0].x-70, items[0].y)
+            if (items.isNotEmpty()) {
+                val dropPoint = Point(items[0].x - 70, items[0].y)
                 items.forEach {
                     smartClick(it, 20, 20, maxTime = 80)
                     smartClick(dropPoint, 20, 20, maxTime = 80)
@@ -522,7 +544,7 @@ open class MapleBaseTask {
     }
 
     suspend fun pressZ(time: Long) {
-         val t = time.toInt() * 1000
+        val t = time.toInt() * 1000
         helper.apply {
             val startTime = System.currentTimeMillis()
             while (System.currentTimeMillis() - startTime < t) {

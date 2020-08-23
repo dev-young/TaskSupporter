@@ -19,13 +19,13 @@ class UpgradeItemTask : MapleBaseTask() {
 
         const val STR = "STR"
         const val DEX = "DEX"
-        const val LUC = "LUC"
+        const val LUK = "LUK"
         const val INT = "INT"
         const val ALL = "ALL"
         const val HP = "HP"
-        const val ATT = "공격력"
-        const val SPELL = "마력"
-        const val DMG = "데미지"
+        const val ATT = "attack"
+        const val SPELL = "spell"
+        const val DMG = "damage"
     }
 
     private var resultWindowLeftTop: Point? = null
@@ -44,7 +44,7 @@ class UpgradeItemTask : MapleBaseTask() {
         if (optionNameTemplates.isEmpty()) {
             optionNameTemplates[STR] = Imgcodecs.imread("img\\cube\\str.png")
             optionNameTemplates[DEX] = Imgcodecs.imread("img\\cube\\dex.png")
-            optionNameTemplates[LUC] = Imgcodecs.imread("img\\cube\\luc.png")
+            optionNameTemplates[LUK] = Imgcodecs.imread("img\\cube\\luc.png")
             optionNameTemplates[INT] = Imgcodecs.imread("img\\cube\\int.png")
             optionNameTemplates[ALL] = Imgcodecs.imread("img\\cube\\all.png")
             optionNameTemplates[HP] = Imgcodecs.imread("img\\cube\\hp.png")
@@ -107,7 +107,7 @@ class UpgradeItemTask : MapleBaseTask() {
             var usedCubeCounter = 0
 
             for (i in 1..targetOptionsList.size) {
-                if (checkEmptyOrDisable(Point(vx, vy))) {
+                if (isEmptyOrDisable(Point(vx, vy))) {
                     logI("큐브 ${usedCubeCounter}개 사용 (${i-1}회 완료)")
                     soundBeep()
                     return
@@ -161,7 +161,7 @@ class UpgradeItemTask : MapleBaseTask() {
             val targetOptions = hashMapOf<String, Int>()
             targetOptions[STR] = 9
             targetOptions[DEX] = 9
-            targetOptions[LUC] = 9
+            targetOptions[LUK] = 9
             targetOptions[INT] = 9
             targetOptions[HP] = 12
             targetOptions[ATT] = 9
@@ -238,9 +238,9 @@ class UpgradeItemTask : MapleBaseTask() {
             //TODO: 각 루프에서 return@forEach 가 제대로 동작하는지 확인 필요
             sourceList.forEachIndexed { _, source ->
                 optionNameTemplates.forEach { (name, template) ->
-                    if (imageSearch(source, template)) {
+                    if (imageSearchReturnBoolean(source, template)) {
                         optionValueTemplates.forEach { (value, template) ->
-                            if (imageSearch(source, template)) {
+                            if (imageSearchReturnBoolean(source, template)) {
                                 val v = when(value) {
                                     2 -> 3
                                     4 -> 6
@@ -262,7 +262,7 @@ class UpgradeItemTask : MapleBaseTask() {
             resultOption[ALL]?.let {
                 resultOption[STR] = resultOption[STR]?.plus(it) ?: it
                 resultOption[DEX] = resultOption[DEX]?.plus(it) ?: it
-                resultOption[LUC] = resultOption[LUC]?.plus(it) ?: it
+                resultOption[LUK] = resultOption[LUK]?.plus(it) ?: it
                 resultOption[INT] = resultOption[INT]?.plus(it) ?: it
             }
 
