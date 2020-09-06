@@ -2,6 +2,7 @@ package maple_tasks
 
 import kotlinx.coroutines.delay
 import logI
+import moveMouseSmoothly
 import java.awt.Point
 import java.awt.event.KeyEvent
 import java.io.File
@@ -584,17 +585,17 @@ class AuctionTask : MapleBaseTask() {
                 copyToClipboard(itemPrice)
                 val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
                 pointPrice.let {
-                    val searchLT = Point(it.x+50, it.y-8)
+                    val searchLT = Point(it.x+150, it.y) //빈칸을 검색좌표 시작점
                     it.setLocation(it.x + 170, it.y + 5)
                     val pointPriceMin = Point(it.x-80, it.y)
                     inputText(it)
-                    smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
+//                    smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
                     if(itemPrice.isNotEmpty())
-                        while (imageSearch(searchLT, 150, 25,"$defaultImgPath\\itemPriceEmpty.png", accuracy = 90.0) != null) {
+                        while (imageSearch(searchLT, 100, 20,"$defaultImgPath\\itemPriceEmpty.png", accuracy = 90.0) != null) {
                             logI("가격 입력 실패: $itemPrice 클립보드:${getStringFromClipboard()}")
                             copyToClipboard(itemPrice)
                             inputText(it)
-                            smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
+//                            smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
                         }
 
                 }
@@ -612,7 +613,8 @@ class AuctionTask : MapleBaseTask() {
             smartClick(targetPoint, randomRangeX = 20, randomRangeY = 3, minTime = 200, maxTime = 300)
             delayRandom(50, 100)
             simpleClick()
-            delayRandom(20, 30)
+            moveMouseSmoothly(Point(targetPoint.x, targetPoint.y-100), t = 20)
+//            delayRandom(20, 30)
             clearText()
 //                    delayRandom(300, 330)
             paste()
