@@ -338,7 +338,7 @@ class AuctionTask : MapleBaseTask() {
 
     /**아이템을 검색한다.
      * 가장 최근 검색 시간을 비교하여 자동으로 남은 시간만큼 대기 후 클릭한다. */
-    private suspend fun searchItem() {
+    suspend fun searchItem() {
         helper.apply {
             val point = imageSearch("$defaultImgPath\\searchBtn.png", 0.1)
 //                ?: Unit.let {
@@ -429,7 +429,7 @@ class AuctionTask : MapleBaseTask() {
     private fun loadItemList(filePath: String): ArrayList<Array<String>>? {
         val list = arrayListOf<Array<String>>()
 
-        val file = File(filePath)
+        val file = File("$filePath.txt")
         if (file.exists()) {
             file.readLines().forEach {
 //                    log(it)
@@ -553,7 +553,7 @@ class AuctionTask : MapleBaseTask() {
     }
 
     /**검색시 이름 및 가격을 입력한다. */
-    private suspend fun inputItemInfo(itemName: String, itemPrice: String, reset: Boolean = false): Boolean {
+    suspend fun inputItemInfo(itemName: String, itemPrice: String, reset: Boolean = false, minPrice:String = "_"): Boolean {
 
         helper.apply {
             if (reset) {
@@ -580,6 +580,25 @@ class AuctionTask : MapleBaseTask() {
 
                 }
             }
+
+            if (minPrice != "_") {
+                copyToClipboard(minPrice)
+                val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
+                pointPrice.let {
+                    val searchLT = Point(it.x+62, it.y) //빈칸을 검색좌표 시작점
+                    it.setLocation(it.x + 83, it.y + 5)
+                    inputText(it)
+                    if(minPrice.isNotEmpty())
+                        while (imageSearch(searchLT, 100, 20,"$defaultImgPath\\itemPriceEmpty.png", accuracy = 90.0) != null) {
+                            logI("가격 입력 실패: $minPrice 클립보드:${getStringFromClipboard()}")
+                            copyToClipboard(minPrice)
+                            inputText(it)
+//                            smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
+                        }
+
+                }
+            }
+
 
             if (itemPrice != "_") {
                 copyToClipboard(itemPrice)

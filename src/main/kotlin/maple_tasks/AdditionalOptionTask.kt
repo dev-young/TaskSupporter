@@ -1,17 +1,23 @@
 package maple_tasks
 
 import changeContract
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.annotations.Expose
 import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
 import toMat
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
+import java.io.*
+import java.util.*
+import kotlin.collections.LinkedHashMap
 
-class AdditionalOptionTask : MapleBaseTask() {
+
+open class AdditionalOptionTask : MapleBaseTask() {
 
     companion object {
         var cubeDelayMin = 1500 // 최소 1500 이상
@@ -33,12 +39,17 @@ class AdditionalOptionTask : MapleBaseTask() {
         const val EAR = "귀고리"
         const val BELT = "벨트"
         const val POCKET = "포켓"
+
+        //직업별 아이템 배열
+        val JOBS = arrayOf(WORRIER, MAGICIAN, ARCHER, THIEF, PIRATE)
+        val CATES = arrayOf(HAT, TOP, BOTTOM)
     }
 
     val goodItems = arrayListOf<Point>()
     val baseImgPath = "img\\additionalOption"
 
-    private val jobPointer = Pair(Imgcodecs.imread("$baseImgPath\\jobWhite.png"), Imgcodecs.imread("$baseImgPath\\jobRed.png"))
+    private val jobPointer =
+        Pair(Imgcodecs.imread("$baseImgPath\\jobWhite.png"), Imgcodecs.imread("$baseImgPath\\jobRed.png"))
 
     private val categoryTemplates = hashMapOf<String, Mat>().apply {
         this[HAT] = Imgcodecs.imread("$baseImgPath\\hat.png")
@@ -100,39 +111,15 @@ class AdditionalOptionTask : MapleBaseTask() {
 
         helper.apply {
             items.forEach { item ->
-                moveMouseSmoothly(item, 30)
-                delayRandom(10, 30)
-                mousePress(KeyEvent.BUTTON3_MASK)
-                delayRandom(30, 50)
 
-                var job  = ""
-                val jobPoint =
-                    imageSearch("$baseImgPath\\jobBeginner1.png") ?: imageSearch("$baseImgPath\\jobBeginner2.png")?.also { job = COMMON }
-                jobPoint?.let {
-                    val temp = createScreenCapture(Rectangle(jobPoint.x - 20, jobPoint.y - 3, 240, 300))
-//                    temp.toFile("test")
-                    val infoImg = temp.toMat()
-                    if(job.isEmpty()) {
-                        val jobView = infoImg.rowRange(3, 13).colRange(20, 230)
-//                        Imgcodecs.imwrite("testJob.png", jobView)
-                        job = checkJob(jobView)
-                    }
-                    infoImg.changeContract()
-                    mouseRelease(KeyEvent.BUTTON3_MASK)
-//                    Imgcodecs.imwrite("test.png", infoImg)
-                    val resultOption = check(infoImg)
-
-                    val category = checkCategory(infoImg)
-                    val itemInfo = "[$job][$category]$resultOption"
-//                    logI(itemInfo)
-
-                    if (isOptionGood(job, category, resultOption)) {
+                getOptions(item)?.let {
+                    val optionStr = it.getInfoText()
+                    if (isOptionGood(it)) {
                         goodItems.add(item)
-                        goodItemsInfo.add(itemInfo)
+                        goodItemsInfo.add(optionStr)
                     }
                 }
 
-                mouseRelease(KeyEvent.BUTTON3_MASK)
             }
 
             goodItems.forEach {
@@ -149,12 +136,45 @@ class AdditionalOptionTask : MapleBaseTask() {
 
     }
 
+    suspend fun getOptions(item: Point): ItemInfo? {
+        helper.apply {
+            moveMouseSmoothly(item, 30)
+            delayRandom(10, 30)
+            mousePress(KeyEvent.BUTTON3_MASK)
+            delayRandom(30, 50)
+
+            var job = ""
+            val jobPoint =
+                imageSearch("$baseImgPath\\jobBeginner1.png")
+                    ?: imageSearch("$baseImgPath\\jobBeginner2.png")?.also { job = COMMON }
+            jobPoint?.let {
+                val temp = createScreenCapture(Rectangle(jobPoint.x - 20, jobPoint.y - 3, 240, 300))
+//                    temp.toFile("test")
+                val infoImg = temp.toMat()
+                if (job.isEmpty()) {
+                    val jobView = infoImg.rowRange(3, 13).colRange(20, 230)
+//                        ul
+                    job = checkJob(jobView)
+                }
+                infoImg.changeContract()
+                mouseRelease(KeyEvent.BUTTON3_MASK)
+//                    Imgcodecs.imwrite("test.png", infoImg)
+                val resultOption = check(infoImg)
+                val category = checkCategory(infoImg)
+                return ItemInfo(job, category, resultOption)
+
+            }
+            mouseRelease(KeyEvent.BUTTON3_MASK)
+            return null
+        }
+    }
+
     private fun checkCategory(infoImg: Mat): String {
         var result = ""
         helper.apply {
             run {
                 categoryTemplates.forEach { (category, tem) ->
-                    if(imageSearchReturnBoolean(infoImg, tem, 90.0)){
+                    if (imageSearchReturnBoolean(infoImg, tem, 90.0)) {
                         result = category
                         return@run
                     }
@@ -169,7 +189,7 @@ class AdditionalOptionTask : MapleBaseTask() {
     private fun checkJob(jobView: Mat): String {
         helper.apply {
             val p = imageSearch(jobView, jobPointer.first, 95.0) ?: imageSearch(jobView, jobPointer.second, 95.0)
-            if(p == null) {
+            if (p == null) {
                 logI("직업을 식별할 수 없습니다.")
                 return ""
             } else {
@@ -201,10 +221,14 @@ class AdditionalOptionTask : MapleBaseTask() {
         }
     }
 
+    private fun isOptionGood(itemInfo: ItemInfo): Boolean {
+        return isOptionGood(itemInfo.job, itemInfo.category, itemInfo.option)
+    }
+
     /**추가옵션 값을 확인후 유효한지 여부를 판단한다. */
-    private fun isOptionGood(job:String, category:String, option: java.util.HashMap<String, Int>): Boolean {
+    private fun isOptionGood(job: String, category: String, option: java.util.HashMap<String, Int>): Boolean {
         val targetOptions = hashMapOf<String, Int>().apply {
-            if(category == FACE) {
+            if (category == FACE) {
                 this[UpgradeItemTask.STR] = 40
                 this[UpgradeItemTask.DEX] = 40
                 this[UpgradeItemTask.LUK] = 40
@@ -224,9 +248,9 @@ class AdditionalOptionTask : MapleBaseTask() {
                 this[UpgradeItemTask.HP] = 3150
             }
 
-            if(category == EAR) {
+            if (category == EAR) {
                 this[UpgradeItemTask.HP] = 2700
-            } else if (category == POCKET){
+            } else if (category == POCKET) {
                 this[UpgradeItemTask.HP] = 2900
             }
 
@@ -285,7 +309,7 @@ class AdditionalOptionTask : MapleBaseTask() {
             option[UpgradeItemTask.STR] = option[UpgradeItemTask.STR]?.plus(state) ?: state
             option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(state) ?: state
             option[UpgradeItemTask.LUK] = option[UpgradeItemTask.LUK]?.plus(state) ?: state
-            option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it*140) ?: it*140
+            option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it * 140) ?: it * 140
         }
 
         var result = false
@@ -304,7 +328,7 @@ class AdditionalOptionTask : MapleBaseTask() {
     }
 
     /**이미지를 확인후 추가옵션을 반환한다. */
-    fun check(infoImg: Mat): HashMap<String, Int> {
+    fun check(infoImg: Mat): LinkedHashMap<String, Int> {
         val resultOption = linkedMapOf<String, Int>()
 
         helper.apply {
@@ -351,5 +375,321 @@ class AdditionalOptionTask : MapleBaseTask() {
         return resultOption
     }
 
+    class ItemManager {
+        companion object {
+            val categoryMap = linkedMapOf<String, SortedMap<String, ArrayList<ItemInfo>>>().apply {
+                JOBS.forEach { job ->
+                    CATES.forEach {
+                        put("[$job][$it]", sortedMapOf())
+                    }
+                }
+            }
+
+            val itemMap = hashMapOf<String, ItemInfo>()
+            val sortedList = arrayListOf<ItemInfo>()
+        }
+
+        fun add(info: ItemInfo) {
+            if (!itemMap.contains(info.getUid())) {
+                val cate1 = info.getCategory1()
+                val gradeKey = info.getGradeKey()
+                val gradeMap =
+                    categoryMap.computeIfAbsent(cate1) { sortedMapOf(Pair(gradeKey, arrayListOf())) }
+                val list = gradeMap.computeIfAbsent(gradeKey) { arrayListOf() }
+                list.add(info)
+
+                itemMap[info.getUid()] = info
+            }
+        }
+
+        /**정보들을 가져와서 중복안되도록 저장한다. */
+        fun addAll(infoList: Collection<ItemInfo>) {
+            infoList.forEach { info ->
+                add(info)
+            }
+        }
+
+        fun getSortedList(): ArrayList<ItemInfo> {
+            sortedList.clear()
+            categoryMap.values.forEach { gradeMap ->
+                gradeMap.values.forEach {
+                    it.sortWith(kotlin.Comparator { o1, o2 -> -o1.price.compareTo(o2.price) })
+                    sortedList.addAll(it)
+                }
+            }
+
+            return sortedList
+        }
+
+        fun clear() {
+            categoryMap.values.forEach { it.clear() }
+            itemMap.clear()
+            sortedList.clear()
+        }
+
+        fun loadFromTxt(fileName: String): MutableCollection<ItemInfo> {
+            val reader = BufferedReader(
+                InputStreamReader(
+                    FileInputStream("$fileName DB"), "euc-kr"
+                )
+            )
+            reader.forEachLine {
+                val item = ItemInfo.fromJson(it)
+                add(item)
+            }
+
+
+            return itemMap.values
+        }
+
+        fun saveToDB(fileName: String = "메이플시세목록") {
+            if (itemMap.isEmpty()) return
+
+            val file = File("$fileName DB")
+            val bw = BufferedWriter(FileWriter(file, false))
+
+            // 문자열을 앞서 지정한 경로에 파일로 저장, 저장시 캐릭터셋은 기본값인 UTF-8으로 저장
+            // 이미 파일이 존재할 경우 덮어쓰기로 저장
+            try {
+                itemMap.values.forEach {
+                    bw.write(it.toDB())
+                    bw.newLine()
+                }
+            } catch (e: FileNotFoundException) {
+                logI("FileNotFound: $fileName")
+            }
+
+            bw.flush()
+            bw.close()
+
+        }
+
+        fun saveToTxt(fileName: String = "메이플시세목록", saveDB: Boolean = true) {
+            val file = File("$fileName.txt")
+            val bw = BufferedWriter(FileWriter(file, false))
+
+            // 문자열을 앞서 지정한 경로에 파일로 저장, 저장시 캐릭터셋은 기본값인 UTF-8으로 저장
+            // 이미 파일이 존재할 경우 덮어쓰기로 저장
+            try {
+                var lastCategory = ""
+                var lastGrade = ""
+                sortedList.forEach {
+                    if (lastCategory != it.getCategory1()) {
+                        bw.newLine()
+                        bw.newLine()
+                        lastCategory = it.getCategory1()
+                        bw.write(lastCategory)
+                        lastGrade = ""
+                    }
+
+                    if (lastGrade != it.getGradeKey()) {
+                        bw.newLine()
+                        lastGrade = it.getGradeKey()
+                        bw.write("  [${it.getGrade().first} ${it.getGrade().second}]")
+                        bw.write("  ")
+                    }
+
+                    bw.write("${it.getPriceAndOption()} > ")
+                }
+            } catch (e: FileNotFoundException) {
+                logI("FileNotFound: $fileName")
+            }
+
+            bw.flush()
+            bw.close()
+
+        }
+    }
+
+    /**아이템 정보를 담는 class*/
+    class ItemInfo(
+        @Expose val job: String,
+        @Expose val category: String,
+        @Expose val option: LinkedHashMap<String, Int>
+    ) : Serializable {
+        @Expose
+        var name = ""
+        @Expose
+        var price = 0L
+        @Expose
+        var priceText = ""
+        @Expose
+        var dateText = ""
+
+        private var gradeKey = ""
+        @Expose
+        private var grade: Pair<String, Int>? = null
+        private var uid: String? = null
+
+        fun getUid(): String {
+            if (uid == null) {
+                uid = "$job>$category>$option>$price"
+            }
+            return uid!!
+        }
+
+        /**추옵이 몇급인지 반환
+         * <"STR", 120> 반환*/
+        fun getGrade(): Pair<String, Int> {
+            if (grade != null) return grade!!
+
+            val statOrder = hashMapOf(
+                Pair(UpgradeItemTask.STR, 4),
+                Pair(UpgradeItemTask.LUK, 3),
+                Pair(UpgradeItemTask.DEX, 2),
+                Pair(UpgradeItemTask.INT, 1)
+            )
+            val tempOptions = hashMapOf<String, Int>()
+            when (job) {
+                WORRIER -> {
+                    var str = option[UpgradeItemTask.STR] ?: 0
+                    str += (option[UpgradeItemTask.ALL] ?: 0) * 10
+                    str += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
+
+                    if (str < 60) {
+                        var hp = option[UpgradeItemTask.HP] ?: 0
+                        hp += option[UpgradeItemTask.ATT]?.let { it * 140 } ?: 0
+
+                        if (hp > 1500)
+                            return Pair(UpgradeItemTask.HP, hp)
+                        else
+                            return Pair(UpgradeItemTask.STR, str)
+                    } else {
+                        return Pair(UpgradeItemTask.STR, str)
+                    }
+                }
+
+                MAGICIAN -> {
+                    var int = option[UpgradeItemTask.INT] ?: 0
+                    int += (option[UpgradeItemTask.ALL] ?: 0) * 10
+                    int += option[UpgradeItemTask.SPELL]?.let { it * 4 } ?: 0
+                    return Pair(UpgradeItemTask.INT, int)
+                }
+
+                ARCHER -> {
+                    var dex = option[UpgradeItemTask.DEX] ?: 0
+                    dex += (option[UpgradeItemTask.ALL] ?: 0) * 10
+                    dex += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
+                    return Pair(UpgradeItemTask.DEX, dex)
+                }
+
+                THIEF -> {
+                    var luc = option[UpgradeItemTask.LUK] ?: 0
+                    luc += (option[UpgradeItemTask.ALL] ?: 0) * 10
+                    luc += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
+                    return Pair(UpgradeItemTask.LUK, luc)
+                }
+
+                PIRATE -> {
+                    var dex = option[UpgradeItemTask.DEX] ?: 0
+                    dex += (option[UpgradeItemTask.ALL] ?: 0) * 10
+                    dex += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
+
+                    var str = option[UpgradeItemTask.STR] ?: 0
+                    str += option[UpgradeItemTask.ALL]?.let { it * 10 } ?: 0
+                    str += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
+
+                    if (dex - str > 2) {
+                        return Pair(UpgradeItemTask.DEX, dex)
+                    } else {
+                        return Pair(UpgradeItemTask.STR, str)
+                    }
+                }
+                else -> {
+                    option.forEach { (t, u) ->
+                        when (t) {
+                            UpgradeItemTask.ALL -> {
+                                val v = 10 * u
+                                tempOptions[UpgradeItemTask.STR] = tempOptions[UpgradeItemTask.STR]?.let { it + v } ?: v
+                                tempOptions[UpgradeItemTask.INT] = tempOptions[UpgradeItemTask.INT]?.let { it + v } ?: v
+                                tempOptions[UpgradeItemTask.DEX] = tempOptions[UpgradeItemTask.DEX]?.let { it + v } ?: v
+                                tempOptions[UpgradeItemTask.LUK] = tempOptions[UpgradeItemTask.LUK]?.let { it + v } ?: v
+                            }
+                            UpgradeItemTask.ATT -> {
+                                val v = 4 * u
+                                tempOptions[UpgradeItemTask.STR] = tempOptions[UpgradeItemTask.STR]?.let { it + v } ?: v
+                                tempOptions[UpgradeItemTask.DEX] = tempOptions[UpgradeItemTask.DEX]?.let { it + v } ?: v
+                                tempOptions[UpgradeItemTask.LUK] = tempOptions[UpgradeItemTask.LUK]?.let { it + v } ?: v
+                                // TODO: hp 옵션
+                            }
+                            UpgradeItemTask.SPELL -> {
+                                val v = 4 * u
+                                tempOptions[UpgradeItemTask.INT] = tempOptions[UpgradeItemTask.INT]?.let { it + v } ?: v
+                            }
+                            UpgradeItemTask.HP -> {
+
+                            }
+                            else -> {
+                                tempOptions[t] = tempOptions[t]?.let { it + u } ?: u
+                            }
+                        }
+                    }
+                    var max = 0
+                    var optionName = ""
+                    for ((t, u) in tempOptions) {
+                        if (u > max) {
+                            optionName = t
+                            max = u
+                        } else if (u == max && optionName != UpgradeItemTask.STR) {
+                            //수치가 같을때 옵션 우선순위 적용
+                            if (statOrder[t]!! > statOrder[optionName]!!) {
+                                optionName = t
+                            }
+                        }
+                    }
+                    return Pair(optionName, max)
+
+                }
+            }
+        }
+
+        /**<스텟><값> 형태의 스트링 반환 (값의 자리수를 4자리로 맞춘다 -> 정렬을 위해서)*/
+        fun getGradeKey(): String {
+            if (gradeKey.isNullOrEmpty()) {
+                gradeKey = "${getGrade().first} ${
+                    getGrade().second.toString().let {
+                        var temp = ""
+                        val space = 4 - (it.length)
+                        for (i in 1..space) {
+                            temp += " "
+                        }
+                        temp + it
+                    }
+                }"
+            }
+            return gradeKey
+        }
+
+        fun getAllInfo(): String {
+            return "${getCategory1()}[${getGradeKey()}][$priceText]$option"
+        }
+
+        fun getCategory1(): String {
+            if (job == COMMON)
+                return if (category == BELT) "[$category]"
+                else "[$category][$name]"
+            return "[$job][$category]"
+        }
+
+        fun getInfoText(): String {
+            return "[$job][$category]$option"
+        }
+
+        fun getPriceAndOption(): String {
+            return "[$priceText]$option"
+        }
+
+        fun toDB(): String {
+            return gson.toJson(this)
+        }
+
+        companion object {
+            private val gson = GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+            fun fromJson(json: String): ItemInfo {
+                return gson.fromJson(json, ItemInfo::class.java)
+            }
+        }
+
+    }
 
 }

@@ -1,35 +1,24 @@
 package maple_tasks
 
-import Testing
-import com.sun.jna.Native
 import com.sun.jna.platform.win32.User32
-import com.sun.jna.platform.win32.WinDef
 import helper.BaseTaskManager
 import helper.ConsumeEvent
-import helper.HelperCore
 import javafx.application.Platform
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
-import moveMouseSmoothly
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
-import toFile
-import toMat
 import tornadofx.asObservable
 import winActive
 import winIsForeground
-import winMove
-import java.awt.Point
-import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
-import kotlin.system.measureNanoTime
 
 
 class MapleTaskManager : BaseTaskManager() {
@@ -41,14 +30,14 @@ class MapleTaskManager : BaseTaskManager() {
             when (it.keyCode) {
 
                 NativeKeyEvent.VC_F2 -> {
-                    if(jobMap.isEmpty()) return@setPressedListener true
+                    if (jobMap.isEmpty()) return@setPressedListener true
                     //pause, resume
                     toggle()
                     false
                 }
 
                 NativeKeyEvent.VC_F3 -> {
-                    if(jobMap.isEmpty() && !isItemCheckerEnable) {
+                    if (jobMap.isEmpty() && !isItemCheckerEnable) {
                         return@setPressedListener true
                     }
                     resetTask()
@@ -69,7 +58,7 @@ class MapleTaskManager : BaseTaskManager() {
                         if (mapleBaseTask == null)
                             mapleBaseTask = MapleBaseTask()
 
-                        if(!User32.INSTANCE.winIsForeground(winTarget.value))
+                        if (!User32.INSTANCE.winIsForeground(winTarget.value))
                             return@setPressedListener true
 
                         GlobalScope.launch {
@@ -82,7 +71,7 @@ class MapleTaskManager : BaseTaskManager() {
 
                 NativeKeyEvent.VC_F1 -> {
                     if (isSimpleTaskEnable) {
-                        if(!User32.INSTANCE.winIsForeground(winTarget.value)){
+                        if (!User32.INSTANCE.winIsForeground(winTarget.value)) {
                             logI("타겟 윈도우가 Foreground에 있지 않습니다.")
                             return@setPressedListener true
                         }
@@ -110,29 +99,30 @@ class MapleTaskManager : BaseTaskManager() {
 
 
     private var mapleBaseTask: MapleBaseTask? = null
-    private var additionalOptionTask : AdditionalOptionTask? = null
+    private var additionalOptionTask: AdditionalOptionTask? = null
     var isItemCheckerEnable = false
     var isSimpleTaskEnable = false  // 간단한 작업 사용 여부
     var winTarget = SimpleStringProperty()
     val goodItemList = arrayListOf<String>().asObservable()
+    val marketItemList = arrayListOf<String>().asObservable()   //시세 목록
 
     val selectedSimpleTask = SimpleStringProperty()
 
     /**광클같은 간단한 작업 수행 */
     private fun startSimpleTask(simpleTask: String) {
         logI("$simpleTask 수행 시작")
-        if(jobMap["simpleTask"] != null) {
+        if (jobMap["simpleTask"] != null) {
             resetTask()
             return
         }
         runTask("simpleTask") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 if (mapleBaseTask == null)
                     mapleBaseTask = MapleBaseTask()
 
 
                 mapleBaseTask?.apply {
-                    when(simpleTask){
+                    when (simpleTask) {
                         SIMPLE_TASK_AUTOCLICK -> startAutoClick(winTarget.value)
                         SIMPLE_TASK_AUTOSPACE -> startAutoSend(winTarget.value, KeyEvent.VK_SPACE)
                         SIMPLE_TASK_AUTOSPACEANDENTER -> startAutoSpaceAndEnter(winTarget.value)
@@ -150,7 +140,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun test() {
         runTask("test") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 AuctionTask().clickCompletePurchasedTab()
             }
 
@@ -161,7 +151,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun test2() {
         runTask("test2") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 AuctionTask().exitAuction()
             }
         }
@@ -204,21 +194,21 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun login(id: String, pw: String) {
         runTask("login") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 LoginTask().login(id, pw)
         }
     }
 
     fun synthesizeItem() {
         runTask("syn") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 MeisterTask().synthesizeItemSmartly()
         }
     }
 
-    fun buyItem(useItemList: Boolean, buyAll: Boolean, fileName:String = "", usePurchasedTab: Boolean) {
+    fun buyItem(useItemList: Boolean, buyAll: Boolean, fileName: String = "", usePurchasedTab: Boolean) {
         runTask("buyItem") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 if (useItemList)
                     AuctionTask().buyItemListUntilEnd(fileName, usePurchasedTab = usePurchasedTab)
                 else
@@ -230,42 +220,42 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun makeItemInfinitely(maxCount: Int) {
         runTask("makeItem") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 MeisterTask().makeItemInfinitely(maxCount)
         }
     }
 
-    fun cubeItem(targetOptions: HashMap<String, Int>, count:Int = 1) {
+    fun cubeItem(targetOptions: HashMap<String, Int>, count: Int = 1) {
         runTask("cube") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 UpgradeItemTask().useCube(targetOptions, count)
         }
     }
 
     fun upgradeItem() {
         runTask("upgrade") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 UpgradeItemTask().upgradeAndStarforce()
         }
     }
 
-    fun makeItem(type:String, name:String, extractIfNormal: Boolean = true){
+    fun makeItem(type: String, name: String, extractIfNormal: Boolean = true) {
         runTask("makeItem") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 MeisterTask().apply {
-                    val targetPosition = when(type) {
+                    val targetPosition = when (type) {
                         MEISTER_1 -> meisterPosition1
                         MEISTER_2 -> meisterPosition2
                         MEISTER_3 -> meisterPosition3
                         else -> null
                     }
-                    if(targetPosition == null){
+                    if (targetPosition == null) {
                         logI("잘못된 타겟입니다.")
                         return@apply
                     }
 
                     moveCharacter(targetPosition)
-                    if(extractIfNormal) {
+                    if (extractIfNormal) {
                         makeItemAndExtractIfNormal(name)
                     } else {
                         makeItem(name)
@@ -275,11 +265,11 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun extractItems(untilBlank:Boolean) {
+    fun extractItems(untilBlank: Boolean) {
         runTask("extract") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 MeisterTask().apply {
-                    if(untilBlank) {
+                    if (untilBlank) {
                         extractItemUntilBlank()
                     } else
                         extractItemAll()
@@ -287,9 +277,9 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun appraiseItems(untilBlank:Boolean) {
+    fun appraiseItems(untilBlank: Boolean) {
         runTask("appraise") {
-            if(activateTargetWindow())
+            if (activateTargetWindow())
                 MapleBaseTask().apply {
                     appraiseItems(untilBlank)
                 }
@@ -298,9 +288,14 @@ class MapleTaskManager : BaseTaskManager() {
 
 
     /**아이템 구매 및 15분마다 타임리스 제작하기 */
-    fun buyItemAndMakeItem(fileName:String = "", usePurchasedTab: Boolean, name:String = "임리스 문라", waitingTime: Long = 900000) {
+    fun buyItemAndMakeItem(
+        fileName: String = "",
+        usePurchasedTab: Boolean,
+        name: String = "임리스 문라",
+        waitingTime: Long = 900000
+    ) {
         runTask("BuyAndMake") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 val auctionTask = AuctionTask()
                 auctionTask.buyItemListUntilEnd(fileName, name, waitingTime, usePurchasedTab = usePurchasedTab)
             }
@@ -311,7 +306,7 @@ class MapleTaskManager : BaseTaskManager() {
     /**첫번째 빈칸까지 아이템을 버린다. */
     fun dropItem(delay: Int) {
         runTask("dropItem") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 MapleBaseTask().apply {
                     dropItemUntilBlank(delay)
                 }
@@ -321,7 +316,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun pressZ(time: Long) {
         runTask("getDropItem") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 delay(1000)
                 MapleBaseTask().apply {
                     this.pressZ(time)
@@ -332,7 +327,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun buyItemAndExtract(fileName: String, usePurchasedTab: Boolean) {
         runTask("BuyAndMakeExtract") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 val auctionTask = AuctionTask()
                 auctionTask.buyItemListUntilEnd(fileName, extract = true, usePurchasedTab = usePurchasedTab)
             }
@@ -342,8 +337,8 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun checkAdditionalOption(untilBlank: Boolean) {
         runTask("additionalOption") {
-            if(activateTargetWindow()){
-                if(additionalOptionTask == null)
+            if (activateTargetWindow()) {
+                if (additionalOptionTask == null)
                     additionalOptionTask = AdditionalOptionTask()
 
                 val goodItems = additionalOptionTask?.checkItems(untilBlank)
@@ -361,7 +356,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun moveMouseToGoodItem(key: String) {
         runTask("additionalOption") {
-            if(activateTargetWindow()){
+            if (activateTargetWindow()) {
                 additionalOptionTask?.let {
                     val index = goodItemList.indexOf(key)
                     val goodItems = additionalOptionTask?.goodItems
@@ -376,6 +371,91 @@ class MapleTaskManager : BaseTaskManager() {
 
         }
 
+    }
+
+
+    fun makeMarketConditionInfo(fileName: String, maxCount: Int) {
+        runTask("marketCondition") {
+            if (activateTargetWindow()) {
+                val itemList: List<AdditionalOptionTask.ItemInfo> =
+                    if (maxCount == 0)
+                        MarketConditionTask().makeInfo(fileName)
+                    else
+                        MarketConditionTask().makeInfo(fileName, maxCount)
+
+                val itemManager = AdditionalOptionTask.ItemManager()
+                itemManager.addAll(itemList)
+                Platform.runLater {
+                    itemList.forEach {
+                        marketItemList.add(it.getAllInfo())
+                    }
+                    logI("${marketItemList.size}개 찾음")
+                }
+            }
+
+        }
+    }
+
+    fun loadMarketCondition(filename: String) {
+        runTask("marketCondition") {
+            if (activateTargetWindow()) {
+                val itemManager = AdditionalOptionTask.ItemManager()
+                val list = itemManager.loadFromTxt(filename)
+                Platform.runLater {
+                    list.forEach {
+                        marketItemList.add(it.getAllInfo())
+                    }
+                    logI("${list.size}개 불러옴, 총 ${marketItemList.size}개")
+                }
+
+            }
+
+        }
+    }
+
+    fun saveMarketCondition(filename: String) {
+        runTask("marketCondition") {
+            if (activateTargetWindow()) {
+                val itemManager = AdditionalOptionTask.ItemManager()
+                itemManager.saveToDB(filename)
+                itemManager.saveToTxt(filename)
+                logI("${marketItemList.size}개 저장")
+            }
+
+        }
+    }
+
+    fun sortMarketCondition() {
+        runTask("marketCondition") {
+            if (activateTargetWindow()) {
+                val itemManager = AdditionalOptionTask.ItemManager()
+                val list = itemManager.getSortedList()
+
+                Platform.runLater {
+                    marketItemList.clear()
+                    list.forEach {
+                        marketItemList.add(it.getAllInfo())
+                    }
+                    logI("${marketItemList.size}개 정렬")
+                }
+
+            }
+
+        }
+    }
+
+    fun clearMarketCondition() {
+        runTask("marketCondition") {
+            if (activateTargetWindow()) {
+                val itemManager = AdditionalOptionTask.ItemManager()
+                itemManager.clear()
+                Platform.runLater {
+                    marketItemList.clear()
+                }
+
+            }
+
+        }
     }
 
 

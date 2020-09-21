@@ -234,6 +234,42 @@ class MainView : View() {
                 }
             }
 
+            tab("추가옵션") {
+                isClosable = false
+                vbox {
+                    paddingAll = defaultItemSpacing
+                    spacing = defaultItemSpacing
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+
+                        val untilBlank = SimpleBooleanProperty()
+                        button ("추옵 확인") {
+                            action {
+                                taskManager.checkAdditionalOption(untilBlank.value)
+                            }
+                        }
+
+                        checkbox("빈칸까지 수행", untilBlank) {
+                            isSelected = false
+                        }
+
+                    }
+
+                    listview(taskManager.goodItemList) {
+                        useMaxWidth = true
+                        prefHeight = 180.0
+                        selectionModel.selectionMode = SelectionMode.SINGLE
+                        onUserSelect {
+                            taskManager.moveMouseToGoodItem(it)
+                        }
+                    }
+
+
+                }
+            }
+
             tab("경매장") {
                 isClosable = false
                 vbox {
@@ -258,7 +294,7 @@ class MainView : View() {
                         }
 
                         textfield(fileName) {
-                            text = "ItemList.txt"
+                            text = "ItemList"
                         }
                     }
 
@@ -309,8 +345,11 @@ class MainView : View() {
                 }
             }
 
-            tab("추가옵션") {
+            tab("시세") {
                 isClosable = false
+                val fileName = SimpleStringProperty()
+                val resultFileName = SimpleStringProperty()
+                val maxCount = SimpleStringProperty()
                 vbox {
                     paddingAll = defaultItemSpacing
                     spacing = defaultItemSpacing
@@ -319,28 +358,69 @@ class MainView : View() {
                         alignment = Pos.CENTER_LEFT
                         spacing = defaultItemSpacing
 
-                        val untilBlank = SimpleBooleanProperty()
-                        button ("추옵 확인") {
+                        textfield(fileName) {
+                            text = "시세조사대상"
+                            maxWidth = 90.0
+                        }
+
+                        button ("시세정보 만들기") {
                             action {
-                                taskManager.checkAdditionalOption(untilBlank.value)
+                                taskManager.makeMarketConditionInfo(fileName.value, maxCount.value.toInt())
                             }
                         }
 
-                        checkbox("빈칸까지 수행", untilBlank) {
-                            isSelected = false
+                        label("조사대상1개당 검색할 수:")
+                        textfield(maxCount) {
+                            text = "0"
+                            maxWidth = 50.0
                         }
+                        label("0:최대")
 
                     }
 
-                    listview(taskManager.goodItemList) {
+                    listview(taskManager.marketItemList) {
                         useMaxWidth = true
-                        prefHeight = 180.0
+                        prefHeight = 160.0
                         selectionModel.selectionMode = SelectionMode.SINGLE
                         onUserSelect {
                             taskManager.moveMouseToGoodItem(it)
                         }
                     }
 
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+
+                        textfield(resultFileName) {
+                            text = "추옵시세표"
+                            maxWidth = 90.0
+                        }
+
+                        button ("불러오기") {
+                            action {
+                                taskManager.loadMarketCondition(resultFileName.value)
+                            }
+                        }
+
+                        button ("저장") {
+                            action {
+                                taskManager.saveMarketCondition(resultFileName.value)
+                            }
+                        }
+
+                        button ("정렬") {
+                            action {
+                                taskManager.sortMarketCondition()
+                            }
+                        }
+
+                        button ("초기화") {
+                            action {
+                                taskManager.clearMarketCondition()
+                            }
+                        }
+
+                    }
 
                 }
             }

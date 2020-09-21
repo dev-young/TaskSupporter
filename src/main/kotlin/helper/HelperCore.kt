@@ -147,7 +147,7 @@ class HelperCore : Robot() {
         } catch (e: Exception) {
 //            print("[Error] 2" + e.message)
 //            logI("사진 파일 확인 필요. error: ${e.message}")
-            logI("오류 발생. (예상 원인: 이미지 파일 없음")
+            logI("오류 발생. (예상 원인: 이미지 파일 없음) ${e.message}")
             return false
         }
 
