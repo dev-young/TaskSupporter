@@ -29,7 +29,7 @@ class MainView : View() {
         val lastLogLabel = Label()
     }
 
-    private val defaultItemSpacing = 8.0
+    private val defaultItemSpacing = 7.0
     private lateinit var infoLabel: Label
     val taskManager = MapleTaskManager()
 
@@ -65,6 +65,12 @@ class MainView : View() {
                 text = "초기화"
                 action {
                     taskManager.resetTask()
+                }
+            }
+
+            button ("인벤 칸 계산") {
+                action {
+                    taskManager.countEmptyInventory()
                 }
             }
         }
@@ -255,6 +261,13 @@ class MainView : View() {
                             isSelected = false
                         }
 
+                        spacer { maxWidth = 10.0 }
+
+                        button ("인벤토리 끝으로 옮기기") {
+                            action {
+                                taskManager.moveGoodItemsToEnd()
+                            }
+                        }
                     }
 
                     listview(taskManager.goodItemList) {
@@ -721,30 +734,52 @@ class MainView : View() {
                             taskManager.test2()
                         }
                     }
-
-                    button {
-                        text = "로그 초기화화"
-                       action {
-                            logList.clear()
-                        }
-                    }
                 }
             }
 
             tab("로그") {
                 isClosable = false
-
                 listview(logList) {
                     useMaxWidth = true
                     prefHeight = 200.0
                     selectionModel.selectionMode = SelectionMode.SINGLE
+                    longpress {
+                        logList.clear()
+                    }
                 }
+//                vbox {
+//                    useMaxWidth = true
+//
+//
+//                    hbox {
+//                        paddingAll = defaultItemSpacing
+//                        spacing = defaultItemSpacing
+//                        paddingTop = 3.0
+//                        paddingBottom = 0.0
+//                        useMaxWidth = true
+//                        alignment = Pos.CENTER_RIGHT
+//
+//                        button {
+//                            text = "로그 초기화화"
+//                            maxHeight = 17.0
+//                            action {
+//                                logList.clear()
+//                            }
+//                        }
+//                    }
+//
+//
+//                }
+
+
+
             }
         }
 
         bottom = vbox {
             label(STATE_IDEL) {
-                paddingAll = defaultItemSpacing
+                paddingBottom = defaultItemSpacing
+                paddingLeft = defaultItemSpacing
                 useMaxWidth = true
                 infoLabel = this
             }
@@ -754,6 +789,7 @@ class MainView : View() {
                 useMaxWidth = true
                 paddingLeft = 5.0
             }
+
 
         }
     }

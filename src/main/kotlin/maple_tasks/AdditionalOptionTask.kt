@@ -120,6 +120,18 @@ open class AdditionalOptionTask : MapleBaseTask() {
                 }
 
             }
+        }
+
+        return goodItemsInfo
+
+    }
+
+    /**전달받은 아이템 목록을 인벤토리 제일 뒷쪽으로 이동시킨다. */
+    suspend fun moveItemsToEnd() {
+        val blankList = arrayListOf<Point>()
+        val items = findItems(false, blankList)
+
+        helper.apply {
 
             goodItems.forEach {
                 if (blankList.isNotEmpty()) {
@@ -131,7 +143,6 @@ open class AdditionalOptionTask : MapleBaseTask() {
             }
         }
 
-        return goodItemsInfo
 
     }
 

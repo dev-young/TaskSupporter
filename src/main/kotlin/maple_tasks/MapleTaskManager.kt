@@ -357,9 +357,22 @@ class MapleTaskManager : BaseTaskManager() {
                     Platform.runLater {
                         goodItemList.clear()
                         goodItemList.addAll(it)
+                        logI("기준에 충족되는 아이템 수: ${it.size}")
                     }
 
                 }
+            }
+
+        }
+    }
+
+    fun moveGoodItemsToEnd() {
+        runTask("additionalOption") {
+            if (activateTargetWindow()) {
+                if (additionalOptionTask == null)
+                    additionalOptionTask = AdditionalOptionTask()
+
+                additionalOptionTask?.moveItemsToEnd()
             }
 
         }
@@ -378,6 +391,24 @@ class MapleTaskManager : BaseTaskManager() {
                 }
 
 
+            }
+
+        }
+
+    }
+
+    fun countEmptyInventory() {
+        runTask("simpleTask") {
+            if (activateTargetWindow()) {
+                if (mapleBaseTask == null)
+                    mapleBaseTask = MapleBaseTask()
+
+                mapleBaseTask?.let {
+                    it.openInventory()
+                    val emptyList = arrayListOf<Point>()
+                    val count = it.findItems(false, emptyList).size
+                    logI("빈칸: ${emptyList.size}  사용중: $count  합: ${count.plus(emptyList.size)}")
+                }
             }
 
         }

@@ -5,10 +5,14 @@ import helper.HelperCore
 import kotlinx.coroutines.delay
 import logI
 import moveMouseSmoothly
+import org.opencv.core.Mat
+import org.opencv.imgcodecs.Imgcodecs
+import toMat
 import winActive
 import winGetPos
 import winIsForeground
 import java.awt.Point
+import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import kotlin.math.absoluteValue
 
@@ -67,6 +71,26 @@ open class MapleBaseTask {
 
         helper.imageSearch(p, 39, 39, "img\\disableItem.png")?.let {
             logI("사용할 수 없는 칸 확인")
+            return 2
+        }
+
+        return 0
+    }
+
+    val emptyItemTemplate = Imgcodecs.imread("img\\emptyItem.png")
+    val disableItemTemplate = Imgcodecs.imread("img\\disableItem.png")
+    /**checkEmptyOrDisable 빠르게 동작하는 버전
+     * @param screenImg 전체 이미지
+     * @param targetItem 전체 이미지 내에서 좌표
+     * */
+    fun checkEmptyOrDisableFast(screenImg: Mat, targetItem: Point): Int {
+        // 검색할 이미지 범위 (해당위치에서 살짝 넓게)
+        val source = screenImg.colRange(targetItem.x-5, targetItem.x+emptyItemTemplate.rows()+5).rowRange(targetItem.y-5, targetItem.y+emptyItemTemplate.cols()+5)
+        if(helper.imageSearchReturnBoolean(source, emptyItemTemplate)){
+            return 1
+        }
+
+        if(helper.imageSearchReturnBoolean(source, disableItemTemplate)){
             return 2
         }
 
@@ -302,7 +326,81 @@ open class MapleBaseTask {
 
     /**인벤토리 첫칸부터 빈칸이 나오기 전까지 아이템의 목록을 반환한다.
      * @param untilBlank false로 할 경우 모든 아이템의 위치를 반환한다. */
-    suspend fun findItems(untilBlank: Boolean = true, blankList: ArrayList<Point> = arrayListOf()): List<Point> {
+    suspend fun findItems(untilBlank: Boolean = true, blankList: ArrayList<Point>? = null): List<Point> {
+        val items = arrayListOf<Point>()
+        blankList?.clear()
+        helper.apply {
+            var vx: Int //현재 아이템 x
+            var vy: Int  //현재 아이템 y
+            val point: Point = findFirstItemInInventory() ?: return@apply soundBeep().also {
+                logI("인벤토리 첫칸을 찾는데 실패했습니다.")
+            }
+            point.let {
+                vx = it.x + 2
+                vy = it.y + 2
+                logI("첫째칸 좌상단 위치: $vx, $vy")
+            }
+
+            val isInventoryExpanded = isInventoryExpanded()
+            val repeatCount = if (isInventoryExpanded) 128 else 24
+
+            val itemPosList = arrayListOf<Point>()
+            for (i in 1..repeatCount) {
+                itemPosList.add(Point(vx, vy))
+                if (isInventoryExpanded) {
+                    //확장된 인벤토리인 경우
+                    if (i % 32 == 0) {
+                        vx += itemDistance
+                        vy -= (itemDistance * 7)
+                        continue
+                    }
+                }
+
+                if (i % 4 == 0) {
+                    vx -= (itemDistance * 3)
+                    vy += itemDistance
+                } else {
+                    vx += itemDistance
+                }
+            }
+
+            //0,0 ~ 인벤토리가 다 보이는곳까지의 이미지
+            val screenImg = if(isInventoryExpanded)
+                createScreenCapture(Rectangle(0, 0, point.x+700, point.y+370)).toMat()
+            else
+                createScreenCapture(Rectangle(0, 0, point.x+190, point.y+330)).toMat()
+
+            var lastPosition = 0
+            kotlin.run {
+                itemPosList.forEachIndexed { index, point ->
+                    kotlinx.coroutines.delay(1)
+//                    logI("${index+1}번째 : 일반아이템? ${checkItemIsNormal(point)}")
+                    val checkResult = checkEmptyOrDisableFast(screenImg, point)
+                    if (checkResult > 0) {
+                        lastPosition = index - 1
+                        logI("lastPosition: $lastPosition")
+
+                        if (checkResult == 2 || untilBlank)
+                            return@run
+
+                        if(checkResult == 1) {
+                            blankList?.add(point)
+                        }
+                    } else {
+                        items.add(point)
+                    }
+                }
+            }
+
+            if (lastPosition < 0) {
+                logI("아이템을 찾을 수 없습니다.")
+            }
+        }
+        return items
+    }
+
+    @Deprecated("느린 방식이다.")
+    private suspend fun findItems_Old(untilBlank: Boolean = true, blankList: ArrayList<Point> = arrayListOf()): List<Point> {
         val items = arrayListOf<Point>()
         blankList.clear()
         helper.apply {
