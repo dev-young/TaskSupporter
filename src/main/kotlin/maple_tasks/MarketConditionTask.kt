@@ -16,7 +16,7 @@ class MarketConditionTask : AdditionalOptionTask() {
     private var resultScreenRect: Rectangle? = null //검색 결과 캡쳐 범위
     private var nextPagePoint: Point? = null //다음 페이지 버튼 위치
 
-    private val optionValueTemplates = linkedMapOf<Int, Mat>().apply {
+    private val valueTemplates = linkedMapOf<Int, Mat>().apply {
         this[0] = Imgcodecs.imread("$defaultImgPath\\0.png")
         this[9] = Imgcodecs.imread("$defaultImgPath\\9.png")
         this[3] = Imgcodecs.imread("$defaultImgPath\\3.png")
@@ -28,7 +28,7 @@ class MarketConditionTask : AdditionalOptionTask() {
         this[7] = Imgcodecs.imread("$defaultImgPath\\7.png")
         this[8] = Imgcodecs.imread("$defaultImgPath\\8.png")
         this[-1] = Imgcodecs.imread("$defaultImgPath\\comma.png")
-//        this[-2] = Imgcodecs.imread("$baseImgPath\\end.png")
+        this[-2] = Imgcodecs.imread("$defaultImgPath\\dash.png")
         values.forEach {
             it.changeContract()
         }
@@ -72,21 +72,25 @@ class MarketConditionTask : AdditionalOptionTask() {
                     var lastResult = ""
                     while (counter < maxCount) {
                         //결과 캡쳐
-                        val priceList = arrayListOf<Pair<Long, String>>()
+                        val priceDateList = arrayListOf<Pair<Pair<Long, String>, String>>()
                         captureResult()?.let { capture ->
                             for (i in 0 until 9) {
 
                                 val startRow = heightArr[i]
                                 val endRow = startRow + 11
-                                val temp = capture.rowRange(startRow, endRow).colRange(0, 95)
-                                temp.changeContract()
+                                val priceTem = capture.rowRange(startRow, endRow).colRange(0, 95)
+                                val dateTem = capture.rowRange(startRow+7, endRow+7).colRange(294, 355)
+                                priceTem.changeContract()
+                                dateTem.changeContract()
+//                                Imgcodecs.imwrite("testDate.png", dateTem)
 
                                 //가격 정보 및 날짜 정보 추출
-                                val price = getPrice(temp)
+                                val price = getPrice(priceTem)
                                 if (price.first > 0) {
-                                    priceList.add(price)
+                                    val date = getDate(dateTem)
+                                    priceDateList.add(Pair(price, date))
                                     counter++
-                                    logI("${price.second} [$counter]")
+//                                    logI("${price.second} [$counter]")
                                 } else {
                                     break
                                 }
@@ -96,7 +100,7 @@ class MarketConditionTask : AdditionalOptionTask() {
                         }
 
                         //최근 가격 목록과 비교하여 목록이 일치하면 마지막 결과인걸로 판단하여 반복 종료
-                        val result = priceList.toString()
+                        val result = priceDateList.toString()
                         if (lastResult == result || nextPagePoint == null) {
                             //마지막페이지
 //                            logI("마지막페이지 확인 counter=$counter")
@@ -107,17 +111,18 @@ class MarketConditionTask : AdditionalOptionTask() {
 
                         //새로운 목록일 경우 아이템 가격정보에 맞춰 해당 아이템 옵션 확인 및 저장
                         val nextItemPoint = Point(nextPagePoint!!.x - 389, nextPagePoint!!.y + 59)
-                        priceList.forEachIndexed { idx, price ->
+                        priceDateList.forEachIndexed { idx, priceDate ->
                             getOptions(nextItemPoint)?.let {
-                                it.price = price.first
-                                it.priceText = price.second
+                                it.price = priceDate.first.first
+                                it.priceText = priceDate.first.second
+                                it.dateText = priceDate.second
                                 it.name = targetName
                                 itemTotalList.add(it)
                             }
                             nextItemPoint.y = nextItemPoint.y + height
                         }
 
-                        if (priceList.size < 9) {
+                        if (priceDateList.size < 9) {
                             break
                         }
 
@@ -166,7 +171,7 @@ class MarketConditionTask : AdditionalOptionTask() {
         val targetMat = optionMat.colRange(startCol, optionWidth + 4)
 //        Imgcodecs.imwrite("test0.png", targetMat)
         kotlin.run {
-            optionValueTemplates.forEach { (v, vt) ->
+            valueTemplates.forEach { (v, vt) ->
                 val point = helper.imageSearch(targetMat, vt, 98.0)
                 point?.let {
                     if (v < 0) {
@@ -189,7 +194,7 @@ class MarketConditionTask : AdditionalOptionTask() {
 //            Imgcodecs.imwrite("test$i.png", targetMat)
             var notFound = false
             kotlin.run {
-                optionValueTemplates.forEach { (v, vt) ->
+                valueTemplates.forEach { (v, vt) ->
                     if (helper.imageSearchReturnBoolean(targetMat, vt, 98.0)) {
                         if (v == -1) {
                             startCol -= 3
@@ -212,6 +217,38 @@ class MarketConditionTask : AdditionalOptionTask() {
 
 
         return Pair(value, strValue)
+    }
+
+    private fun getDate(mat: Mat): String {
+
+        var optionWidth = 6
+        var strValue = ""
+        var startCol = 0
+
+        for (i in 0..9) {
+            val targetMat = mat.colRange(startCol, startCol + optionWidth + 1)
+//            Imgcodecs.imwrite("date$i.png", targetMat)
+            var notFound = false
+            startCol += optionWidth
+            kotlin.run {
+                valueTemplates.forEach { (v, vt) ->
+                    if (helper.imageSearchReturnBoolean(targetMat, vt, 98.0)) {
+                        if (v > -1) {
+                            strValue += v.toString()
+                        } else {
+                            strValue = "$strValue-"
+                        }
+                        return@run
+                    }
+                }
+                notFound = true
+            }
+            if (notFound)
+                break
+        }
+
+
+        return strValue
     }
 
     private fun captureResult(): Mat? {
@@ -276,5 +313,15 @@ class MarketConditionTask : AdditionalOptionTask() {
             }
             simpleClick()
         }
+    }
+
+    suspend fun findMarketCondition(itemPosition: Point): List<ItemInfo> {
+        val result = arrayListOf<ItemInfo>()
+        getOptions(itemPosition)?.let {
+            logI(it.getInfoText())
+            result.addAll(ItemManager().search(it))
+        }
+
+        return result
     }
 }

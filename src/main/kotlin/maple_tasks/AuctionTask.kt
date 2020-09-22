@@ -6,6 +6,9 @@ import moveMouseSmoothly
 import java.awt.Point
 import java.awt.event.KeyEvent
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class AuctionTask : MapleBaseTask() {
@@ -643,6 +646,45 @@ class AuctionTask : MapleBaseTask() {
             send(KeyEvent.VK_SPACE)
             send(KeyEvent.VK_SPACE)
             delay(40L)
+        }
+    }
+
+    suspend fun sellItem(item: Point, price: String) {
+        Date().let {
+            val newPrice = price.substring(0, price.length-4) + SimpleDateFormat("MMdd").format(it)
+            logI("$newPrice 가격에 등록 시작")
+
+            helper.apply {
+                moveMouseSmoothly(item, t = 50)
+                delayRandom(30, 60)
+                simpleClick()
+
+                imageSearch("$defaultImgPath\\sell.png")?.let { it ->
+                    val priceZone = Point(it.x+200, it.y+120)
+                    val sellBtn = Point(it.x+210, it.y+222)
+
+                    smartClick(priceZone, randomRangeY = 3, randomRangeX = 20, maxTime = 80)
+                    simpleClick()
+
+                    copyToClipboard(newPrice)
+                    smartClick(priceZone, randomRangeX = 20, randomRangeY = 3, minTime = 50, maxTime = 100)
+                    clearText()
+                    delayRandom(20,50)
+                    paste()
+
+                    delayRandom(50,100)
+                    smartClick(sellBtn, randomRangeX = 40, randomRangeY = 5, maxTime = 80)
+                    simpleClick()
+                    delayRandom(20,50)
+
+                    sendEnter()
+                    delayRandom(100,150)
+                    sendEnter()
+
+                }
+            }
+
+
         }
     }
 

@@ -1,7 +1,6 @@
 package maple_tasks
 
 import changeContract
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.Expose
 import logI
@@ -427,6 +426,48 @@ open class AdditionalOptionTask : MapleBaseTask() {
             sortedList.clear()
         }
 
+
+        fun search(info: ItemInfo): ArrayList<ItemInfo> {
+            val result = arrayListOf<ItemInfo>()
+
+            val cateList = arrayListOf<String>()
+            if(info.category == BELT) {
+                info.name = "쿰의벨"
+                cateList.add(info.getCategory1())
+                info.name = "골든클"
+                cateList.add(info.getCategory1())
+            } else
+                cateList.add(info.getCategory1())
+            val gradeKey = info.getGradeKey()
+
+            cateList.forEach {cate1 ->
+                val gradeMap = categoryMap[cate1]
+                gradeMap?.let {
+                    gradeMap.computeIfAbsent(gradeKey) { arrayListOf() }
+                    val keys = gradeMap.keys.toList()
+                    for (i in keys.indices) {
+                        val key = keys[i]
+                        if(key == gradeKey) {
+                            intArrayOf(i-1, i, i+1).forEach {
+                                if(it > -1 && it < keys.size) {
+                                    gradeMap[keys[it]]?.let {
+                                        it.sortWith(kotlin.Comparator { o1, o2 -> -o1.price.compareTo(o2.price) })
+                                        result.addAll(it)
+                                    }
+
+                                }
+                            }
+                            break
+                        }
+
+                    }
+                }
+            }
+
+
+            return result
+        }
+
         fun loadFromTxt(fileName: String): MutableCollection<ItemInfo> {
             val reader = BufferedReader(
                 InputStreamReader(
@@ -442,11 +483,11 @@ open class AdditionalOptionTask : MapleBaseTask() {
             return itemMap.values
         }
 
-        fun saveToDB(fileName: String = "메이플시세목록") {
+        fun saveToDB(fileName: String = "메이플시세목록", overwrite: Boolean) {
             if (itemMap.isEmpty()) return
 
             val file = File("$fileName DB")
-            val bw = BufferedWriter(FileWriter(file, false))
+            val bw = BufferedWriter(FileWriter(file, !overwrite))
 
             // 문자열을 앞서 지정한 경로에 파일로 저장, 저장시 캐릭터셋은 기본값인 UTF-8으로 저장
             // 이미 파일이 존재할 경우 덮어쓰기로 저장
@@ -489,7 +530,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
                         bw.write("  ")
                     }
 
-                    bw.write("${it.getPriceAndOption()} > ")
+                    bw.write("${it.getPriceAndDateAndOption()} > ")
                 }
             } catch (e: FileNotFoundException) {
                 logI("FileNotFound: $fileName")
@@ -515,6 +556,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
         var priceText = ""
         @Expose
         var dateText = ""
+        var dateTextSimple = ""
 
         private var gradeKey = ""
         @Expose
@@ -523,7 +565,10 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
         fun getUid(): String {
             if (uid == null) {
-                uid = "$job>$category>$option>$price"
+                if (category == BELT)
+                    uid = "$job>$name$category>$option>$price>$dateText"
+                else
+                    uid = "$job>$category>$option>$price>$dateText"
             }
             return uid!!
         }
@@ -661,22 +706,28 @@ open class AdditionalOptionTask : MapleBaseTask() {
         }
 
         fun getAllInfo(): String {
-            return "${getCategory1()}[${getGradeKey()}][$priceText]$option"
+            return "${getCategory1()}[${getGradeKey()}][$priceText][${getSimpleDate()}]$option"
         }
 
         fun getCategory1(): String {
             if (job == COMMON)
-                return if (category == BELT) "[$category]"
-                else "[$category][$name]"
+                return if (category == BELT) "[$category][$name]"
+                else "[$category]"
             return "[$job][$category]"
         }
 
         fun getInfoText(): String {
-            return "[$job][$category]$option"
+            return "${getCategory1()}[${getGrade().first} ${getGrade().second}]$option"
         }
 
-        fun getPriceAndOption(): String {
-            return "[$priceText]$option"
+        fun getSimpleDate(): String {
+            if (dateTextSimple.isNullOrEmpty())
+                dateTextSimple = dateText.substring(5).replace('-','.')
+            return dateTextSimple
+        }
+
+        fun getPriceAndDateAndOption(): String {
+            return "[$priceText][${getSimpleDate()}]$option"
         }
 
         fun toDB(): String {

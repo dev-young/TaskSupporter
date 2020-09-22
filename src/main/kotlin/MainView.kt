@@ -350,6 +350,7 @@ class MainView : View() {
                 val fileName = SimpleStringProperty()
                 val resultFileName = SimpleStringProperty()
                 val maxCount = SimpleStringProperty()
+                val overwriteDB = SimpleBooleanProperty()
                 vbox {
                     paddingAll = defaultItemSpacing
                     spacing = defaultItemSpacing
@@ -380,10 +381,10 @@ class MainView : View() {
 
                     listview(taskManager.marketItemList) {
                         useMaxWidth = true
-                        prefHeight = 160.0
+                        prefHeight = 150.0
                         selectionModel.selectionMode = SelectionMode.SINGLE
                         onUserSelect {
-                            taskManager.moveMouseToGoodItem(it)
+                            taskManager.sellItem(it)
                         }
                     }
 
@@ -404,7 +405,7 @@ class MainView : View() {
 
                         button ("저장") {
                             action {
-                                taskManager.saveMarketCondition(resultFileName.value)
+                                taskManager.saveMarketCondition(resultFileName.value, overwriteDB.value)
                             }
                         }
 
@@ -417,6 +418,41 @@ class MainView : View() {
                         button ("초기화") {
                             action {
                                 taskManager.clearMarketCondition()
+                            }
+                        }
+
+                        checkbox("DB덮어씌우기", overwriteDB) {
+                            isSelected = false
+                        }
+
+                    }
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = 4.5
+
+                        checkbox("F1버튼으로 해당 아이템 시세 확인하기") {
+                            isSelected = false
+                            action {
+                                taskManager.checkMarketConditionEnable = isSelected
+                            }
+                        }
+
+                        val price = SimpleStringProperty()
+
+                        spacer {maxWidth = 15.0}
+
+                        textfield(price) {
+                            maxWidth = 90.0
+                        }
+                        button ("등록") {
+                            action {
+                                taskManager.sellItem("  #${price.value}0000")
+                            }
+                        }
+                        button {
+                            action {
+                                price.set("")
                             }
                         }
 

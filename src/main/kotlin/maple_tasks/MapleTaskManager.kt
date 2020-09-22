@@ -3,6 +3,7 @@ package maple_tasks
 import com.sun.jna.platform.win32.User32
 import helper.BaseTaskManager
 import helper.ConsumeEvent
+import helper.HelperCore
 import javafx.application.Platform
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.GlobalScope
@@ -14,6 +15,7 @@ import org.jnativehook.keyboard.NativeKeyEvent
 import tornadofx.asObservable
 import winActive
 import winIsForeground
+import java.awt.Point
 import java.awt.event.KeyEvent
 import java.io.File
 import java.util.logging.Level
@@ -70,7 +72,15 @@ class MapleTaskManager : BaseTaskManager() {
                 }
 
                 NativeKeyEvent.VC_F1 -> {
-                    if (isSimpleTaskEnable) {
+                    if (checkMarketConditionEnable) {
+                        if (!User32.INSTANCE.winIsForeground(winTarget.value)) {
+                            logI("타겟 윈도우가 Foreground에 있지 않습니다.")
+                            findMarketConditionTarget = HelperCore().getMousePos()
+                            return@setPressedListener true
+                        }
+                        findMarketConditionInMouse()
+                        false
+                    } else if (isSimpleTaskEnable) {
                         if (!User32.INSTANCE.winIsForeground(winTarget.value)) {
                             logI("타겟 윈도우가 Foreground에 있지 않습니다.")
                             return@setPressedListener true
@@ -102,6 +112,7 @@ class MapleTaskManager : BaseTaskManager() {
     private var additionalOptionTask: AdditionalOptionTask? = null
     var isItemCheckerEnable = false
     var isSimpleTaskEnable = false  // 간단한 작업 사용 여부
+    var checkMarketConditionEnable = false  // F1버튼을 통해 시세파악기능 활성화 여부
     var winTarget = SimpleStringProperty()
     val goodItemList = arrayListOf<String>().asObservable()
     val marketItemList = arrayListOf<String>().asObservable()   //시세 목록
@@ -398,47 +409,39 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun loadMarketCondition(filename: String) {
         runTask("marketCondition") {
-            if (activateTargetWindow()) {
-                val itemManager = AdditionalOptionTask.ItemManager()
-                val list = itemManager.loadFromTxt(filename)
-                Platform.runLater {
-                    list.forEach {
-                        marketItemList.add(it.getAllInfo())
-                    }
-                    logI("${list.size}개 불러옴, 총 ${marketItemList.size}개")
+            val itemManager = AdditionalOptionTask.ItemManager()
+            val list = itemManager.loadFromTxt(filename)
+            Platform.runLater {
+                list.forEach {
+                    marketItemList.add(it.getAllInfo())
                 }
-
+                logI("${list.size}개 불러옴, 총 ${marketItemList.size}개")
             }
 
         }
     }
 
-    fun saveMarketCondition(filename: String) {
+    fun saveMarketCondition(filename: String, overwriteDB: Boolean) {
         runTask("marketCondition") {
-            if (activateTargetWindow()) {
-                val itemManager = AdditionalOptionTask.ItemManager()
-                itemManager.saveToDB(filename)
-                itemManager.saveToTxt(filename)
-                logI("${marketItemList.size}개 저장")
-            }
+            val itemManager = AdditionalOptionTask.ItemManager()
+            itemManager.saveToDB(filename, overwriteDB)
+            itemManager.saveToTxt(filename)
+            logI("${marketItemList.size}개 저장")
 
         }
     }
 
     fun sortMarketCondition() {
         runTask("marketCondition") {
-            if (activateTargetWindow()) {
-                val itemManager = AdditionalOptionTask.ItemManager()
-                val list = itemManager.getSortedList()
+            val itemManager = AdditionalOptionTask.ItemManager()
+            val list = itemManager.getSortedList()
 
-                Platform.runLater {
-                    marketItemList.clear()
-                    list.forEach {
-                        marketItemList.add(it.getAllInfo())
-                    }
-                    logI("${marketItemList.size}개 정렬")
+            Platform.runLater {
+                marketItemList.clear()
+                list.forEach {
+                    marketItemList.add(it.getAllInfo())
                 }
-
+                logI("${marketItemList.size}개 정렬")
             }
 
         }
@@ -446,16 +449,69 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun clearMarketCondition() {
         runTask("marketCondition") {
+            val itemManager = AdditionalOptionTask.ItemManager()
+            itemManager.clear()
+            Platform.runLater {
+                marketItemList.clear()
+            }
+
+        }
+    }
+
+    var findMarketConditionTarget : Point? = null   //시세를 알아볼 아이템의 마우스 좌표
+    /**마우스 좌표의 아이템의 시세를 파악한 뒤 관련 아이템들 목록을 뷰에 업데이트*/
+    private fun findMarketConditionInMouse() {
+        runTask("marketCondition") {
             if (activateTargetWindow()) {
-                val itemManager = AdditionalOptionTask.ItemManager()
-                itemManager.clear()
-                Platform.runLater {
-                    marketItemList.clear()
+                val task = MarketConditionTask()
+                val point = task.helper.getMousePos()
+                findMarketConditionTarget = point
+                task.findMarketCondition(point).let {
+                    Platform.runLater {
+                        marketItemList.clear()
+                        it.forEach {
+                            marketItemList.add("${it.name}[${it.getGradeKey()}][${it.priceText}][${it.dateTextSimple}]${it.option}   #${it.price}")
+                        }
+                    }
                 }
+
+
 
             }
 
         }
+    }
+
+    /**문자열에서 가격을 추출 후 */
+    fun sellItem(str: String) {
+
+        runTask("auctionTask") {
+            var price = ""
+            var findPrice = false
+            for (i in str.lastIndex downTo str.lastIndex-30) {
+                if(str[i] == '#'){
+                    findPrice = true
+                    break
+                } else {
+                    price = str[i] + price
+                }
+            }
+            if(!findPrice) {
+                return@runTask
+            }
+
+            if (activateTargetWindow()) {
+                findMarketConditionTarget?.let {
+                    AuctionTask().sellItem(it, price)
+                }
+            }
+
+        }
+
+
+
+
+
     }
 
 
