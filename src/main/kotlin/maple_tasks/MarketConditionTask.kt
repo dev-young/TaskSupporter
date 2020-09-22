@@ -36,7 +36,7 @@ class MarketConditionTask : AdditionalOptionTask() {
 
     suspend fun makeInfo(filePath: String, maxCount: Int = Int.MAX_VALUE): ArrayList<ItemInfo> {
         //아이템 정보 불러오기
-        val itemList = loadItemList(filePath) ?: arrayListOf(arrayOf("", "", "", "", ""))
+        val itemList = loadItemList(filePath) ?: arrayListOf(arrayOf("", "", "", "", "", ""))
         itemList.forEach { logI(it.contentToString()) }
         val itemTotalList = arrayListOf<ItemInfo>() //아이템 시세 목록
         helper.apply {
@@ -45,7 +45,8 @@ class MarketConditionTask : AdditionalOptionTask() {
                 val targetCategory = itemInfo[0]
                 val targetName = itemInfo[1]
                 val targetPrice = itemInfo[2]
-                val targetClickReset = if (itemInfo.size > 4) !itemInfo[4].contains("t") else false
+                val potentialGrade = if (itemInfo.size > 3 && itemInfo[3].length == 1) itemInfo[3].toInt() else -1
+                val targetClickReset = if (itemInfo.size > 4) itemInfo[4].contains("t") else false
 
 
                 //시세탭 클릭
@@ -55,7 +56,7 @@ class MarketConditionTask : AdditionalOptionTask() {
                 delayRandom(30, 50)
                 auctionTask.clickCategory(targetCategory)
 
-                val success = auctionTask.inputItemInfo(targetName, "_", targetClickReset, minPrice = targetPrice)
+                val success = auctionTask.inputItemInfo(targetName, "_", targetClickReset, minPrice = targetPrice, potentialGrade = potentialGrade)
                 if (success) {
                     delayRandom(30, 50)
 
@@ -265,9 +266,10 @@ class MarketConditionTask : AdditionalOptionTask() {
     }
 
     /**파일로부터 검색할 아이템 목록을 가져온다.
-     * Array<String> = {분류, 템이름, 최소가격, reset}
+     * Array<String> = {분류, 템이름, 최소가격, 잠재등급, reset}
      * 분류 = 방어구, 무기, 소비, 캐시, 기타
      * 템이름 = 공백없이 작성
+     * 잠재등급  = -1 ~ 5 (default = -1)
      * reset = 초기화버튼 클릭 여부 (default = false)
      * */
     private fun loadItemList(filePath: String): ArrayList<Array<String>>? {

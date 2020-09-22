@@ -556,13 +556,43 @@ class AuctionTask : MapleBaseTask() {
     }
 
     /**검색시 이름 및 가격을 입력한다. */
-    suspend fun inputItemInfo(itemName: String, itemPrice: String, reset: Boolean = false, minPrice:String = "_"): Boolean {
+    suspend fun inputItemInfo(itemName: String, itemPrice: String, reset: Boolean = false, minPrice:String = "_", potentialGrade:Int = -1): Boolean {
 
         helper.apply {
             if (reset) {
                 val p = imageSearchAndClick("$defaultImgPath\\resetConditionBtn.png", maxTime = 100)
                 p?.let {
                     simpleClick()
+                }
+            }
+
+            if (potentialGrade > -1 && potentialGrade < 6) {
+                copyToClipboard(itemName)
+                val pointGrade = imageSearch("$defaultImgPath\\potentialGrade.png") ?: return false
+                pointGrade.let {
+                    val gradeBtn = Point(it.x+10, it.y+30)
+                    val targetGrade = when(potentialGrade) {
+                        1 -> Point(it.x+10, it.y+70)    //없음
+                        2 -> Point(it.x+10, it.y+87)    //레어
+                        3 -> Point(it.x+10, it.y+101)   //에픽
+                        4 -> Point(it.x+10, it.y+116)   //유닠
+                        5 -> Point(it.x+10, it.y+132)   //레전
+                        else -> Point(it.x+10, it.y+53) //전체
+                    }
+
+                    smartClick(gradeBtn, 2,1, maxTime = 100)
+                    delayRandom(100, 200)
+                    moveMouseSmoothly(targetGrade, 100)
+                    smartClick(targetGrade, 2,1, maxTime = 100)
+                    delayRandom(100, 200)
+
+                    smartClick(gradeBtn, 2,1, maxTime = 100)
+                    delayRandom(100, 200)
+                    moveMouseSmoothly(targetGrade, 100)
+                    smartClick(targetGrade, 2,1, maxTime = 100)
+                    delayRandom(100, 200)
+
+                    moveMouseSmoothly(it, 50)
                 }
             }
 
