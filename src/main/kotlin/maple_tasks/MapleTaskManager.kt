@@ -10,9 +10,11 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
+import maple_tasks.AdditionalOptionTask.Companion.BELT
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import tornadofx.asObservable
+import tornadofx.point
 import winActive
 import winIsForeground
 import java.awt.Point
@@ -503,7 +505,8 @@ class MapleTaskManager : BaseTaskManager() {
                     Platform.runLater {
                         marketItemList.clear()
                         it.forEach {
-                            marketItemList.add("${it.name}[${it.getGradeKey()}][${it.priceText}][${it.dateTextSimple}]${it.option}   #${it.price}")
+                            val name = if(it.category == BELT) it.name else ""
+                            marketItemList.add("$name[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
                         }
                     }
                 }
@@ -545,6 +548,17 @@ class MapleTaskManager : BaseTaskManager() {
 
 
 
+    }
+
+    fun resaleItems(decreasePrice1:Long, pivotPrice:Long, decreasePrice2: Long) {
+        runTask("auctionTask") {
+            if (activateTargetWindow()) {
+                AuctionTask().resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
+            }
+
+
+
+        }
     }
 
 

@@ -1,9 +1,16 @@
 package maple_tasks
 
+import changeContract
+import changeContract2
 import kotlinx.coroutines.delay
 import logI
 import moveMouseSmoothly
+import org.opencv.core.Mat
+import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
+import toMat
 import java.awt.Point
+import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.io.File
 import java.text.SimpleDateFormat
@@ -19,6 +26,7 @@ class AuctionTask : MapleBaseTask() {
     private var lastPurchaseTime: Long = 0       //최근 구매 시간
     private val searchDelay = 5000  //검색 딜레이 (5초)
     private val purchaseDelay = 1000 //구매 딜레이 (경매장에서 구매시 생기는 딜레이)
+    private val salesDelay = 1100 //판매 딜레이 (경매장에서 구매시 생기는 딜레이)
 
     private val purchaseSlotCount = 10  //구매 슬롯 수
 
@@ -504,14 +512,16 @@ class AuctionTask : MapleBaseTask() {
         }
     }
 
-    suspend fun clickCompleteTab() {
+    suspend fun clickCompleteTab(maxDelay: Int = 200): Point? {
         helper.apply {
-            val point = imageSearchAndClick("$defaultImgPath\\completeTab.png", maxTime = 300)
+            val point = imageSearchAndClick("$defaultImgPath\\completeTab.png", maxTime = maxDelay)
+            point?.let { simpleClick() }
             if (point == null) {
 //                log("완료탭을 찾을 수 없습니다.")
-                return
             }
-            simpleClick()
+
+            return point
+
         }
     }
 
@@ -556,7 +566,13 @@ class AuctionTask : MapleBaseTask() {
     }
 
     /**검색시 이름 및 가격을 입력한다. */
-    suspend fun inputItemInfo(itemName: String, itemPrice: String, reset: Boolean = false, minPrice:String = "_", potentialGrade:Int = -1): Boolean {
+    suspend fun inputItemInfo(
+        itemName: String,
+        itemPrice: String,
+        reset: Boolean = false,
+        minPrice: String = "_",
+        potentialGrade: Int = -1
+    ): Boolean {
 
         helper.apply {
             if (reset) {
@@ -570,26 +586,26 @@ class AuctionTask : MapleBaseTask() {
                 copyToClipboard(itemName)
                 val pointGrade = imageSearch("$defaultImgPath\\potentialGrade.png") ?: return false
                 pointGrade.let {
-                    val gradeBtn = Point(it.x+10, it.y+30)
-                    val targetGrade = when(potentialGrade) {
-                        1 -> Point(it.x+10, it.y+70)    //없음
-                        2 -> Point(it.x+10, it.y+87)    //레어
-                        3 -> Point(it.x+10, it.y+101)   //에픽
-                        4 -> Point(it.x+10, it.y+116)   //유닠
-                        5 -> Point(it.x+10, it.y+132)   //레전
-                        else -> Point(it.x+10, it.y+53) //전체
+                    val gradeBtn = Point(it.x + 10, it.y + 30)
+                    val targetGrade = when (potentialGrade) {
+                        1 -> Point(it.x + 10, it.y + 70)    //없음
+                        2 -> Point(it.x + 10, it.y + 87)    //레어
+                        3 -> Point(it.x + 10, it.y + 101)   //에픽
+                        4 -> Point(it.x + 10, it.y + 116)   //유닠
+                        5 -> Point(it.x + 10, it.y + 132)   //레전
+                        else -> Point(it.x + 10, it.y + 53) //전체
                     }
 
-                    smartClick(gradeBtn, 2,1, maxTime = 100)
+                    smartClick(gradeBtn, 2, 1, maxTime = 100)
                     delayRandom(100, 200)
                     moveMouseSmoothly(targetGrade, 100)
-                    smartClick(targetGrade, 2,1, maxTime = 100)
+                    smartClick(targetGrade, 2, 1, maxTime = 100)
                     delayRandom(100, 200)
 
-                    smartClick(gradeBtn, 2,1, maxTime = 100)
+                    smartClick(gradeBtn, 2, 1, maxTime = 100)
                     delayRandom(100, 200)
                     moveMouseSmoothly(targetGrade, 100)
-                    smartClick(targetGrade, 2,1, maxTime = 100)
+                    smartClick(targetGrade, 2, 1, maxTime = 100)
                     delayRandom(100, 200)
 
                     moveMouseSmoothly(it, 50)
@@ -600,12 +616,19 @@ class AuctionTask : MapleBaseTask() {
                 copyToClipboard(itemName)
                 val pointName = imageSearch("$defaultImgPath\\itemName.png") ?: return false
                 pointName.let {
-                    val searchLT = Point(it.x, it.y-5)
+                    val searchLT = Point(it.x, it.y - 5)
                     it.setLocation(it.x + 120, it.y + 5)
                     inputText(it)
 
-                    if(itemName.isNotEmpty())
-                        while (imageSearch(searchLT, 200, 30,"$defaultImgPath\\itemNameEmpty.png", accuracy = 90.0) != null) {
+                    if (itemName.isNotEmpty())
+                        while (imageSearch(
+                                searchLT,
+                                200,
+                                30,
+                                "$defaultImgPath\\itemNameEmpty.png",
+                                accuracy = 90.0
+                            ) != null
+                        ) {
                             logI("아이템명 입력 실패: $itemName 클립보드:${getStringFromClipboard()}")
                             copyToClipboard(itemName)
                             inputText(it)
@@ -618,11 +641,18 @@ class AuctionTask : MapleBaseTask() {
                 copyToClipboard(minPrice)
                 val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
                 pointPrice.let {
-                    val searchLT = Point(it.x+62, it.y) //빈칸을 검색좌표 시작점
+                    val searchLT = Point(it.x + 62, it.y) //빈칸을 검색좌표 시작점
                     it.setLocation(it.x + 83, it.y + 5)
                     inputText(it)
-                    if(minPrice.isNotEmpty())
-                        while (imageSearch(searchLT, 100, 20,"$defaultImgPath\\itemPriceEmpty.png", accuracy = 90.0) != null) {
+                    if (minPrice.isNotEmpty())
+                        while (imageSearch(
+                                searchLT,
+                                100,
+                                20,
+                                "$defaultImgPath\\itemPriceEmpty.png",
+                                accuracy = 90.0
+                            ) != null
+                        ) {
                             logI("가격 입력 실패: $minPrice 클립보드:${getStringFromClipboard()}")
                             copyToClipboard(minPrice)
                             inputText(it)
@@ -637,13 +667,20 @@ class AuctionTask : MapleBaseTask() {
                 copyToClipboard(itemPrice)
                 val pointPrice = imageSearch("$defaultImgPath\\itemPrice.png") ?: return false
                 pointPrice.let {
-                    val searchLT = Point(it.x+150, it.y) //빈칸을 검색좌표 시작점
+                    val searchLT = Point(it.x + 150, it.y) //빈칸을 검색좌표 시작점
                     it.setLocation(it.x + 170, it.y + 5)
-                    val pointPriceMin = Point(it.x-80, it.y)
+                    val pointPriceMin = Point(it.x - 80, it.y)
                     inputText(it)
 //                    smartClick(pointPriceMin, randomRangeX = 5, randomRangeY = 3, minTime = 20, maxTime = 30)
-                    if(itemPrice.isNotEmpty())
-                        while (imageSearch(searchLT, 100, 20,"$defaultImgPath\\itemPriceEmpty.png", accuracy = 90.0) != null) {
+                    if (itemPrice.isNotEmpty())
+                        while (imageSearch(
+                                searchLT,
+                                100,
+                                20,
+                                "$defaultImgPath\\itemPriceEmpty.png",
+                                accuracy = 90.0
+                            ) != null
+                        ) {
                             logI("가격 입력 실패: $itemPrice 클립보드:${getStringFromClipboard()}")
                             copyToClipboard(itemPrice)
                             inputText(it)
@@ -665,7 +702,7 @@ class AuctionTask : MapleBaseTask() {
             smartClick(targetPoint, randomRangeX = 20, randomRangeY = 3, minTime = 200, maxTime = 300)
             delayRandom(50, 100)
             simpleClick()
-            moveMouseSmoothly(Point(targetPoint.x, targetPoint.y-100), t = 20)
+            moveMouseSmoothly(Point(targetPoint.x, targetPoint.y - 100), t = 20)
 //            delayRandom(20, 30)
             clearText()
 //                    delayRandom(300, 330)
@@ -681,7 +718,7 @@ class AuctionTask : MapleBaseTask() {
 
     suspend fun sellItem(item: Point, price: String) {
         Date().let {
-            val newPrice = price.substring(0, price.length-4) + SimpleDateFormat("MMdd").format(it)
+            val newPrice = price.substring(0, price.length - 4) + SimpleDateFormat("MMdd").format(it)
             logI("$newPrice 가격에 등록 시작")
 
             helper.apply {
@@ -689,9 +726,9 @@ class AuctionTask : MapleBaseTask() {
                 delayRandom(30, 60)
                 simpleClick()
 
-                imageSearch("$defaultImgPath\\sell.png")?.let { it ->
-                    val priceZone = Point(it.x+200, it.y+120)
-                    val sellBtn = Point(it.x+210, it.y+222)
+                imageSearch("$defaultImgPath\\sales.png")?.let { it ->
+                    val priceZone = Point(it.x + 200, it.y + 120)
+                    val salesBtn = Point(it.x + 210, it.y + 222)
 
                     smartClick(priceZone, randomRangeY = 3, randomRangeX = 20, maxTime = 80)
                     simpleClick()
@@ -699,22 +736,228 @@ class AuctionTask : MapleBaseTask() {
                     copyToClipboard(newPrice)
                     smartClick(priceZone, randomRangeX = 20, randomRangeY = 3, minTime = 50, maxTime = 100)
                     clearText()
-                    delayRandom(20,50)
+                    delayRandom(20, 50)
                     paste()
 
-                    delayRandom(50,100)
-                    smartClick(sellBtn, randomRangeX = 40, randomRangeY = 5, maxTime = 80)
+                    delayRandom(50, 100)
+                    smartClick(salesBtn, randomRangeX = 40, randomRangeY = 5, maxTime = 80)
                     simpleClick()
-                    delayRandom(20,50)
+                    delayRandom(20, 50)
 
                     sendEnter()
-                    delayRandom(100,150)
+                    delayRandom(100, 150)
                     sendEnter()
 
+                    lastPurchaseTime = System.currentTimeMillis()
                 }
             }
 
 
+        }
+    }
+
+
+    private val resalePriceHeadTemplate =
+        Imgcodecs.imread("$defaultImgPath\\resalePrice.png").apply { this.changeContract2() }
+    private val resalePriceTemplates = linkedMapOf<Int, Mat>().apply {
+        this[0] = Imgcodecs.imread("$defaultImgPath\\resale0.png")
+        this[9] = Imgcodecs.imread("$defaultImgPath\\resale9.png")
+        this[3] = Imgcodecs.imread("$defaultImgPath\\resale3.png")
+        this[1] = Imgcodecs.imread("$defaultImgPath\\resale1.png")
+        this[2] = Imgcodecs.imread("$defaultImgPath\\resale2.png")
+        this[4] = Imgcodecs.imread("$defaultImgPath\\resale4.png")
+        this[5] = Imgcodecs.imread("$defaultImgPath\\resale5.png")
+        this[6] = Imgcodecs.imread("$defaultImgPath\\resale6.png")
+        this[7] = Imgcodecs.imread("$defaultImgPath\\resale7.png")
+        this[8] = Imgcodecs.imread("$defaultImgPath\\resale8.png")
+        this[-1] = Imgcodecs.imread("$defaultImgPath\\100000000.png")
+        this[-2] = Imgcodecs.imread("$defaultImgPath\\10000.png")
+        values.forEach {
+            it.changeContract2()
+        }
+    }
+
+    /**@param decreasePrice1 아이템 가격이 pivotPrice보다 작은 경우 감소시킬 값
+     * @param decreasePrice2 아이템 가격이 pivotPrice보다 큰 경우 감소시킬 값
+     * */
+    suspend fun resaleItem(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long) {
+        //판매탭 누르기
+        clickSalesTab()?.let {
+            it.x -= 50
+            helper.moveMouseSmoothly(it, t = 50)
+        }
+
+        //물품반환될 아이템 위치 파악하기
+        val returnPoint = getReturnItemPosition()
+        if (returnPoint == null) {
+            logI("반환될 물품의 위치를 찾을 수 없습니다.")
+            return
+        }
+
+        var completaCounter = 0
+        for (i in 1..9) {
+            //완료탭 누르기
+            val completeTab =
+                clickCompleteTab(100) ?: helper.imageSearch("$defaultImgPath\\completeTabClicked.png") ?: break
+            val okBtn = completeTab.let { Point(it.x - 427, it.y + 335) }
+            val cancelBtn = okBtn.let { Point(it.x + 95, it.y) }
+
+            //거래실패목록 누르기
+            clickSalesFailureTab()
+
+            //재등록 누르기
+            val resaleBtn = clickResaleBtn() ?: break
+            val returnBtn = Point(resaleBtn.x - 77, resaleBtn.y)    //물품반환 버튼위치
+
+
+            //가격 확인 및 재판매 금액 계산하기
+            var priceSource =
+                helper.createScreenCapture(Rectangle(completeTab.x - 440, completeTab.y + 250, 142, 12)).toMat()
+            priceSource.changeContract2()
+            while (!helper.imageSearchReturnBoolean(priceSource, resalePriceHeadTemplate)) {
+                helper.smartClick(resaleBtn)
+                priceSource = helper.createScreenCapture(Rectangle(completeTab.x - 440, completeTab.y + 250, 142, 12)).toMat()
+                priceSource.changeContract2()
+                delay(100)
+            }
+            val newPrice =
+                readResalePrice(priceSource).let {
+//                    logI("readPrice:$it")
+//                    logI("dec1:$decreasePrice1, pivot:$pivotPrice, dec2:$decreasePrice2")
+                    if (it > pivotPrice)
+                        it - decreasePrice2
+                    else
+                        it - decreasePrice1
+                }.toString()
+
+            //esc 혹은 취소 누르기
+            helper.smartClick(cancelBtn, 10, 5, maxTime = 100)
+            helper.delayRandom(50, 100)
+            helper.simpleClick()
+
+            //물품반환 누르기
+            helper.smartClick(returnBtn, 10, 5, maxTime = 100)
+            helper.simpleClick()
+            helper.smartClick(returnBtn, 10, 5, maxTime = 100)
+
+            //enter 혹은 확인 누르기
+
+            helper.smartClick(okBtn, 10, 5, maxTime = 100)
+            helper.simpleClick()
+            helper.sendEnter()
+
+
+            //판매탭 누르기
+            clickSalesTab()
+
+            //반환된 아이템 계산된 금액에 판매하기
+            sellItem(returnPoint, newPrice)
+
+            completaCounter++
+        }
+
+
+        logI("$completaCounter 개 재등록 완료")
+
+
+    }
+
+    /**이미지로부터 재등록 가격을 읽어서 반환한다. */
+    private fun readResalePrice(priceSource: Mat): Long {
+        helper.apply {
+            var price = 0L
+            val p = imageSearch(priceSource, resalePriceHeadTemplate) ?: return 29999999999
+            var startCol = p.x + 23
+            val between = 7
+            out@ for (i in 0..8) {
+                val targetSource = priceSource.colRange(startCol, startCol + between + 1)
+                startCol += between
+//                Imgcodecs.imwrite("emptyTemplate$i.png", targetSource)
+                for ((v, template) in resalePriceTemplates) {
+                    if (imageSearchReturnBoolean(targetSource, template, 98.0)) {
+                        if (v == -1) {
+                            // 억
+                            startCol += (between + 2)
+//                            logI("억 [$i]")
+                        } else if (v == -2) {
+                            // 만
+                            price *= 10000
+//                            logI("만  [$i]")
+                            break@out
+                        } else {
+                            price = price * 10 + v
+//                            logI("$v   [$i]")
+                        }
+                        break
+                    }
+
+                }
+            }
+            return price
+        }
+    }
+
+    private suspend fun clickResaleBtn(maxDelay: Int = 200): Point? {
+        val diff = (System.currentTimeMillis() - lastPurchaseTime)
+        if (diff < salesDelay) {
+            delay(salesDelay - diff)
+        }
+        return helper.imageSearchAndClick("$defaultImgPath\\resale.png", maxTime = maxDelay).apply {
+            if (this != null) helper.simpleClick()
+        }
+    }
+
+    /**판매탭에서 '물품반환' 시 반환될 아이템의 위치 (첫번재 빈칸) */
+    private fun getReturnItemPosition(): Point? {
+
+        helper.apply {
+            imageSearch("$defaultImgPath\\sales.png")?.let { it ->
+                val source = createScreenCapture(Rectangle(0, 0, it.x + 5, it.y + 300)).toMat()
+                val emptyTemplate = Imgcodecs.imread("$defaultImgPath\\salesEmpty.png")
+                val between = 53    // 칸 간격
+                val firstItemX = it.x - 600   // 첫번째칸 좌상단 x
+                val firstItemY = it.y + 55    // 첫번째칸 좌상단 y
+                val currentItem = Point(firstItemX, firstItemY)
+//                Imgcodecs.imwrite("emptyTemplate.png", source)
+                for (i in 0 until 44) {
+                    val targetSource = source.rowRange(currentItem.y - 10, currentItem.y + 40)
+                        .colRange(currentItem.x - 10, currentItem.x + 43)
+//                    Imgcodecs.imwrite("targetSource$i.png", targetSource)
+                    if (imageSearchReturnBoolean(targetSource, emptyTemplate, 50.0)) {
+                        logI("찾음: $i")
+                        return currentItem
+                    } else logI("못찾음: $i")
+
+                    if (i > 9 && i % 11 == 10) {
+                        currentItem.x = firstItemX
+                        currentItem.y = currentItem.y + between
+                    } else {
+                        currentItem.x = currentItem.x + between
+                    }
+                }
+
+
+            }
+        }
+        return null
+    }
+
+    suspend fun clickSalesTab(): Point? {
+        helper.apply {
+            imageSearchAndClick("$defaultImgPath\\salesTab.png", maxTime = 100).let {
+                it?.let { simpleClick() }
+                return it
+            }
+        }
+    }
+
+    suspend fun clickSalesFailureTab() {
+        helper.apply {
+            val point = imageSearchAndClick("$defaultImgPath\\failureSale.png", 95.0, maxTime = 150)
+            if (point == null) {
+                return
+            }
+            simpleClick()
         }
     }
 

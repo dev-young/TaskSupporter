@@ -61,6 +61,11 @@ fun Mat.changeContract(){
     convertTo(this, -1, 1.5, -110.0)
 }
 
+fun Mat.changeContract2(){
+    convertTo(this,-1, 1.0, -180.0)
+    convertTo(this,-1, 2.0, 0.0)
+}
+
 fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {
     //t의 60% 정도로 n을 사용해야 t만큼의 시간동안 마우스가 움직인다.
     moveMouseSmoothly(x1, y1, x2, y2, t, (t * 0.6).toInt())
