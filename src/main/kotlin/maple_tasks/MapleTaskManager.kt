@@ -346,13 +346,13 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun checkAdditionalOption(untilBlank: Boolean) {
+    fun checkAdditionalOption(untilBlank: Boolean, moveToEnd:Boolean) {
         runTask("additionalOption") {
             if (activateTargetWindow()) {
                 if (additionalOptionTask == null)
                     additionalOptionTask = AdditionalOptionTask()
 
-                val goodItems = additionalOptionTask?.checkItems(untilBlank)
+                val goodItems = additionalOptionTask?.checkItems(untilBlank, moveToEnd)
                 goodItems?.let {
                     Platform.runLater {
                         goodItemList.clear()
@@ -377,6 +377,8 @@ class MapleTaskManager : BaseTaskManager() {
 
         }
     }
+
+
 
     fun moveMouseToGoodItem(key: String) {
         runTask("additionalOption") {
@@ -419,13 +421,13 @@ class MapleTaskManager : BaseTaskManager() {
     fun makeMarketConditionInfo(fileName: String, maxCount: Int) {
         runTask("marketCondition") {
             if (activateTargetWindow()) {
-                val itemList: List<AdditionalOptionTask.ItemInfo> =
+                val itemList: List<ItemInfo> =
                     if (maxCount == 0)
                         MarketConditionTask().makeInfo(fileName)
                     else
                         MarketConditionTask().makeInfo(fileName, maxCount)
 
-                val itemManager = AdditionalOptionTask.ItemManager()
+                val itemManager = ItemManager()
                 itemManager.addAll(itemList)
                 Platform.runLater {
                     itemList.forEach {
@@ -440,7 +442,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun loadMarketCondition(filename: String) {
         runTask("marketCondition") {
-            val itemManager = AdditionalOptionTask.ItemManager()
+            val itemManager = ItemManager()
             val list = itemManager.loadFromTxt(filename)
             Platform.runLater {
                 list.forEach {
@@ -454,7 +456,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun saveMarketCondition(filename: String, overwriteDB: Boolean) {
         runTask("marketCondition") {
-            val itemManager = AdditionalOptionTask.ItemManager()
+            val itemManager = ItemManager()
             itemManager.saveToDB(filename, overwriteDB)
             itemManager.saveToTxt(filename)
             logI("${marketItemList.size}개 저장")
@@ -464,7 +466,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun sortMarketCondition() {
         runTask("marketCondition") {
-            val itemManager = AdditionalOptionTask.ItemManager()
+            val itemManager = ItemManager()
             val list = itemManager.getSortedList()
 
             Platform.runLater {
@@ -480,7 +482,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun clearMarketCondition() {
         runTask("marketCondition") {
-            val itemManager = AdditionalOptionTask.ItemManager()
+            val itemManager = ItemManager()
             itemManager.clear()
             Platform.runLater {
                 marketItemList.clear()

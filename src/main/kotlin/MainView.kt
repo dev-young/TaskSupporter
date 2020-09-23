@@ -8,6 +8,7 @@ import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
 import javafx.scene.control.SelectionMode
 import javafx.scene.image.Image
+import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
 import maple_tasks.MapleTaskManager
@@ -68,7 +69,7 @@ class MainView : View() {
                 }
             }
 
-            button ("인벤 칸 계산") {
+            button("인벤 칸 계산") {
                 action {
                     taskManager.countEmptyInventory()
                 }
@@ -242,37 +243,46 @@ class MainView : View() {
 
             tab("추가옵션") {
                 isClosable = false
-                vbox {
+
+                borderpane {
                     paddingAll = defaultItemSpacing
-                    spacing = defaultItemSpacing
-
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
+                    top = vbox {
                         spacing = defaultItemSpacing
+                        paddingBottom = 4.0
 
-                        val untilBlank = SimpleBooleanProperty()
-                        button ("추옵 확인") {
-                            action {
-                                taskManager.checkAdditionalOption(untilBlank.value)
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = defaultItemSpacing
+
+                            val untilBlank = SimpleBooleanProperty()
+                            val moveToEnd = SimpleBooleanProperty()
+                            button("추옵 확인") {
+                                action {
+                                    taskManager.checkAdditionalOption(untilBlank.value, moveToEnd.value)
+                                }
+                            }
+
+                            checkbox("빈칸까지 수행", untilBlank) {
+                                isSelected = false
+                            }
+
+                            spacer { maxWidth = 10.0 }
+
+                            button("인벤토리 끝으로 옮기기") {
+                                action {
+                                    taskManager.moveGoodItemsToEnd()
+                                }
+                            }
+
+                            checkbox("자동 옮기기", moveToEnd) {
+                                isSelected = false
                             }
                         }
 
-                        checkbox("빈칸까지 수행", untilBlank) {
-                            isSelected = false
-                        }
-
-                        spacer { maxWidth = 10.0 }
-
-                        button ("인벤토리 끝으로 옮기기") {
-                            action {
-                                taskManager.moveGoodItemsToEnd()
-                            }
-                        }
                     }
-
-                    listview(taskManager.goodItemList) {
+                    center = listview(taskManager.goodItemList) {
                         useMaxWidth = true
-                        prefHeight = 180.0
+                        prefHeight = 200.0
                         selectionModel.selectionMode = SelectionMode.SINGLE
                         onUserSelect {
                             taskManager.moveMouseToGoodItem(it)
@@ -364,35 +374,38 @@ class MainView : View() {
                 val resultFileName = SimpleStringProperty()
                 val maxCount = SimpleStringProperty()
                 val overwriteDB = SimpleBooleanProperty()
-                vbox {
-                    paddingAll = defaultItemSpacing
-                    spacing = defaultItemSpacing
 
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
+                borderpane {
+                    top = vbox {
+                        paddingAll = defaultItemSpacing
                         spacing = defaultItemSpacing
 
-                        textfield(fileName) {
-                            text = "시세조사대상"
-                            maxWidth = 90.0
-                        }
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = defaultItemSpacing
 
-                        button ("시세정보 만들기") {
-                            action {
-                                taskManager.makeMarketConditionInfo(fileName.value, maxCount.value.toInt())
+                            textfield(fileName) {
+                                text = "시세조사대상"
+                                maxWidth = 90.0
                             }
-                        }
 
-                        label("조사대상1개당 검색할 수:")
-                        textfield(maxCount) {
-                            text = "0"
-                            maxWidth = 50.0
-                        }
-                        label("0:최대")
+                            button("시세정보 만들기") {
+                                action {
+                                    taskManager.makeMarketConditionInfo(fileName.value, maxCount.value.toInt())
+                                }
+                            }
 
+                            label("조사대상1개당 검색할 수:")
+                            textfield(maxCount) {
+                                text = "0"
+                                maxWidth = 50.0
+                            }
+                            label("0:최대")
+
+                        }
                     }
 
-                    listview(taskManager.marketItemList) {
+                    center = listview(taskManager.marketItemList) {
                         useMaxWidth = true
                         prefHeight = 150.0
                         selectionModel.selectionMode = SelectionMode.SINGLE
@@ -401,77 +414,85 @@ class MainView : View() {
                         }
                     }
 
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
+                    bottom = vbox {
+                        paddingAll = defaultItemSpacing
                         spacing = defaultItemSpacing
 
-                        textfield(resultFileName) {
-                            text = "추옵시세표"
-                            maxWidth = 90.0
-                        }
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = defaultItemSpacing
 
-                        button ("불러오기") {
-                            action {
-                                taskManager.loadMarketCondition(resultFileName.value)
+                            textfield(resultFileName) {
+                                text = "추옵시세표"
+                                maxWidth = 90.0
                             }
-                        }
 
-                        button ("저장") {
-                            action {
-                                taskManager.saveMarketCondition(resultFileName.value, overwriteDB.value)
+                            button("불러오기") {
+                                action {
+                                    taskManager.loadMarketCondition(resultFileName.value)
+                                }
                             }
-                        }
 
-                        button ("정렬") {
-                            action {
-                                taskManager.sortMarketCondition()
+                            button("저장") {
+                                action {
+                                    taskManager.saveMarketCondition(resultFileName.value, overwriteDB.value)
+                                }
                             }
-                        }
 
-                        button ("초기화") {
-                            action {
-                                taskManager.clearMarketCondition()
+                            button("정렬") {
+                                action {
+                                    taskManager.sortMarketCondition()
+                                }
                             }
+
+                            button("초기화") {
+                                action {
+                                    taskManager.clearMarketCondition()
+                                }
+                            }
+
+                            checkbox("DB덮어씌우기", overwriteDB) {
+                                isSelected = false
+                            }
+
                         }
 
-                        checkbox("DB덮어씌우기", overwriteDB) {
-                            isSelected = false
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = 4.5
+
+                            checkbox("F1버튼으로 해당 아이템 시세 확인하기") {
+                                isSelected = false
+                                action {
+                                    taskManager.checkMarketConditionEnable = isSelected
+                                }
+                            }
+
+                            val price = SimpleStringProperty()
+
+                            spacer { maxWidth = 15.0 }
+
+                            textfield(price) {
+                                maxWidth = 90.0
+                            }
+                            button("등록") {
+                                action {
+                                    taskManager.sellItem("  #${price.value}0000")
+                                }
+                            }
+                            button {
+                                action {
+                                    price.set("")
+                                }
+                            }
+
                         }
 
                     }
-
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
-                        spacing = 4.5
-
-                        checkbox("F1버튼으로 해당 아이템 시세 확인하기") {
-                            isSelected = false
-                            action {
-                                taskManager.checkMarketConditionEnable = isSelected
-                            }
-                        }
-
-                        val price = SimpleStringProperty()
-
-                        spacer {maxWidth = 15.0}
-
-                        textfield(price) {
-                            maxWidth = 90.0
-                        }
-                        button ("등록") {
-                            action {
-                                taskManager.sellItem("  #${price.value}0000")
-                            }
-                        }
-                        button {
-                            action {
-                                price.set("")
-                            }
-                        }
-
-                    }
-
                 }
+
+
+
             }
 
             tab("큐브") {
@@ -770,7 +791,6 @@ class MainView : View() {
 //
 //
 //                }
-
 
 
             }

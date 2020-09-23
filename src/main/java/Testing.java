@@ -18,6 +18,9 @@ public class Testing {
         User32.INSTANCE.GetWindowRect(hwnd, rect);
         System.out.println("rect = " + rect);
 
+//        String s = "!@#";
+//        System.out.println(s, "%s test");
+
 //        PointerByReference pointer = new PointerByReference();
 //        User32DLL.GetWindowThreadProcessId(User32DLL.GetForegroundWindow(), pointer);
 //        Pointer process = Kernel32.OpenProcess(Kernel32.PROCESS_QUERY_INFORMATION | Kernel32.PROCESS_VM_READ, false, pointer.getValue());
