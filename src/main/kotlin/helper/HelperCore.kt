@@ -29,7 +29,7 @@ import kotlin.system.exitProcess
 class HelperCore : Robot() {
     val random = Random()
 
-    private val user32 = User32.INSTANCE
+    val user32 = User32.INSTANCE
 
     val dirPath = System.getProperty("user.dir") + "\\"
 
@@ -330,10 +330,10 @@ class HelperCore : Robot() {
         delay(random.get(min, max).toLong())
     }
 
-    suspend fun smartDrag(from: Point, to: Point, keyCode: Int = defaultClickKey) {
+    fun smartDrag(from: Point, to: Point, keyCode: Int = defaultClickKey) {
         moveMouseSmoothly(from, 100)
         mousePress(keyCode)
-        moveMouseSmoothly(to, random.get(200, 300))
+        moveMouseSmoothly(to, random.get(150, 200))
         mouseRelease(keyCode)
     }
 

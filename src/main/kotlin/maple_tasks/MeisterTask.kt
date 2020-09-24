@@ -1,8 +1,10 @@
 package maple_tasks
 
 import helper.HelperCore
+import leftTop
 import logI
 import moveMouseSmoothly
+import winGetPos
 import java.awt.Point
 import java.awt.event.KeyEvent
 
@@ -276,6 +278,7 @@ class MeisterTask : MapleBaseTask() {
 
         var maxCount = getMasExtractSize()    //한번에 분해할 수 있는 아이템 최대 수
 
+        val winPos = helper.user32.winGetPos().leftTop()
         //아이템 클릭
         itemPosList.forEachIndexed { index, point ->
             helper.apply {
@@ -284,6 +287,7 @@ class MeisterTask : MapleBaseTask() {
                 sendEnter() //분해 불가능한 아이템 있을경우 넘어가기 위해 사용
                 if ((index + 1) % maxCount == 0 || index == itemPosList.lastIndex) {
                     //분해창 가득 찼거나 마지막 남은 아이템이 없을때
+                    moveMouseSmoothly(winPos, t = 20)
                     clickOkBtn()
                     delayRandom(100, 150)
                     sendEnter()
@@ -337,16 +341,19 @@ class MeisterTask : MapleBaseTask() {
                     return
                 }
                 simpleClick()
-                delayRandom(200, 300)
+                delayRandom(150, 200)
             }
             if (moveWindow) {
                 val okBtn = imageSearch(imgpathSynthesizeOKBtn)
                 if (okBtn == null || mesoBtn == null) {
                     logI("합성창을 찾지 못해 옮기기에 실패했습니다")
                 } else {
-                    delayRandom(200, 300)
+                    val windowPos = helper.user32.winGetPos().leftTop()
                     val synthesizeWindowTitle = Point(okBtn.x, okBtn.y - 165)
-                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 286)
+                    val dragDestination = if (mesoBtn.x - windowPos.x < 220){
+                        Point(mesoBtn.x + 760, mesoBtn.y - 286)
+                    } else Point(mesoBtn.x - 160, mesoBtn.y - 286)
+
                     smartDrag(synthesizeWindowTitle, dragDestination)
                 }
             }
@@ -376,9 +383,12 @@ class MeisterTask : MapleBaseTask() {
                 if (okBtn == null || mesoBtn == null) {
                     logI("분해창을 찾지 못해 옮기기에 실패했습니다")
                 } else {
-                    delayRandom(200, 300)
+                    val windowPos = helper.user32.winGetPos().leftTop()
                     val extractWindowTitle = Point(okBtn.x, okBtn.y - 173)
-                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 286)
+//                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 286)
+                    val dragDestination = if (mesoBtn.x - windowPos.x < 220){
+                        Point(mesoBtn.x + 770, mesoBtn.y - 286)
+                    } else Point(mesoBtn.x - 160, mesoBtn.y - 286)
                     smartDrag(extractWindowTitle, dragDestination)
                 }
             }

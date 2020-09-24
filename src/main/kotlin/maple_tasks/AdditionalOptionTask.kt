@@ -175,7 +175,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
                 //이름에 강화표시 있나 확인
                 temp.rowRange(0, 75).let {
-                    Imgcodecs.imwrite("name.png", it)
+//                    Imgcodecs.imwrite("name.png", it)
                     isUpgraded = checkUpgraded(it)
                 }
 
@@ -186,7 +186,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
                 }
                 infoImg.changeContract()
                 mouseRelease(KeyEvent.BUTTON3_MASK)
-                Imgcodecs.imwrite("test.png", infoImg)
+//                Imgcodecs.imwrite("test.png", infoImg)
                 val resultOption = check(infoImg)
                 val category = checkCategory(infoImg)
                 return ItemInfo(job, category, resultOption).apply { this.isUpgraded = isUpgraded }
