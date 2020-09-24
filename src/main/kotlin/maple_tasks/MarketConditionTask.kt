@@ -320,7 +320,8 @@ class MarketConditionTask : AdditionalOptionTask() {
     suspend fun findMarketCondition(itemPosition: Point): List<ItemInfo> {
         val result = arrayListOf<ItemInfo>()
         getOptions(itemPosition)?.let {
-            logI(it.getInfoText())
+            val upgraded = if(it.isUpgraded == true) "강화된 " else ""
+            logI("$upgraded${it.getInfoText()}")
             result.addAll(ItemManager().search(it))
         }
 

@@ -35,6 +35,8 @@ class ItemInfo(
     private var grade: Pair<String, Int>? = null
     private var uid: String? = null
 
+    @Expose var isUpgraded : Boolean? = null
+
     fun getUid(): String {
         if (uid == null) {
             if (category == AdditionalOptionTask.BELT)
@@ -205,7 +207,8 @@ class ItemInfo(
     }
 
     fun getAllInfo(): String {
-        return "${getCategory1()}[${getGradeKey()}]  ${getSimplePrice()}  [${getSimpleDate()}]$option"
+        val upgraded = if(isUpgraded == true) "강화된 " else ""
+        return "$upgraded${getCategory1()}[${getGradeKey()}]  ${getSimplePrice()}  [${getSimpleDate()}]$option"
     }
 
     fun getCategory1(): String {
@@ -238,7 +241,8 @@ class ItemInfo(
     }
 
     fun getPriceAndDateAndOption(): String {
-        return "[$priceText][${getSimpleDate()}]$option"
+        val upgraded = if(isUpgraded == true) "강화됨 " else ""
+        return "[$priceText][${getSimpleDate()}]$upgraded$option"
     }
 
     fun toDB(): String {

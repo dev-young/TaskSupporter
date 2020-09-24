@@ -1,5 +1,7 @@
 package maple_tasks
 
+import changeContract
+import changeContract2
 import com.sun.jna.platform.win32.User32
 import helper.BaseTaskManager
 import helper.ConsumeEvent
@@ -11,18 +13,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
 import maple_tasks.AdditionalOptionTask.Companion.BELT
+import moveMouseSmoothly
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
+import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
+import toFile
+import toMat
 import tornadofx.asObservable
-import tornadofx.point
 import winActive
 import winIsForeground
 import java.awt.Point
+import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
+import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 
 
 class MapleTaskManager : BaseTaskManager() {
@@ -153,10 +162,53 @@ class MapleTaskManager : BaseTaskManager() {
 
     fun test() {
         runTask("test") {
-            if (activateTargetWindow()) {
-                AuctionTask().clickCompletePurchasedTab()
-            }
+            MapleBaseTask().apply {
+                val img = helper.createScreenCapture(Rectangle(0, 0, 500, 500))
+                val mat = img.toMat()
+                mat.clone().apply {
+                    Imgproc.cvtColor(this, this, Imgproc.COLOR_BGR2GRAY)
+                    Imgcodecs.imwrite("test0.png", this)
+                }
+                mat.clone().apply {
+                    println(measureTimeMillis {
+                        convertTo(this, -1, 2.0, -100.0)
+                    })
+                    Imgcodecs.imwrite("test1.png", this)
+                }
+                mat.clone().apply {
+                    println(measureTimeMillis {
+                        Imgproc.cvtColor(this, this, Imgproc.COLOR_BGR2GRAY)
+                    })
 
+                    Imgcodecs.imwrite("test2.png", this)
+                }
+                mat.clone().apply {
+                    println(measureTimeMillis {
+                        convertTo(this, -1, 2.0, -100.0)
+                        Imgproc.cvtColor(this, this, Imgproc.COLOR_BGR2GRAY)
+                    })
+                    Imgcodecs.imwrite("test3.png", this)
+                }
+                mat.clone().apply {
+                    println(measureTimeMillis {
+                        convertTo(this, -1, 2.0, -100.0)
+                        Imgproc.cvtColor(this, this, Imgproc.COLOR_BGR2GRAY)
+                        convertTo(this, -1, 5.0, 0.0)
+                    })
+
+                    Imgcodecs.imwrite("test4.png", this)
+                }
+                mat.clone().apply {
+                    println(measureTimeMillis {
+                        convertTo(this, -1, 2.0, -100.0)
+                        Imgproc.cvtColor(this, this, Imgproc.COLOR_BGR2GRAY)
+                        convertTo(this, -1, 10.0, 0.0)
+                    })
+
+                    Imgcodecs.imwrite("test5.png", this)
+                }
+
+            }
 
         }
 
@@ -348,7 +400,7 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun checkAdditionalOption(untilBlank: Boolean, moveToEnd:Boolean) {
+    fun checkAdditionalOption(untilBlank: Boolean, moveToEnd: Boolean) {
         runTask("additionalOption") {
             if (activateTargetWindow()) {
                 if (additionalOptionTask == null)
@@ -379,7 +431,6 @@ class MapleTaskManager : BaseTaskManager() {
 
         }
     }
-
 
 
     fun moveMouseToGoodItem(key: String) {
@@ -493,7 +544,8 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    var findMarketConditionTarget : Point? = null   //시세를 알아볼 아이템의 마우스 좌표
+    var findMarketConditionTarget: Point? = null   //시세를 알아볼 아이템의 마우스 좌표
+
     /**마우스 좌표의 아이템의 시세를 파악한 뒤 관련 아이템들 목록을 뷰에 업데이트*/
     private fun findMarketConditionInMouse() {
         runTask("marketCondition") {
@@ -505,12 +557,12 @@ class MapleTaskManager : BaseTaskManager() {
                     Platform.runLater {
                         marketItemList.clear()
                         it.forEach {
-                            val name = if(it.category == BELT) it.name else ""
-                            marketItemList.add("$name[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
+                            val name = if (it.category == BELT) it.name else ""
+                            val upgraded = if (it.isUpgraded == true) "강화된 " else ""
+                            marketItemList.add("$upgraded$name[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
                         }
                     }
                 }
-
 
 
             }
@@ -524,15 +576,15 @@ class MapleTaskManager : BaseTaskManager() {
         runTask("auctionTask") {
             var price = ""
             var findPrice = false
-            for (i in str.lastIndex downTo str.lastIndex-30) {
-                if(str[i] == '#'){
+            for (i in str.lastIndex downTo str.lastIndex - 30) {
+                if (str[i] == '#') {
                     findPrice = true
                     break
                 } else {
                     price = str[i] + price
                 }
             }
-            if(!findPrice) {
+            if (!findPrice) {
                 return@runTask
             }
 
@@ -545,17 +597,13 @@ class MapleTaskManager : BaseTaskManager() {
         }
 
 
-
-
-
     }
 
-    fun resaleItems(decreasePrice1:Long, pivotPrice:Long, decreasePrice2: Long) {
+    fun resaleItems(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long) {
         runTask("auctionTask") {
             if (activateTargetWindow()) {
                 AuctionTask().resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
             }
-
 
 
         }

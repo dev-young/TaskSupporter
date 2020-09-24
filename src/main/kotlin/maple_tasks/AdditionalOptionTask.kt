@@ -1,10 +1,12 @@
 package maple_tasks
 
+import changeBlackAndWhite
 import changeContract
 import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
 import toMat
 import java.awt.Point
 import java.awt.Rectangle
@@ -162,30 +164,44 @@ open class AdditionalOptionTask : MapleBaseTask() {
             mousePress(KeyEvent.BUTTON3_MASK)
             delayRandom(30, 40)
 
+            var isUpgraded : Boolean
             var job = ""
             val jobPoint =
                 imageSearch("$baseImgPath\\jobBeginner1.png")
                     ?: imageSearch("$baseImgPath\\jobBeginner2.png")?.also { job = COMMON }
             jobPoint?.let {
-                val temp = createScreenCapture(Rectangle(jobPoint.x - 20, jobPoint.y - 3, 240, 300))
-//                    temp.toFile("test")
-                val infoImg = temp.toMat()
+                //createScreenCapture(Rectangle(jobPoint.x - 20, jobPoint.y - 3, 240, 300)
+                val temp = createScreenCapture(Rectangle(jobPoint.x - 20, jobPoint.y - 193, 240, 440)).toMat()
+
+                //이름에 강화표시 있나 확인
+                temp.rowRange(0, 75).let {
+                    Imgcodecs.imwrite("name.png", it)
+                    isUpgraded = checkUpgraded(it)
+                }
+
+                val infoImg = temp.rowRange(190, temp.rows())
                 if (job.isEmpty()) {
                     val jobView = infoImg.rowRange(3, 13).colRange(20, 230)
-//                        ul
                     job = checkJob(jobView)
                 }
                 infoImg.changeContract()
                 mouseRelease(KeyEvent.BUTTON3_MASK)
-//                    Imgcodecs.imwrite("test.png", infoImg)
+                Imgcodecs.imwrite("test.png", infoImg)
                 val resultOption = check(infoImg)
                 val category = checkCategory(infoImg)
-                return ItemInfo(job, category, resultOption)
+                return ItemInfo(job, category, resultOption).apply { this.isUpgraded = isUpgraded }
 
             }
             mouseRelease(KeyEvent.BUTTON3_MASK)
             return null
         }
+    }
+
+    private val upgradeTemplate = Imgcodecs.imread("$baseImgPath\\upgraded.png").apply { changeBlackAndWhite() }
+    /**아이템 강화가 적용되었는지 판단하여 반환 */
+    private fun checkUpgraded(nameSource: Mat): Boolean {
+        nameSource.changeBlackAndWhite()
+        return helper.imageSearchReturnBoolean(nameSource, upgradeTemplate)
     }
 
     private fun checkCategory(infoImg: Mat): String {

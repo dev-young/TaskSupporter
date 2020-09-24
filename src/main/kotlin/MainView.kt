@@ -8,6 +8,7 @@ import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
 import javafx.scene.control.SelectionMode
 import javafx.scene.image.Image
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
@@ -521,6 +522,11 @@ class MainView : View() {
 
                             textfield(price) {
                                 maxWidth = 90.0
+                                setOnKeyPressed {
+                                    if(it.code == KeyCode.ENTER){
+                                        taskManager.sellItem("  #${price.value}0000")
+                                    }
+                                }
                             }
                             button("등록") {
                                 action {
@@ -719,7 +725,7 @@ class MainView : View() {
                         }
 
                         textfield(dropDelay) {
-                            text = "340"
+                            text = "360"
                             maxWidth = inputWidth
                         }
                         label("delay")

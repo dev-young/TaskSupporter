@@ -6,6 +6,7 @@ import org.jnativehook.keyboard.NativeKeyEvent
 import org.jnativehook.keyboard.NativeKeyEvent.getKeyText
 import org.opencv.core.CvType
 import org.opencv.core.Mat
+import org.opencv.imgproc.Imgproc
 import java.awt.AWTException
 import java.awt.MouseInfo
 import java.awt.Point
@@ -64,6 +65,13 @@ fun Mat.changeContract(){
 fun Mat.changeContract2(){
     convertTo(this,-1, 1.0, -180.0)
     convertTo(this,-1, 2.0, 0.0)
+}
+
+//흑과 백으로만 변경 (반투명한 배경위의 글씨를 읽을때 유용)
+fun Mat.changeBlackAndWhite(){
+    convertTo(this, -1, 2.0, -100.0)
+    Imgproc.cvtColor(this, this, Imgproc.COLOR_BGR2GRAY)
+    convertTo(this, -1, 10.0, 0.0)
 }
 
 fun Robot.moveMouseSmoothly(x1: Int, y1: Int, x2: Int, y2: Int, t: Int) {
