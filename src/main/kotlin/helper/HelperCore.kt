@@ -269,7 +269,7 @@ class HelperCore : Robot() {
     }
 
     fun soundBeep() {
-        toolkit.beep()
+//        toolkit.beep()
     }
 
     fun showDialog(msg: String) {

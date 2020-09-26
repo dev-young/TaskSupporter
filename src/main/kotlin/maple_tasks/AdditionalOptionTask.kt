@@ -6,7 +6,6 @@ import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
 import toMat
 import java.awt.Point
 import java.awt.Rectangle
@@ -108,6 +107,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
         goodItems.clear()
 
         helper.apply {
+            moveMouseRB()
             items.forEach { item ->
 
                 getOptions(item)?.let {
@@ -121,14 +121,9 @@ open class AdditionalOptionTask : MapleBaseTask() {
             }
 
             if(moveToEnd) {
-                goodItems.forEach {
-                    if (blankList.isNotEmpty()) {
-                        smartClick(it, 10, 10, maxTime = 100)
-                        smartClick(blankList.last(), 10, 10, maxTime = 100)
-                        blankList.removeAt(blankList.lastIndex)
-                        delayRandom(400, 500)
-                    }
-                }
+                if(blankList.isEmpty())
+                    findItems(untilBlank, blankList)
+                moveItemsToEnd(blankList)
             }
         }
 
@@ -137,22 +132,28 @@ open class AdditionalOptionTask : MapleBaseTask() {
     }
 
     /**전달받은 아이템 목록을 인벤토리 제일 뒷쪽으로 이동시킨다. */
+    suspend fun moveItemsToEnd(blankList: ArrayList<Point>, itemList: ArrayList<Point> = goodItems){
+        helper.apply {
+            itemList.forEach {
+                if (blankList.isNotEmpty()) {
+                    while (!isItemEmpty(it)) {
+                        smartClick(it, 10, 10, maxTime = 100)
+                        smartClick(blankList.last(), 10, 10, maxTime = 100)
+                        delayRandom(400, 440)
+                    }
+                    blankList.removeAt(blankList.lastIndex)
+                }
+            }
+        }
+    }
+
+    /**전달받은 아이템 목록을 인벤토리 제일 뒷쪽으로 이동시킨다. */
     suspend fun moveItemsToEnd() {
         val blankList = arrayListOf<Point>()
         findItems(false, blankList)
 
-        helper.apply {
-
-            goodItems.forEach {
-                if (blankList.isNotEmpty()) {
-                    smartClick(it, 10, 10, maxTime = 100)
-                    smartClick(blankList.last(), 10, 10, maxTime = 100)
-                    blankList.removeAt(blankList.lastIndex)
-                    delayRandom(400, 500)
-                }
-            }
-            logI("이동한 아이템 수: ${goodItems.size}}")
-        }
+        moveItemsToEnd(blankList)
+        logI("이동한 아이템 수: ${goodItems.size}}")
 
 
     }

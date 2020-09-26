@@ -1,9 +1,11 @@
 package maple_tasks
 
+import changeBlackAndWhite
 import helper.HelperCore
 import leftTop
 import logI
 import moveMouseSmoothly
+import org.opencv.core.Mat
 import winGetPos
 import java.awt.Point
 import java.awt.event.KeyEvent
@@ -12,6 +14,7 @@ class MeisterTask : MapleBaseTask() {
 
     val imgpathMakebtn = "img\\meister\\makeBtn.png"
     val imgpathOkBtn = "img\\meister\\okBtn.png"
+    val imgpathSynOkBtn = "img\\meister\\synOkBtn.png"
     val imgpathCancelBtn = "img\\meister\\cancelBtn.png"
     val imgpathExpandBtn = "img\\meister\\expandBtn.png"
     val imgpathSynthesizeOKBtn = "img\\synthesizeOK.png"
@@ -28,7 +31,7 @@ class MeisterTask : MapleBaseTask() {
     val meisterPosition3 = Point(60, 158)   // 연금술 위치 (미니맵 좌상단, 최대 확장시 상대좌표)
 
     /**빈칸이 나오거나 모든 아이템을 합성할때까지 합성을 반복한다. */
-    suspend fun synthesizeItemSmartly() {
+    suspend fun synthesizeItemUntilBlank() {
         logI("합성 시작!")
         HelperCore().apply {
 
@@ -107,6 +110,79 @@ class MeisterTask : MapleBaseTask() {
             logI("합성 완료 (${repeatCount / 2}회 수행)")
             soundBeep()
             return
+        }
+    }
+
+    /**
+     * @param maxSynCount 합성을 최대 몇번 수행할지 지정 (0 = 끝까지 수행)
+     * @param maxTargetItemCount 최대 몇개의 아이템중에서 합성할 아이템을 찾고 수행할지 지정 (0 = 끝까지 찾는다)
+     * */
+    suspend fun synthesizeItemSmartly(untilBlank: Boolean, maxSynCount: Int = 0, maxTargetItemCount: Int = 0) :Int {
+        logI("합성 시작!")
+        HelperCore().apply {
+            moveMouseRB()
+            smartClickTimeMin = 45
+            smartClickTimeMax = 55
+            openSynthesize()
+
+            //확인버튼 중앙 좌표 찾기
+            val synOkBtn = findSynOkBtn(true) ?: return 0
+            val synItem = Pair(Point(), Point()) //합성아이템1,2 좌표 담을 변수
+            synOkBtn.let {
+                synItem.first.setLocation(it.x - 12, it.y - 54) //첫번째 합성칸 중앙 좌표
+                synItem.second.setLocation(it.x + 58, it.y - 54)//두번째 합성칸 중앙 좌표
+            }
+
+            val pairList = findSynItems(untilBlank, maxTargetItemCount)
+
+            var synCount = 0
+            pairList.forEach {
+                if(synCount < maxSynCount || maxSynCount == 0) {
+                    smartClick(it.first, 15, 15)
+                    smartClick(synItem.first, 6, 6)
+                    smartClick(it.second, 15, 15)
+                    smartClick(synItem.second, 6, 6)
+                    moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
+
+                    if(clickSynOkBtn(50)){
+                        delayRandom(50, 100)
+                        simpleClick()
+                        sendEnter()
+                    } else {
+                        smartClick(it.first, 15, 15)
+                        smartClick(synItem.first, 6, 6)
+                        smartClick(it.second, 15, 15)
+                        smartClick(synItem.second, 6, 6)
+                        moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
+
+                        if(clickSynOkBtn(50)){
+                            delayRandom(50, 100)
+                            simpleClick()
+                            sendEnter()
+                        } else {
+                            logI("더이상 합성을 진행할 수 없습니다. 진행 횟수: $synCount")
+                            return synCount
+                        }
+                    }
+                    moveMouseRB(300)
+                    delayRandom(1500, 1700) // 합성 대기시간
+                    var failCount = 0
+                    while (!clickOkBtn(50)) {
+                        delayRandom(50, 100)
+                        failCount++
+                        if(failCount > 30) {
+                            logI("더이상 합성을 진행할 수 없습니다. 진행 횟수: $synCount")
+                            return synCount
+                        }
+                    }
+                    sendEnter()
+                    sendEnter()
+                    delayRandom(100, 150)
+
+                    synCount++
+                }
+            }
+            return synCount
         }
     }
 
@@ -309,21 +385,35 @@ class MeisterTask : MapleBaseTask() {
         return 5
     }
 
-    suspend fun clickOkBtn() {
-        val ok = helper.imageSearchAndClick(imgpathOkBtn, maxTime = 200)
+    suspend fun clickOkBtn(time:Int = 200) : Boolean {
+        val ok = helper.imageSearchAndClick(imgpathOkBtn, maxTime = time)
         if (ok == null) {
-            logI("확인버튼을 찾을 수 없습니다.")
+            return false
         } else {
             helper.simpleClick()
+            return true
         }
     }
 
-    suspend fun clickCancelBtn() {
+    suspend fun clickSynOkBtn(time:Int = 200) : Boolean {
+        val ok = helper.imageSearch(imgpathSynOkBtn, accuracy = 80.0)
+        if (ok == null) {
+            return false
+        } else {
+            helper.smartClick(ok, 10, 5, maxTime = time)
+            helper.simpleClick()
+            return true
+        }
+    }
+
+    suspend fun clickCancelBtn(): Boolean {
         val cancel = helper.imageSearchAndClick(imgpathCancelBtn)
         if (cancel == null) {
             logI("취소버튼을 찾을 수 없습니다.")
+            return false
         } else {
 //            helper.simpleClick()
+            return true
         }
     }
 
@@ -350,7 +440,7 @@ class MeisterTask : MapleBaseTask() {
                 } else {
                     val windowPos = helper.user32.winGetPos().leftTop()
                     val synthesizeWindowTitle = Point(okBtn.x, okBtn.y - 165)
-                    val dragDestination = if (mesoBtn.x - windowPos.x < 220){
+                    val dragDestination = if (mesoBtn.x - windowPos.x < 220) {
                         Point(mesoBtn.x + 760, mesoBtn.y - 286)
                     } else Point(mesoBtn.x - 160, mesoBtn.y - 286)
 
@@ -386,7 +476,7 @@ class MeisterTask : MapleBaseTask() {
                     val windowPos = helper.user32.winGetPos().leftTop()
                     val extractWindowTitle = Point(okBtn.x, okBtn.y - 173)
 //                    val dragDestination = Point(mesoBtn.x - 160, mesoBtn.y - 286)
-                    val dragDestination = if (mesoBtn.x - windowPos.x < 220){
+                    val dragDestination = if (mesoBtn.x - windowPos.x < 220) {
                         Point(mesoBtn.x + 770, mesoBtn.y - 286)
                     } else Point(mesoBtn.x - 160, mesoBtn.y - 286)
                     smartDrag(extractWindowTitle, dragDestination)
@@ -416,5 +506,71 @@ class MeisterTask : MapleBaseTask() {
         }
         return p
     }
+
+    /**합성 가능한 아이템 좌표의 페어를 반환
+     * @param maxTargetItemCount 최대 몇개의 아이템중에서 합성할 아이템을 찾고 수행할지 지정 (0 = 끝까지 찾는다)
+     * */
+    suspend fun findSynItems(untilBlank: Boolean, maxTargetItemCount: Int = 0): ArrayList<Pair<Point, Point>> {
+        val temp = Array(1){Mat()}
+        val itemList = findItems(untilBlank, capturedImg = temp)
+        val capturedImg = temp[0]
+        capturedImg.changeBlackAndWhite()
+
+        //인벤토리에서 찾은 아이템의 수가 maxTargetItemCount 보다 큰 경우 뒤에서부터 maxTargetItemCount 까지 제거
+        if(maxTargetItemCount != 0 && itemList.size > maxTargetItemCount) {
+            for (i in 1..(itemList.size - maxTargetItemCount)) {
+                itemList.removeAt(maxTargetItemCount)
+            }
+        }
+
+        val targetList = arrayListOf<Pair<Point, Point>>()  // 합성할 아이템들의 페어를 저장할 리스트
+
+        //합성할 아이템들의 페어 리스트 구하기
+        val tempList = arrayListOf<Point>()
+        itemList.forEach {
+            tempList.add(it)
+            if(tempList.size == 2) {
+                isItemSame(capturedImg, tempList[0], tempList[1]).let {pair ->
+                    if(pair != null) {
+                        targetList.add(pair)
+                        tempList.clear()
+                    } else {
+                        tempList.removeAt(0)
+                    }
+
+                }
+
+            }
+        }
+
+        return targetList
+
+
+
+    }
+
+    /**해당 이미지의 좌표 내에서 두 아이템이 같은지 반환환*/
+    fun isItemSame(totalImg: Mat, item1: Point, item2: Point): Pair<Point, Point>? {
+        val i1 = totalImg.colRange(item1.x, item1.x + 25).rowRange(item1.y, item1.y + 25)
+        val i2 = totalImg.colRange(item2.x, item2.x + 25).rowRange(item2.y, item2.y + 25)
+
+        return if (helper.imageSearchReturnBoolean(i1, i2, 80.0)) {
+            Pair(item1, item2)
+        } else null
+    }
+
+    suspend fun synthesizeItem(item1: Point, item2: Point) {
+
+        helper.apply {
+            moveMouseSmoothly(item1, 200)
+            kotlinx.coroutines.delay(300)
+            moveMouseSmoothly(item2, 200)
+            kotlinx.coroutines.delay(300)
+
+            moveMouseRB()
+        }
+
+    }
+
 
 }

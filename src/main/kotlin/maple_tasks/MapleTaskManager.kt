@@ -1,7 +1,5 @@
 package maple_tasks
 
-import changeContract
-import changeContract2
 import com.sun.jna.platform.win32.User32
 import helper.BaseTaskManager
 import helper.ConsumeEvent
@@ -13,24 +11,22 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
 import maple_tasks.AdditionalOptionTask.Companion.BELT
-import moveMouseSmoothly
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
-import toFile
 import toMat
 import tornadofx.asObservable
 import winActive
 import winIsForeground
 import java.awt.Point
 import java.awt.Rectangle
+import java.awt.Toolkit
 import java.awt.event.KeyEvent
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
-import kotlin.system.measureNanoTime
 import kotlin.system.measureTimeMillis
 
 
@@ -217,8 +213,11 @@ class MapleTaskManager : BaseTaskManager() {
     fun test2() {
         runTask("test2") {
             if (activateTargetWindow()) {
-                AuctionTask().exitAuction()
+                MeisterTask().apply {
+                    synthesizeItemSmartly(false, 0, 0)
+                }
             }
+
         }
 
     }
@@ -267,7 +266,16 @@ class MapleTaskManager : BaseTaskManager() {
     fun synthesizeItem() {
         runTask("syn") {
             if (activateTargetWindow())
-                MeisterTask().synthesizeItemSmartly()
+                MeisterTask().synthesizeItemUntilBlank()
+            Toolkit.getDefaultToolkit().beep()
+        }
+    }
+
+    fun synthesizeItem(untilBlank: Boolean, maxSynCount: Int, maxTargetItemCount: Int) {
+        runTask("syn") {
+            if (activateTargetWindow())
+                MeisterTask().synthesizeItemSmartly(untilBlank, maxSynCount, maxTargetItemCount)
+            Toolkit.getDefaultToolkit().beep()
         }
     }
 
@@ -279,28 +287,34 @@ class MapleTaskManager : BaseTaskManager() {
                 else
                     AuctionTask().buyOneItemUntilEnd(buyAll, usePurchasedTab = usePurchasedTab)
             }
-
+            Toolkit.getDefaultToolkit().beep()
         }
     }
 
     fun makeItemInfinitely(maxCount: Int) {
         runTask("makeItem") {
-            if (activateTargetWindow())
+            if (activateTargetWindow()) {
                 MeisterTask().makeItemInfinitely(maxCount)
+                Toolkit.getDefaultToolkit().beep()
+            }
         }
     }
 
     fun cubeItem(targetOptions: HashMap<String, Int>, count: Int = 1) {
         runTask("cube") {
-            if (activateTargetWindow())
+            if (activateTargetWindow()) {
                 UpgradeItemTask().useCube(targetOptions, count)
+                Toolkit.getDefaultToolkit().beep()
+            }
         }
     }
 
     fun upgradeItem() {
         runTask("upgrade") {
-            if (activateTargetWindow())
+            if (activateTargetWindow()) {
                 UpgradeItemTask().upgradeAndStarforce()
+                Toolkit.getDefaultToolkit().beep()
+            }
         }
     }
 
@@ -326,6 +340,7 @@ class MapleTaskManager : BaseTaskManager() {
                         makeItem(name)
                     }
 
+                    Toolkit.getDefaultToolkit().beep()
                 }
         }
     }
@@ -339,6 +354,7 @@ class MapleTaskManager : BaseTaskManager() {
                     } else
                         extractItemAll()
                 }
+            Toolkit.getDefaultToolkit().beep()
         }
     }
 
@@ -347,6 +363,7 @@ class MapleTaskManager : BaseTaskManager() {
             if (activateTargetWindow())
                 MapleBaseTask().apply {
                     appraiseItems(untilBlank)
+                    Toolkit.getDefaultToolkit().beep()
                 }
         }
     }
@@ -375,6 +392,7 @@ class MapleTaskManager : BaseTaskManager() {
                 MapleBaseTask().apply {
                     dropItemUntilBlank(delay)
                 }
+                Toolkit.getDefaultToolkit().beep()
             }
         }
     }
@@ -386,6 +404,7 @@ class MapleTaskManager : BaseTaskManager() {
                 MapleBaseTask().apply {
                     this.pressZ(time)
                 }
+                Toolkit.getDefaultToolkit().beep()
             }
         }
     }
@@ -415,6 +434,7 @@ class MapleTaskManager : BaseTaskManager() {
                     }
 
                 }
+                Toolkit.getDefaultToolkit().beep()
             }
 
         }
@@ -429,6 +449,7 @@ class MapleTaskManager : BaseTaskManager() {
                 additionalOptionTask?.moveItemsToEnd()
             }
 
+            Toolkit.getDefaultToolkit().beep()
         }
     }
 
@@ -488,6 +509,8 @@ class MapleTaskManager : BaseTaskManager() {
                     }
                     logI("${marketItemList.size}개 찾음")
                 }
+
+                Toolkit.getDefaultToolkit().beep()
             }
 
         }
@@ -603,9 +626,93 @@ class MapleTaskManager : BaseTaskManager() {
         runTask("auctionTask") {
             if (activateTargetWindow()) {
                 AuctionTask().resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
+                Toolkit.getDefaultToolkit().beep()
             }
 
 
+        }
+    }
+
+    /**피로도 혹은 합성할 아이템이 없을때까지 계속 합성
+     * 합성 한번 할때마다 추옵 확인 후 가장자리로 옮기는 작업 실시 */
+    fun synthesizeUtilEnd(maxSynCount: Int = 66, startWithCheck: Boolean = false) {
+        runTask("auctionTask") {
+            if (activateTargetWindow()) {
+                if (additionalOptionTask == null) additionalOptionTask = AdditionalOptionTask()
+                val meisterTask = MeisterTask()
+
+
+                meisterTask.apply {
+
+                    openInventory()
+                    sortItems()
+
+                    var targetItemCount = if (startWithCheck) {
+                        //startWithCheck == true 인 경우 추옵확인 후 옮긴 뒤에 합성 시작
+                        val goodItems = additionalOptionTask!!.checkItems(false, true)
+                        Platform.runLater {
+                            goodItemList.clear()
+                            goodItemList.addAll(goodItems)
+                            logI("기준에 충족되는 아이템 수: ${goodItemList.size}")
+                        }
+                        val itemCount = meisterTask.findItems(false).size
+                        logI("현재 전체 아이템 수:$itemCount")
+                        itemCount - goodItems.size
+                    } else meisterTask.findItems(false).size
+
+                    var remainSynCount = maxSynCount //남은 합성 횟수
+                    var completeSynCount = 0
+
+                    while (remainSynCount > 0 && targetItemCount > 1) {
+                        //합성
+                        logI("$targetItemCount 개의 아이템 합성여부 확인")
+                        logI("남은 합성 횟수: $remainSynCount")
+                        val synCount = synthesizeItemSmartly(false, remainSynCount, targetItemCount)
+                        remainSynCount -= synCount
+                        completeSynCount += synCount
+                        targetItemCount -= synCount
+
+                        if (synCount == 0) {
+                            //더이상 합성이 불가능할때
+                            helper.sendEnter()
+                            moveMouseRB()
+                            clickCancelBtn()
+                            additionalOptionTask!!.checkItems(true, true).let {
+                                Platform.runLater {
+                                    goodItemList.addAll(it)
+                                    logI("기준에 충족되는 아이템 수: ${goodItemList.size}")
+                                }
+                            }
+                            break
+                        }
+
+                        while (clickCancelBtn()) {
+                            moveMouseRB(100)
+                        }
+
+
+                        //정렬
+                        sortItems()
+
+                        //추옵찾고 옮기기
+                        val goodItems = additionalOptionTask!!.checkItems(false, true)
+                        Platform.runLater {
+                            goodItemList.clear()
+                            goodItemList.addAll(goodItems)
+                            logI("기준에 충족되는 아이템 수: ${goodItemList.size}")
+                        }
+                        val itemCount = findItems(false).size
+                        logI("현재 전체 아이템 수:$itemCount")
+                        targetItemCount = itemCount - goodItems.size
+
+
+                    }
+
+                    logI("작업 완료. $completeSynCount 회 합성 / 추옵 ${goodItemList.size} 개 발견")
+
+
+                }
+            }
         }
     }
 

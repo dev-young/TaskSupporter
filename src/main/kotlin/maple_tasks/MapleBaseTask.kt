@@ -7,6 +7,7 @@ import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
+import rightBottom
 import toMat
 import winActive
 import winGetPos
@@ -36,10 +37,10 @@ open class MapleBaseTask {
     }
 
     /**해당 좌표의 아이템이 빈칸인지 확인*/
-    fun checkEmpty(leftTop: Point): Boolean {
-        val x1 = leftTop.x - 10
-        val y1 = leftTop.y - 10
-        helper.imageSearch(Point(x1, y1), 40, 40, "img\\emptyItem.png")?.let {
+    fun isItemEmpty(leftTop: Point): Boolean {
+        val x1 = leftTop.x - 8
+        val y1 = leftTop.y - 8
+        helper.imageSearch(Point(x1, y1), 39, 39, "img\\emptyItem.png")?.let {
             return true
         }
         return false
@@ -324,11 +325,14 @@ open class MapleBaseTask {
         }
     }
 
+    var lastUsedImg : Mat? = null   //마지막으로 사용된 이미지(Mat 형식)
+
     /**인벤토리 첫칸부터 빈칸이 나오기 전까지 아이템의 목록을 반환한다.
      * @param untilBlank false로 할 경우 모든 아이템의 위치를 반환한다. */
-    suspend fun findItems(untilBlank: Boolean = true, blankList: ArrayList<Point>? = null): List<Point> {
+    suspend fun findItems(untilBlank: Boolean = true, blankList: ArrayList<Point>? = null, capturedImg: Array<Mat>? = null): ArrayList<Point> {
         val items = arrayListOf<Point>()
         blankList?.clear()
+        moveMouseRB()
         helper.apply {
             var vx: Int //현재 아이템 x
             var vy: Int  //현재 아이템 y
@@ -369,6 +373,8 @@ open class MapleBaseTask {
                 createScreenCapture(Rectangle(0, 0, point.x+700, point.y+370)).toMat()
             else
                 createScreenCapture(Rectangle(0, 0, point.x+190, point.y+330)).toMat()
+            lastUsedImg = screenImg
+            capturedImg?.let { it[0] = screenImg }
 
             var lastPosition = 0
             kotlin.run {
@@ -378,7 +384,7 @@ open class MapleBaseTask {
                     val checkResult = checkEmptyOrDisableFast(screenImg, point)
                     if (checkResult > 0) {
                         lastPosition = index - 1
-                        logI("lastPosition: $lastPosition")
+//                        logI("lastPosition: $lastPosition")
 
                         if (checkResult == 2 || untilBlank)
                             return@run
@@ -447,7 +453,7 @@ open class MapleBaseTask {
                     val checkResult = checkEmptyOrDisable(point)
                     if (checkResult > 0) {
                         lastPosition = index - 1
-                        logI("lastPosition: $lastPosition")
+//                        logI("lastPosition: $lastPosition")
 
                         if (checkResult == 2 || untilBlank)
                             return@run
@@ -650,6 +656,29 @@ open class MapleBaseTask {
                 delayRandom(50, 150)
             }
 
+        }
+    }
+
+    /**마우스 좌표를 메이플창의 오른쪽 하단으로 이동시킨다. */
+    fun moveMouseRB(time: Int =  80){
+        helper.user32.winGetPos().rightBottom().let {
+            it.x = it.x-10
+            it.y = it.y-10
+            helper.moveMouseSmoothly(it, t = time)
+        }
+    }
+
+    /**아이템 정렬*/
+    suspend fun sortItems() {
+        moveMouseRB()
+        val mesoBtn = findInventory()
+        mesoBtn?.let {
+            val sortBtn = Point(it.x+144, it.y)
+            helper.smartClick(sortBtn, 5,5, maxTime = 50)
+            helper.smartClick(sortBtn, 5,5, maxTime = 50)
+            delay(800)
+            helper.smartClick(sortBtn, 5,5, maxTime = 50)
+            helper.smartClick(sortBtn, 5,5, maxTime = 50)
         }
     }
 }

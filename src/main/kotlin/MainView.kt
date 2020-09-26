@@ -110,24 +110,66 @@ class MainView : View() {
 
                 vbox {
                     paddingAll = defaultItemSpacing
-                    spacing = 10.0
+                    spacing = 4.0
+
+                    val maxSynCount = SimpleIntegerProperty()
+                    val maxTargetItemCount = SimpleIntegerProperty()
+                    val untilBlank = SimpleBooleanProperty()
 
                     hbox {
                         alignment = Pos.CENTER_LEFT
                         spacing = 4.0
 
+                        textfield(maxSynCount) {
+                            text = "64"
+                            maxWidth = 50.0
+                        }
+                        label ("= 최대 합성 횟수 (0==64)")
+                    }
+
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = 4.0
+
+                        textfield(maxTargetItemCount) {
+                            text = "128"
+                            maxWidth = 50.0
+                        }
+                        label ("= 합성가능여부를 검사할 최대 아이템 수 (0==128)")
+                    }
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = 4.0
                         button("자동합성") {
                             action {
                                 runAsync {
-                                    taskManager.synthesizeItem()
+                                    taskManager.synthesizeItem(untilBlank.value, maxSynCount.value, maxTargetItemCount.value)
                                 }
                             }
                         }
-                        button("자동감정") {
+                        checkbox ("첫번째 빈칸까지 수행", untilBlank) {
+                            isSelected = true
+                        }
+
+                        spacer { maxWidth = 10.0 }
+
+                        val maxSynCount2 = SimpleIntegerProperty()
+                        val additionalFirst = SimpleBooleanProperty()
+                        button("무한합성") {
                             action {
-                                taskManager.appraiseItems(true)
+                                runAsync {
+                                    taskManager.synthesizeUtilEnd(maxSynCount2.value, additionalFirst.value)
+                                }
                             }
                         }
+                        textfield(maxSynCount2) {
+                            text = "66"
+                            maxWidth = 50.0
+                        }
+                        checkbox ("추옵부터", additionalFirst) {
+                            isSelected = false
+                        }
+
                     }
 
                     hbox {
@@ -142,6 +184,11 @@ class MainView : View() {
                         button("모두분해") {
                             action {
                                 taskManager.extractItems(false)
+                            }
+                        }
+                        button("자동감정") {
+                            action {
+                                taskManager.appraiseItems(true)
                             }
                         }
                     }

@@ -1,10 +1,8 @@
 package helper
 
-import com.sun.jna.platform.win32.User32
 import kotlinx.coroutines.*
 import logI
 import org.opencv.core.Core
-import winActive
 import java.io.File
 import kotlin.system.exitProcess
 
