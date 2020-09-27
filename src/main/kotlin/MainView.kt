@@ -59,6 +59,7 @@ class MainView : View() {
             button {
                 text = "일시정지"
                 action {
+                    taskManager.activateTargetWindow()
                     taskManager.toggle()
                 }
             }
@@ -100,6 +101,10 @@ class MainView : View() {
                             }
                             label(description)
                         }
+                    }
+
+                    button("숙련도올릴계정.txt 파일의 계정들의 숙련도작업").setOnAction {
+                        taskManager.autoMakeWithMultipleAccount()
                     }
                 }
             }

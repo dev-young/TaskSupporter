@@ -237,6 +237,43 @@ class HelperCore : Robot() {
         return imageSearch(imgName, defaultAccuracy, findOnForeground)
     }
 
+    /**이미지를 찾을때까지 반복하여 검색 (기본 5초간 검색)*/
+    suspend fun imageSearchUntilFind(
+        imgName: String,
+        accuracy: Double = defaultAccuracy,
+        repeatDelay: Int = 250,
+        repeatCount: Int = 20
+    ): Point? {
+        var point = imageSearch(imgName, accuracy)
+        val delay = repeatDelay.toLong()
+        var tryCount = 0
+        while (point == null){
+            tryCount++
+            point = imageSearch(imgName, accuracy)
+            delay(delay)
+            if(tryCount > repeatCount) return null
+        }
+        return point
+    }
+
+
+    /**이미지를 찾고 찾은 이미지 범위 내에서 클릭을 한다.
+     * 이미지를 못찾은경우 찾을때까지 계속 반복한다. (최대 몇초간 반복할지 설정 가능)
+     * 이미지를 찾은경우 찾은 좌상단 좌표를 반환하고 못찾으면 null 반환*/
+    suspend fun imageSearchAndClickUntilFind(
+        imgName: String,
+        accuracy: Double = defaultAccuracy,
+        minTime: Int = smartClickTimeMin,
+        maxTime: Int = smartClickTimeMax,
+        keyCode: Int = defaultClickKey,
+        repeatDelay: Int = 250,
+        repeatCount: Int = 20
+    ): Point? {
+        val point = imageSearchUntilFind(imgName, accuracy, repeatDelay, repeatCount)
+        point?.let { smartClick(it, searchedImgWidth, searchedImgHeight, minTime, maxTime, keyCode) }
+        return point
+    }
+
     /**이미지를 찾고 찾은 이미지 범위 내에서 클릭을 한다.
      * 이미지를 찾은경우 찾은 좌상단 좌표를 반환하고 못찾으면 null 반환*/
     suspend fun imageSearchAndClick(

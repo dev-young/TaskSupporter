@@ -262,8 +262,9 @@ class MeisterTask : MapleBaseTask() {
         }
     }
 
-    /**아이템을 검색후 제작한다. */
-    suspend fun makeItem(itemName: String): Boolean {
+    /**아이템을 검색후 제작한다.
+     * @param waitTimeMinute 만약 제작 대기시간이 있을경우 대기 시간을 지정할 수 있다. (0인경우 기다리지 않는다.)*/
+    suspend fun makeItem(itemName: String, waitTimeMinute:Int = 0): Boolean {
         val searchBtn = openProductionSkill()
         if (searchBtn == null) {
             logI("전문기술 창을 열 수 없습니다.")
@@ -274,13 +275,12 @@ class MeisterTask : MapleBaseTask() {
         val searchedItem = Point(searchBtn.x - 10, searchBtn.y + 45)
         helper.apply {
             smartClickTimeMax = 200
+            copyToClipboard(itemName)
+
             smartClick(searchArea, 10, 5)
             simpleClick()
-            delayRandom(200, 300)
+            delayRandom(300, 400)
             clearText()
-
-            delayRandom(100, 200)
-            copyToClipboard(itemName)
             delayRandom(100, 200)
             paste()
 
@@ -291,7 +291,7 @@ class MeisterTask : MapleBaseTask() {
             clickExpandBtn(searchBtn)
             delayRandom(100, 150)
 
-            moveMouseSmoothly(searchBtn, 100)
+            moveMouseSmoothly(searchBtn, 200)
 
             clickExpandBtn(searchBtn)
             delayRandom(100, 150)
@@ -300,19 +300,26 @@ class MeisterTask : MapleBaseTask() {
             simpleClick()
             delayRandom(100, 150)
 
-            moveMouseSmoothly(searchBtn, 100)
+            moveMouseSmoothly(searchBtn, 200)
 
-            return makeItem()
+            return makeItem(waitTimeMinute)
 
         }
     }
 
     /**제작하기 버튼을 눌러 제작을 한 뒤 완료 버튼까지 누른다. (전문기술 창을 열고 사용해야한다.)*/
-    suspend fun makeItem(): Boolean {
-
+    suspend fun makeItem(waitMinute:Int = 0): Boolean {
+        val maxWaitSec = waitMinute * 60
         helper.apply {
+            var point = imageSearchAndClick(imgpathMakebtn, maxTime = 150)
+            var tryCount = 0
+            while (point == null) {
+                tryCount++
+                if(tryCount > maxWaitSec) return false
+                kotlinx.coroutines.delay(1000)
+                point = imageSearchAndClick(imgpathMakebtn, maxTime = 150)
 
-            val point = imageSearchAndClick(imgpathMakebtn, maxTime = 150) ?: return false
+            }
             delayRandom(20, 40)
             simpleClick()
             delayRandom(200, 250)

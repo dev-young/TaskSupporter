@@ -213,8 +213,8 @@ class MapleTaskManager : BaseTaskManager() {
     fun test2() {
         runTask("test2") {
             if (activateTargetWindow()) {
-                MeisterTask().apply {
-                    synthesizeItemSmartly(false, 0, 0)
+                LoginTask().apply {
+                    logOut()
                 }
             }
 
@@ -231,9 +231,9 @@ class MapleTaskManager : BaseTaskManager() {
         mapleBaseTask = null
     }
 
-    fun loadAccountList(): List<List<String>> {
+    fun loadAccountList(fileName: String = "AccountList"): List<List<String>> {
         val list = ArrayList<List<String>>()
-        val file = File("AccountList.txt")
+        val file = File("$fileName.txt")
         if (file.exists()) {
             file.readLines().forEach {
 //                    log(it)
@@ -676,6 +676,8 @@ class MapleTaskManager : BaseTaskManager() {
                             //더이상 합성이 불가능할때
                             helper.sendEnter()
                             moveMouseRB()
+                            helper.sendEnter()
+                            helper.sendEnter()
                             clickCancelBtn()
                             additionalOptionTask!!.checkItems(true, true).let {
                                 Platform.runLater {
@@ -687,6 +689,7 @@ class MapleTaskManager : BaseTaskManager() {
                         }
 
                         while (clickCancelBtn()) {
+                            helper.sendEnter()
                             moveMouseRB(100)
                         }
 
@@ -716,6 +719,87 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
+    /**여러 개정으로 자동으로 로그인하며 제작*/
+    fun autoMakeWithMultipleAccount(){
+        runTask("loginTask") {
+            if (activateTargetWindow()) {
+                val loginTask = LoginTask()
+                val meisterTask = MeisterTask()
+
+                val accountList = loadAccountList("숙련도올릴계정")
+                accountList.forEach { logI("${it[0]}  ${it[2]}번째") }
+                run {
+                    accountList.forEach {
+                        val id = it[0]
+                        val pw = it[1]
+                        val temp = it[2].split(',', limit = 3)
+                        val characterIndex = temp[0].toInt()
+                        val type = temp[1]
+                        val itemName = temp[2]
+
+                        loginTask.login(id, pw, true)
+
+                        if(loginTask.waitLoadingChannel()){
+                            loginTask.intoChannel(7)
+                            logI("서버 선택")
+
+                            loginTask.waitLoadingCharacter()
+                            loginTask.selectCharacter(characterIndex)
+                            logI("$characterIndex 번째 캐릭 선택")
+
+                            if(loginTask.waitLoadingGame()){
+                                logI("로딩 완료")
+                                loginTask.clearAd()
+
+                                meisterTask.apply {
+                                    val targetPosition = when (type) {
+                                        MEISTER_1 -> meisterPosition1
+                                        MEISTER_2 -> meisterPosition2
+                                        MEISTER_3 -> meisterPosition3
+                                        else -> null
+                                    }
+                                    if (targetPosition == null) {
+                                        logI("잘못된 타겟입니다.")
+                                        return@apply
+                                    }
+                                    moveCharacter(targetPosition)
+                                    if(makeItem(itemName, 15)){
+                                        logI("제작 성공")
+                                    } else {
+                                        logI("제작 실패")
+                                    }
+                                }
+
+                                loginTask.logOut()
+
+                            } else {
+                                //거탐뜬 경우
+                                logI("게임 로딩 실패")
+                                return@run
+                            }
+
+                        } else {
+                            // 월드선택창 접속 못하는 경우 ( 로그인 실패한경우 )
+                            logI("로그인 실패: $id")
+                            loginTask.helper.send(KeyEvent.VK_ESCAPE)
+                            loginTask.helper.send(KeyEvent.VK_ESCAPE)
+                            loginTask.waitLoadingLogin()
+
+                        }
+
+
+
+                    }
+                }
+
+
+
+                Toolkit.getDefaultToolkit().beep()
+            }
+
+
+        }
+    }
 
     companion object {
         const val SIMPLE_TASK_AUTOCLICK = "마우스 광클"

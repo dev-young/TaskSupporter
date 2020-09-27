@@ -273,12 +273,12 @@ open class MapleBaseTask {
     }
 
     /**인벤토리창을 닫는다. */
-    suspend fun closeInventory() {
+    suspend fun closeInventory(repeatDelay: Int = 100) {
         val mesoBtn = findInventory()
 
         if (mesoBtn != null) {
             helper.send(inventoryKey)
-            delay(100)
+            delay(repeatDelay.toLong())
             closeInventory()
         }
     }
@@ -289,6 +289,7 @@ open class MapleBaseTask {
 
         if (searchBtn == null) {
             helper.apply {
+                openInventory()
                 send(productionSkillKey)
                 delayRandom(200, 400)
                 val p = imageSearch("img\\meister\\productionSkill.png")?.let {
@@ -297,8 +298,12 @@ open class MapleBaseTask {
                 }
             }
 
+            while (findInventory() != null) {
+                closeInventory(1000)
+                delay(500) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
+            }
+            delay(500)
 
-            delay(7000) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
             return openProductionSkill()
         } else {
             return searchBtn
