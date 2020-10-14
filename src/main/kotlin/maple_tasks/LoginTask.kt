@@ -159,9 +159,17 @@ class LoginTask : MapleBaseTask() {
     suspend fun clearAd() {
         helper.apply {
             moveMouseRB()
+
+            if(imageSearch("img\\closeAd.png") == null) {
+                //처음에 광고가 안뜬 경우 (썬데이메이플)
+                send(KeyEvent.VK_ESCAPE)
+                delayRandom(1000, 1100)
+            }
             imageSearchAndClickUntilFind("img\\closeAd.png", 95.5, maxTime = 200)
             delayRandom(1000, 1100)
             send(KeyEvent.VK_ESCAPE)
+
+            imageSearchAndClick("img\\closeAd.png")
         }
     }
 

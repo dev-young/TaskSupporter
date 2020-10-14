@@ -129,7 +129,7 @@ class MarketConditionTask : AdditionalOptionTask() {
 
 
                         //다음 페이지 클릭
-                        smartClick(nextPagePoint!!, randomRangeX = 4, randomRangeY = 4, maxTime = 100)
+                        smartClick(nextPagePoint!!, randomRangeX = 2, randomRangeY = 2, maxTime = 100)
                         delayRandom(100, 150)
                     }
 
@@ -257,7 +257,7 @@ class MarketConditionTask : AdditionalOptionTask() {
             if (resultScreenRect == null) {
                 val point = imageSearch("$defaultImgPath\\searchResult.png") ?: return null
                 resultScreenRect = Rectangle(point.x + 320, point.y + 50, 370, 500)
-                nextPagePoint = Point(point.x + 400, point.y + 6)
+                nextPagePoint = Point(point.x + 401, point.y + 7)
             }
 
             return createScreenCapture(resultScreenRect).toMat()

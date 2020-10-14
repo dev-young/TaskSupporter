@@ -749,6 +749,7 @@ class MapleTaskManager : BaseTaskManager() {
 
                             if(loginTask.waitLoadingGame()){
                                 logI("로딩 완료")
+                                delay(1000)
                                 loginTask.clearAd()
 
                                 meisterTask.apply {
