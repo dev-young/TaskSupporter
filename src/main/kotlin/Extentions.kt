@@ -190,6 +190,7 @@ fun User32.winGetPos(): WinDef.RECT {
 }
 
 fun WinDef.RECT.leftTop() = Point(left, top)
+fun WinDef.RECT.leftBottom() = Point(left, bottom)
 fun WinDef.RECT.rightBottom() = Point(right, bottom)
 fun WinDef.RECT.width() = right - left
 fun WinDef.RECT.getHeight() = bottom - top

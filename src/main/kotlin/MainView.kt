@@ -9,7 +9,6 @@ import javafx.scene.control.Label
 import javafx.scene.control.SelectionMode
 import javafx.scene.image.Image
 import javafx.scene.input.KeyCode
-import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
 import maple_tasks.MapleTaskManager
@@ -34,6 +33,11 @@ class MainView : View() {
     private val defaultItemSpacing = 7.0
     private lateinit var infoLabel: Label
     val taskManager = MapleTaskManager()
+
+    val price1 = SimpleLongProperty()
+    val price2 = SimpleLongProperty()
+    val pivot = SimpleLongProperty()
+    val cancelFirst = SimpleBooleanProperty()
 
     override val root = borderpane {
         top = hbox {
@@ -104,7 +108,7 @@ class MainView : View() {
                     }
 
                     button("숙련도올릴계정.txt 파일의 계정들의 숙련도작업").setOnAction {
-                        taskManager.autoMakeWithMultipleAccount()
+                        taskManager.autoMakeAndResaleWithMultipleAccount(price1.value*10000, pivot.value*10000, price2.value*10000)
                     }
                 }
             }
@@ -424,10 +428,6 @@ class MainView : View() {
                         }
                     }
 
-                    val price1 = SimpleLongProperty()
-                    val price2 = SimpleLongProperty()
-                    val pivot = SimpleLongProperty()
-
                     vbox {
                         spacing = 2.0
                         hbox {
@@ -452,8 +452,12 @@ class MainView : View() {
 
                             button("아이템 재등록") {
                                 action {
-                                    taskManager.resaleItems(price1.value*10000, pivot.value*10000, price2.value*10000)
+                                    taskManager.resaleItems(price1.value*10000, pivot.value*10000, price2.value*10000, cancelFirst.value)
                                 }
+                            }
+
+                            checkbox("판매중취소", cancelFirst) {
+                                isSelected = true
                             }
                         }
                         label ("      [감가1]             [기준]              [감가2]       (단위: 만)")

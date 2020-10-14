@@ -120,7 +120,7 @@ class MeisterTask : MapleBaseTask() {
     suspend fun synthesizeItemSmartly(untilBlank: Boolean, maxSynCount: Int = 0, maxTargetItemCount: Int = 0) :Int {
         logI("합성 시작!")
         HelperCore().apply {
-            moveMouseRB()
+            moveMouseLB()
             smartClickTimeMin = 45
             smartClickTimeMax = 55
             openSynthesize()
@@ -164,7 +164,7 @@ class MeisterTask : MapleBaseTask() {
                             return synCount
                         }
                     }
-                    moveMouseRB(300)
+                    moveMouseLB(300)
                     delayRandom(1500, 1700) // 합성 대기시간
                     var failCount = 0
                     while (!clickOkBtn(50)) {
@@ -574,7 +574,7 @@ class MeisterTask : MapleBaseTask() {
             moveMouseSmoothly(item2, 200)
             kotlinx.coroutines.delay(300)
 
-            moveMouseRB()
+            moveMouseLB()
         }
 
     }

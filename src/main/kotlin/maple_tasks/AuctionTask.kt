@@ -1,13 +1,11 @@
 package maple_tasks
 
-import changeContract
 import changeContract2
 import kotlinx.coroutines.delay
 import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
 import toMat
 import java.awt.Point
 import java.awt.Rectangle
@@ -26,7 +24,7 @@ class AuctionTask : MapleBaseTask() {
     private var lastPurchaseTime: Long = 0       //최근 구매 시간
     private val searchDelay = 5000  //검색 딜레이 (5초)
     private val purchaseDelay = 1000 //구매 딜레이 (경매장에서 구매시 생기는 딜레이)
-    private val salesDelay = 1100 //판매 딜레이 (경매장에서 구매시 생기는 딜레이)
+    private val salesDelay = 1000 //판매 딜레이 (경매장에서 구매시 생기는 딜레이)
 
     private val purchaseSlotCount = 10  //구매 슬롯 수
 
@@ -756,6 +754,22 @@ class AuctionTask : MapleBaseTask() {
         }
     }
 
+    /**판매중인 아이템 전부 취소하기 */
+    suspend fun cancelSellingItem(){
+        helper.apply {
+            clickSalesTab()
+            for (i in 1..60) {
+                imageSearchAndClick("$defaultImgPath\\cancelSelling.png", 90.0, maxTime = 100) ?: let {
+                    moveMouseLB()
+                    imageSearchAndClick("$defaultImgPath\\cancelSelling.png", 90.0, maxTime = 100)
+                } ?: break
+                delayRandom(300, 500)
+            }
+            delayRandom(400, 500)
+            sendEnter()
+        }
+    }
+
 
     private val resalePriceHeadTemplate =
         Imgcodecs.imread("$defaultImgPath\\resalePrice.png").apply { this.changeContract2() }
@@ -795,7 +809,7 @@ class AuctionTask : MapleBaseTask() {
         }
 
         var completaCounter = 0
-        for (i in 1..9) {
+        for (i in 1..30) {
             //완료탭 누르기
             val completeTab =
                 clickCompleteTab(100) ?: helper.imageSearch("$defaultImgPath\\completeTabClicked.png") ?: break
@@ -805,8 +819,22 @@ class AuctionTask : MapleBaseTask() {
             //거래실패목록 누르기
             clickSalesFailureTab()
 
+            //모두받기 버튼 있는지 확인
+            helper.imageSearch("$defaultImgPath\\getAllBtn.png") ?: break
+
             //재등록 누르기
-            val resaleBtn = clickResaleBtn() ?: break
+            val resaleBtn = let {
+                var p = clickResaleBtn()
+                var tryCount = 0
+                while (p == null && tryCount < 4) {
+                    //다음 페이지
+                    helper.moveMouseSmoothly(okBtn, 100)
+                    helper.mouseWheelSmoothly(1)
+                    p = clickResaleBtn()
+                    tryCount++
+                }
+                p
+            } ?: break
             val returnBtn = Point(resaleBtn.x - 77, resaleBtn.y)    //물품반환 버튼위치
 
 
@@ -908,36 +936,57 @@ class AuctionTask : MapleBaseTask() {
     }
 
     /**판매탭에서 '물품반환' 시 반환될 아이템의 위치 (첫번재 빈칸) */
-    private fun getReturnItemPosition(): Point? {
+    private suspend fun getReturnItemPosition(): Point? {
 
         helper.apply {
             imageSearch("$defaultImgPath\\sales.png")?.let { it ->
-                val source = createScreenCapture(Rectangle(0, 0, it.x + 5, it.y + 300)).toMat()
-                val emptyTemplate = Imgcodecs.imread("$defaultImgPath\\salesEmpty.png")
-                val between = 53    // 칸 간격
-                val firstItemX = it.x - 600   // 첫번째칸 좌상단 x
-                val firstItemY = it.y + 55    // 첫번째칸 좌상단 y
-                val currentItem = Point(firstItemX, firstItemY)
-//                Imgcodecs.imwrite("emptyTemplate.png", source)
-                for (i in 0 until 44) {
-                    val targetSource = source.rowRange(currentItem.y - 10, currentItem.y + 40)
-                        .colRange(currentItem.x - 10, currentItem.x + 43)
-//                    Imgcodecs.imwrite("targetSource$i.png", targetSource)
-                    if (imageSearchReturnBoolean(targetSource, emptyTemplate, 50.0)) {
-                        logI("찾음: $i")
-                        return currentItem
-                    } else logI("못찾음: $i")
+                val scrollPointUp = Point(it.x-21, it.y+47)
+                val scrollPointDown = Point(it.x-21, it.y+249)
 
-                    if (i > 9 && i % 11 == 10) {
-                        currentItem.x = firstItemX
-                        currentItem.y = currentItem.y + between
-                    } else {
-                        currentItem.x = currentItem.x + between
+                //최상단으로 스크롤 업
+                moveMouseSmoothly(scrollPointDown, 50)
+                mouseWheelSmoothly(-10)
+//                smartClick(scrollPointUp, 1, 1, maxTime = 50)
+//                simpleClick(scrollPointUp, 20)
+
+                for (i in 1..4) {
+                    moveMouseLB()
+                    val source = createScreenCapture(Rectangle(0, 0, it.x + 5, it.y + 300)).toMat()
+                    val emptyTemplate = Imgcodecs.imread("$defaultImgPath\\salesEmpty.png")
+                    val between = 53    // 칸 간격
+                    val firstItemX = it.x - 600   // 첫번째칸 좌상단 x
+                    val firstItemY = it.y + 55    // 첫번째칸 좌상단 y
+                    val currentItem = Point(firstItemX, firstItemY)
+//                Imgcodecs.imwrite("emptyTemplate.png", source)
+                    for (i in 0 until 44) {
+                        val targetSource = source.rowRange(currentItem.y - 10, currentItem.y + 40)
+                            .colRange(currentItem.x - 10, currentItem.x + 43)
+//                    Imgcodecs.imwrite("targetSource$i.png", targetSource)
+                        if (imageSearchReturnBoolean(targetSource, emptyTemplate, 50.0)) {
+                            logI("찾음: $i")
+                            return currentItem
+                        } else logI("못찾음: $i")
+
+                        if (i > 9 && i % 11 == 10) {
+                            currentItem.x = firstItemX
+                            currentItem.y = currentItem.y + between
+                        } else {
+                            currentItem.x = currentItem.x + between
+                        }
                     }
+
+                    moveMouseSmoothly(scrollPointDown, 50)
+                    mouseWheelSmoothly(4)
+//                    moveMouseSmoothly(scrollPointDown, 50)
+//                    simpleClick(scrollPointDown, 4)
                 }
 
 
+
             }
+
+
+
         }
         return null
     }

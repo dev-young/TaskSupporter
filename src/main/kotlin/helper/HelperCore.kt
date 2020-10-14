@@ -23,6 +23,7 @@ import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
 import java.awt.event.KeyEvent.*
 import java.util.*
+import kotlin.math.abs
 import kotlin.system.exitProcess
 
 
@@ -197,6 +198,7 @@ class HelperCore : Robot() {
         var source = bi.toMat()
         var template = Imgcodecs.imread(imgName)
         setSearchedImgSize(template.cols(), template.rows())
+//        Imgcodecs.imwrite("test.png", source)
 
         val outputImage = Mat()
         val machMethod = Imgproc.TM_SQDIFF
@@ -387,6 +389,15 @@ class HelperCore : Robot() {
     suspend fun moveMouseOnForeground(x: Int, y: Int){
         val rect = user32.winGetPos()
         moveMouseSmoothly(Point(x+rect.left, y+rect.top), 100)
+    }
+
+    suspend fun mouseWheelSmoothly(move:Int) {
+        var direction = 1
+        if (move < 0) direction = -1
+        for (i in 1..abs(move)) {
+            mouseWheel(direction)
+            delay(50L)
+        }
     }
 
 

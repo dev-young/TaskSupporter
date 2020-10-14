@@ -3,6 +3,8 @@ package maple_tasks
 import com.sun.jna.platform.win32.User32
 import helper.HelperCore
 import kotlinx.coroutines.delay
+import leftBottom
+import leftTop
 import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
@@ -337,7 +339,7 @@ open class MapleBaseTask {
     suspend fun findItems(untilBlank: Boolean = true, blankList: ArrayList<Point>? = null, capturedImg: Array<Mat>? = null): ArrayList<Point> {
         val items = arrayListOf<Point>()
         blankList?.clear()
-        moveMouseRB()
+        moveMouseLB()
         helper.apply {
             var vx: Int //현재 아이템 x
             var vy: Int  //현재 아이템 y
@@ -664,8 +666,17 @@ open class MapleBaseTask {
         }
     }
 
+    /**마우스 좌표를 메이플창의 왼쪽 하단으로 이동시킨다. */
+    fun moveMouseLB(time: Int =  80){
+        helper.user32.winGetPos().leftBottom().let {
+            it.x = it.x+8
+            it.y = it.y-8
+            helper.moveMouseSmoothly(it, t = time)
+        }
+    }
+
     /**마우스 좌표를 메이플창의 오른쪽 하단으로 이동시킨다. */
-    fun moveMouseRB(time: Int =  80){
+    fun moveMouseRB2(time: Int =  80){
         helper.user32.winGetPos().rightBottom().let {
             it.x = it.x-10
             it.y = it.y-10
@@ -675,7 +686,7 @@ open class MapleBaseTask {
 
     /**아이템 정렬*/
     suspend fun sortItems() {
-        moveMouseRB()
+        moveMouseLB()
         val mesoBtn = findInventory()
         mesoBtn?.let {
             val sortBtn = Point(it.x+144, it.y)

@@ -622,10 +622,14 @@ class MapleTaskManager : BaseTaskManager() {
 
     }
 
-    fun resaleItems(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long) {
+    fun resaleItems(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long, cancelFirst: Boolean) {
         runTask("auctionTask") {
             if (activateTargetWindow()) {
-                AuctionTask().resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
+                AuctionTask().apply {
+                    if(cancelFirst)
+                        cancelSellingItem()
+                    resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
+                }
                 Toolkit.getDefaultToolkit().beep()
             }
 
@@ -675,7 +679,7 @@ class MapleTaskManager : BaseTaskManager() {
                         if (synCount == 0) {
                             //더이상 합성이 불가능할때
                             helper.sendEnter()
-                            moveMouseRB()
+                            moveMouseLB()
                             helper.sendEnter()
                             helper.sendEnter()
                             clickCancelBtn()
@@ -690,7 +694,7 @@ class MapleTaskManager : BaseTaskManager() {
 
                         while (clickCancelBtn()) {
                             helper.sendEnter()
-                            moveMouseRB(100)
+                            moveMouseLB(100)
                         }
 
 
@@ -719,12 +723,13 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    /**여러 개정으로 자동으로 로그인하며 제작*/
-    fun autoMakeWithMultipleAccount(){
+    /**여러 계정으로 자동으로 로그인하며 물품 재등록 및 숙련도아이템 제작*/
+    fun autoMakeAndResaleWithMultipleAccount(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long){
         runTask("loginTask") {
             if (activateTargetWindow()) {
                 val loginTask = LoginTask()
                 val meisterTask = MeisterTask()
+                val auctionTask = AuctionTask()
 
                 val accountList = loadAccountList("숙련도올릴계정")
                 accountList.forEach { logI("${it[0]}  ${it[2]}번째") }
@@ -752,6 +757,15 @@ class MapleTaskManager : BaseTaskManager() {
                                 delay(1000)
                                 loginTask.clearAd()
 
+                                //아이템 재등록
+                                auctionTask.openAuction()
+                                auctionTask.cancelSellingItem()
+                                auctionTask.resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
+                                auctionTask.exitAuction()
+                                logI("옥션 종료")
+                                loginTask.waitLoadingGame()
+                                logI("게임 로딩 완료")
+
                                 meisterTask.apply {
                                     val targetPosition = when (type) {
                                         MEISTER_1 -> meisterPosition1
@@ -763,6 +777,7 @@ class MapleTaskManager : BaseTaskManager() {
                                         logI("잘못된 타겟입니다.")
                                         return@apply
                                     }
+                                    logI("이동 시작")
                                     moveCharacter(targetPosition)
                                     if(makeItem(itemName, 15)){
                                         logI("제작 성공")

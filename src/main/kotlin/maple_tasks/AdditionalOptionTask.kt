@@ -107,7 +107,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
         goodItems.clear()
 
         helper.apply {
-            moveMouseRB()
+            moveMouseLB()
             items.forEach { item ->
 
                 getOptions(item)?.let {

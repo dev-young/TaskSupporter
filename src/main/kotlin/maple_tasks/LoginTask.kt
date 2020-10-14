@@ -66,7 +66,7 @@ class LoginTask : MapleBaseTask() {
     }
 
     /**로그인 후 채널 선택창 로딩 대기 */
-    suspend fun waitLoadingChannel(maxTimeSec: Int = 10): Boolean {
+    suspend fun waitLoadingChannel(maxTimeSec: Int = 20): Boolean {
         return waitLoading("img\\serverImg.png", maxTimeSec)
     }
 
@@ -76,7 +76,7 @@ class LoginTask : MapleBaseTask() {
     suspend fun intoChannel(wordNumber: Int): Boolean {
         helper.apply {
             val mouseMoveTime = 200
-            moveMouseRB()
+            moveMouseLB()
             val wordBetween = 32    //월드간 간격   (1: 620, 55)
             val titlePoint = imageSearchUntilFind("img\\serverImg.png") ?: return false
             val wordPoint = Point(titlePoint.x + 620, titlePoint.y + 55 + ((wordNumber - 1) * wordBetween))
@@ -147,18 +147,18 @@ class LoginTask : MapleBaseTask() {
     }
 
     /**캐릭터창 로딩 대기 */
-    suspend fun waitLoadingCharacter(maxTimeSec: Int = 10): Boolean {
+    suspend fun waitLoadingCharacter(maxTimeSec: Int = 20): Boolean {
         return waitLoading("img\\selectCharacter.png", maxTimeSec)
     }
 
     /**캐릭터 선택후 접속 대기 */
-    suspend fun waitLoadingGame(maxTimeSec: Int = 25): Boolean {
+    suspend fun waitLoadingGame(maxTimeSec: Int = 45): Boolean {
         return waitLoading("img\\menu.png", maxTimeSec)
     }
 
     suspend fun clearAd() {
         helper.apply {
-            moveMouseRB()
+            moveMouseLB()
 
             if(imageSearch("img\\closeAd.png") == null) {
                 //처음에 광고가 안뜬 경우 (썬데이메이플)
@@ -176,9 +176,9 @@ class LoginTask : MapleBaseTask() {
     /**로딩 대기 */
     suspend fun waitLoading(img:String, maxTimeSec: Int = 10): Boolean {
         helper.apply {
-            moveMouseRB()
+            moveMouseLB()
             var tryCount = 0
-            while (imageSearch(img, 90.0) == null){
+            while (imageSearch(img, 80.0) == null){
                 kotlinx.coroutines.delay(1000)
 
                 tryCount++
@@ -191,14 +191,14 @@ class LoginTask : MapleBaseTask() {
 
     suspend fun logOut() {
         helper.apply {
-            moveMouseRB()
+            moveMouseLB()
             if(imageSearch("img\\menu.png") != null) {
                 backToCharacter()
                 waitLoadingCharacter()
                 delayRandom(500, 600)
             }
 
-            moveMouseRB()
+            moveMouseLB()
             if (imageSearchAndClick("img\\backToLogin.png", 80.5, maxTime = 200) != null) {
                 simpleClick()
                 delayRandom(1000, 1110)
