@@ -580,9 +580,8 @@ class MapleTaskManager : BaseTaskManager() {
                     Platform.runLater {
                         marketItemList.clear()
                         it.forEach {
-                            val name = if (it.category == BELT) it.name else ""
                             val upgraded = if (it.isUpgraded == true) "강화된 " else ""
-                            marketItemList.add("$upgraded$name[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
+                            marketItemList.add("$upgraded[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
                         }
                     }
                 }

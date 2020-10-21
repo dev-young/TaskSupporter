@@ -166,6 +166,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
             delayRandom(30, 40)
 
             var isUpgraded : Boolean
+            var reqLev : Int? = null
             var job = ""
             val jobPoint =
                 imageSearch("$baseImgPath\\jobBeginner1.png")
@@ -180,6 +181,12 @@ open class AdditionalOptionTask : MapleBaseTask() {
                     isUpgraded = checkUpgraded(it)
                 }
 
+                //140제,150제 여부 확인 (둘다 아닐경우 null)
+                temp.rowRange(128, 139).colRange(140, 215).let {
+                    reqLev = checkRequireLevel(it)
+//                    Imgcodecs.imwrite("ReqLev.png", it)
+                }
+
                 val infoImg = temp.rowRange(190, temp.rows())
                 if (job.isEmpty()) {
                     val jobView = infoImg.rowRange(3, 13).colRange(20, 230)
@@ -190,7 +197,10 @@ open class AdditionalOptionTask : MapleBaseTask() {
 //                Imgcodecs.imwrite("test.png", infoImg)
                 val resultOption = check(infoImg)
                 val category = checkCategory(infoImg)
-                return ItemInfo(job, category, resultOption).apply { this.isUpgraded = isUpgraded }
+                return ItemInfo(job, category, resultOption).apply {
+                    this.isUpgraded = isUpgraded
+                    this.reqLev = reqLev
+                }
 
             }
             mouseRelease(KeyEvent.BUTTON3_MASK)
@@ -203,6 +213,18 @@ open class AdditionalOptionTask : MapleBaseTask() {
     private fun checkUpgraded(nameSource: Mat): Boolean {
         nameSource.changeBlackAndWhite()
         return helper.imageSearchReturnBoolean(nameSource, upgradeTemplate)
+    }
+
+    /**레벨제한이 150 이상인지 판단*/
+    private val reqLev150 = Imgcodecs.imread("$baseImgPath\\req150.png").apply { changeBlackAndWhite() }
+    private val reqLev140 = Imgcodecs.imread("$baseImgPath\\req140.png").apply { changeBlackAndWhite() }
+    private fun checkRequireLevel(source: Mat): Int? {
+        source.changeBlackAndWhite()
+        if(helper.imageSearchReturnBoolean(source, reqLev150))
+            return 150
+        if(helper.imageSearchReturnBoolean(source, reqLev140))
+            return 140
+        return null
     }
 
     private fun checkCategory(infoImg: Mat): String {
@@ -263,6 +285,8 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
     /**추가옵션 값을 확인후 유효한지 여부를 판단한다. */
     private fun isOptionGood(job: String, category: String, option: java.util.HashMap<String, Int>): Boolean {
+
+        //targetOptions: 아이템의 직업군, 종류에 따라 목표 옵션을 지정한다.
         val targetOptions = hashMapOf<String, Int>().apply {
             if (category == FACE) {
                 this[UpgradeItemTask.STR] = 40
@@ -336,14 +360,16 @@ open class AdditionalOptionTask : MapleBaseTask() {
         }
 
         option[UpgradeItemTask.SPELL]?.let {
-            val state = it * 4
+//            val state = it * 4    // 인트가 비싸지면 사용
+            val state = it * 2  // INT50 마력5  같은 경우를 제외시키기 위해 일부러 배율을 2로 낮춘다
             option[UpgradeItemTask.INT] = option[UpgradeItemTask.INT]?.plus(state) ?: state
         }
 
         option[UpgradeItemTask.ATT]?.let {
             val state = it * 4
+            val lowState = it * 2   //덱스같은 인기 없는 스텟을 위의 인트와 같은 이유로 배율을 낮게 곱하여 계산
             option[UpgradeItemTask.STR] = option[UpgradeItemTask.STR]?.plus(state) ?: state
-            option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(state) ?: state
+            option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(lowState) ?: lowState  /**추후 덱스가 비싸지면 그냥 state 사용*/
             option[UpgradeItemTask.LUK] = option[UpgradeItemTask.LUK]?.plus(state) ?: state
             option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it * 140) ?: it * 140
         }

@@ -16,10 +16,13 @@ import maple_tasks.MapleTaskManager.Companion.MEISTER_1
 import maple_tasks.MapleTaskManager.Companion.MEISTER_2
 import maple_tasks.MapleTaskManager.Companion.MEISTER_3
 import maple_tasks.UpgradeItemTask
+import maple_tasks.UpgradeItemTask.Companion.ATT
 import maple_tasks.UpgradeItemTask.Companion.DEX
+import maple_tasks.UpgradeItemTask.Companion.DMG
 import maple_tasks.UpgradeItemTask.Companion.HP
 import maple_tasks.UpgradeItemTask.Companion.INT
 import maple_tasks.UpgradeItemTask.Companion.LUK
+import maple_tasks.UpgradeItemTask.Companion.SPELL
 import maple_tasks.UpgradeItemTask.Companion.STR
 import tornadofx.*
 import java.lang.Exception
@@ -611,64 +614,119 @@ class MainView : View() {
                 val int = SimpleIntegerProperty()
                 val luc = SimpleIntegerProperty()
                 val hp = SimpleIntegerProperty()
+                val att = SimpleIntegerProperty()
+                val spell = SimpleIntegerProperty()
+                val dmg = SimpleIntegerProperty()
+
 
                 vbox {
                     paddingAll = defaultItemSpacing
                     spacing = 5.0
 
-                    val labelWidth = 40.0
-                    val inputWidth = 45.0
+                    hbox {
+                        spacing = 10.0
 
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
-                        label(STR) {
-                            minWidth = labelWidth
+                        vbox {
+                            spacing = 5.0
+
+                            val labelWidth = 40.0
+                            val inputWidth = 45.0
+
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(STR) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(str) {
+                                    text = "9"
+                                    maxWidth = inputWidth
+                                }
+                            }
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(DEX) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(dex) {
+                                    text = "9"
+                                    maxWidth = inputWidth
+                                }
+                            }
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(INT) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(int) {
+                                    text = "9"
+                                    maxWidth = inputWidth
+                                }
+                            }
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(LUK) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(luc) {
+                                    text = "9"
+                                    maxWidth = inputWidth
+                                }
+                            }
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(HP) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(hp) {
+                                    text = "12"
+                                    maxWidth = inputWidth
+                                }
+                            }
+
                         }
-                        textfield(str) {
-                            text = "9"
-                            maxWidth = inputWidth
+
+                        vbox {
+                            spacing = 5.0
+
+                            val labelWidth = 55.0
+                            val inputWidth = 45.0
+
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(ATT) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(att) {
+                                    text = "6"
+                                    maxWidth = inputWidth
+                                }
+                            }
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(SPELL) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(spell) {
+                                    text = "6"
+                                    maxWidth = inputWidth
+                                }
+                            }
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(DMG) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(dmg) {
+                                    text = "9"
+                                    maxWidth = inputWidth
+                                }
+                            }
                         }
                     }
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
-                        label(DEX) {
-                            minWidth = labelWidth
-                        }
-                        textfield(dex) {
-                            text = "9"
-                            maxWidth = inputWidth
-                        }
-                    }
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
-                        label(INT) {
-                            minWidth = labelWidth
-                        }
-                        textfield(int) {
-                            text = "9"
-                            maxWidth = inputWidth
-                        }
-                    }
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
-                        label(LUK) {
-                            minWidth = labelWidth
-                        }
-                        textfield(luc) {
-                            text = "9"
-                            maxWidth = inputWidth
-                        }
-                    }
-                    hbox {
-                        alignment = Pos.CENTER_LEFT
-                        label(HP) {
-                            minWidth = labelWidth
-                        }
-                        textfield(hp) {
-                            text = "12"
-                            maxWidth = inputWidth
-                        }
-                    }
+
+
+
+
 
                     hbox {
                         alignment = Pos.CENTER_LEFT
@@ -707,6 +765,9 @@ class MainView : View() {
                                 targetOptions[LUK] = luc.let { it.value }
                                 targetOptions[INT] = int.let { it.value }
                                 targetOptions[HP] = hp.let { it.value }
+                                targetOptions[ATT] = att.let { it.value }
+                                targetOptions[SPELL] = spell.let { it.value }
+                                targetOptions[DMG] = dmg.let { it.value }
 //                                targetOptions[UpgradeItemTask.ATT] = 9
 //                                targetOptions[UpgradeItemTask.SPELL] = 9
                                 taskManager.cubeItem(targetOptions, cubeCount.value.toInt())

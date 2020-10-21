@@ -29,6 +29,9 @@ class ItemInfo(
     var dateText = ""
     var dateTextSimple = ""
 
+    @Expose
+    var reqLev : Int? = null
+
     private var gradeKey = ""
 
     @Expose
@@ -213,7 +216,12 @@ class ItemInfo(
 
     fun getCategory1(): String {
         if (job == AdditionalOptionTask.COMMON)
-            return if (category == AdditionalOptionTask.BELT) "[$category][$name]"
+            return if (category == AdditionalOptionTask.BELT && reqLev != null) {
+                if(reqLev == null){
+                    "[140$category]"
+                } else
+                    "[${reqLev}$category]"
+            }
             else "[$category]"
         return "[$job][$category]"
     }

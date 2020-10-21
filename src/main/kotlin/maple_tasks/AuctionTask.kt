@@ -794,6 +794,7 @@ class AuctionTask : MapleBaseTask() {
     /**@param decreasePrice1 아이템 가격이 pivotPrice보다 작은 경우 감소시킬 값
      * @param decreasePrice2 아이템 가격이 pivotPrice보다 큰 경우 감소시킬 값
      * */
+    var minPrice = 1999999L //판매시 최소 금액
     suspend fun resaleItem(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long) {
         //판매탭 누르기
         clickSalesTab()?.let {
@@ -852,10 +853,13 @@ class AuctionTask : MapleBaseTask() {
                 readResalePrice(priceSource).let {
 //                    logI("readPrice:$it")
 //                    logI("dec1:$decreasePrice1, pivot:$pivotPrice, dec2:$decreasePrice2")
+                    var temp = it - decreasePrice1
                     if (it > pivotPrice)
                         it - decreasePrice2
-                    else
-                        it - decreasePrice1
+
+                    if(temp < minPrice)
+                        temp = minPrice
+                    temp
                 }.toString()
 
             //esc 혹은 취소 누르기
@@ -963,9 +967,11 @@ class AuctionTask : MapleBaseTask() {
                             .colRange(currentItem.x - 10, currentItem.x + 43)
 //                    Imgcodecs.imwrite("targetSource$i.png", targetSource)
                         if (imageSearchReturnBoolean(targetSource, emptyTemplate, 50.0)) {
-                            logI("찾음: $i")
+//                            logI("찾음: $i")
                             return currentItem
-                        } else logI("못찾음: $i")
+                        } else {
+//                            logI("못찾음: $i")
+                        }
 
                         if (i > 9 && i % 11 == 10) {
                             currentItem.x = firstItemX
@@ -980,7 +986,7 @@ class AuctionTask : MapleBaseTask() {
 //                    moveMouseSmoothly(scrollPointDown, 50)
 //                    simpleClick(scrollPointDown, 4)
                 }
-
+                logI("반환될 아이템의 위치 찾기 실패")
 
 
             }

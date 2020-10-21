@@ -3,6 +3,12 @@ package maple_tasks
 import logI
 import java.awt.Point
 import java.awt.event.KeyEvent
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileWriter
+import java.text.SimpleDateFormat
+import java.util.*
 
 class LoginTask : MapleBaseTask() {
 
@@ -55,9 +61,29 @@ class LoginTask : MapleBaseTask() {
                 delayRandom(500, 600)
                 sendEnter()
             }
+
+            //로그인 기록 남기기
+            saveLog(id)
         }
 
         return false
+    }
+
+    private fun saveLog(id: String) {
+        val file = File("loginLog.txt")
+        val bw = BufferedWriter(FileWriter(file, true))
+        val simpleDateFormat = SimpleDateFormat("YYYY-MM-dd  HH:mm:ss")
+        // 문자열을 앞서 지정한 경로에 파일로 저장, 저장시 캐릭터셋은 기본값인 UTF-8으로 저장
+        // 이미 파일이 존재할 경우 덮어쓰기로 저장
+        try {
+            bw.write("${simpleDateFormat.format(Date())} > $id")
+            bw.newLine()
+        } catch (e: FileNotFoundException) {
+            logI("FileNotFound: $id")
+        }
+
+        bw.flush()
+        bw.close()
     }
 
     /**로그인창 로딩 대기*/
@@ -84,7 +110,7 @@ class LoginTask : MapleBaseTask() {
 
             smartClick(wordPoint, 20, 5, maxTime = mouseMoveTime)
 
-            smartClick(channelPoint, 20, 5, maxTime = 1000)
+            smartClick(channelPoint, 20, 5, maxTime = 5000)
             sendEnter()
             simpleClick()
 
@@ -180,6 +206,8 @@ class LoginTask : MapleBaseTask() {
             var tryCount = 0
             while (imageSearch(img, 80.0) == null){
                 kotlinx.coroutines.delay(1000)
+
+                activateMaple()
 
                 tryCount++
                 if(tryCount > maxTimeSec)
