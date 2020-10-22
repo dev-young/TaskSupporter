@@ -6,6 +6,7 @@ import javafx.beans.property.*
 import javafx.geometry.Pos
 import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
+import javafx.scene.control.ListView
 import javafx.scene.control.SelectionMode
 import javafx.scene.image.Image
 import javafx.scene.input.KeyCode
@@ -50,7 +51,7 @@ class MainView : View() {
                 paddingHorizontal = defaultItemSpacing
                 paddingVertical = 5
                 text = "항상 위에 표시"
-                isSelected = true
+                isSelected = false
                 action { primaryStage.isAlwaysOnTop = isSelected }
             }
 
@@ -511,8 +512,9 @@ class MainView : View() {
 
                         }
                     }
-
+                    var marketConditionListView: ListView<String>
                     center = listview(taskManager.marketItemList) {
+                        marketConditionListView = this
                         useMaxWidth = true
                         prefHeight = 150.0
                         selectionModel.selectionMode = SelectionMode.SINGLE
@@ -569,7 +571,7 @@ class MainView : View() {
                             spacing = 4.5
 
                             checkbox("F1버튼으로 해당 아이템 시세 확인하기") {
-                                isSelected = false
+                                isSelected = taskManager.checkMarketConditionEnable
                                 action {
                                     taskManager.checkMarketConditionEnable = isSelected
                                 }
@@ -599,6 +601,26 @@ class MainView : View() {
                             }
 
                         }
+
+                        hbox {
+                            alignment = Pos.CENTER_LEFT
+                            spacing = 4.5
+
+                            checkbox("최근 목록만 불러오기") {
+                                isSelected = taskManager.checkUseSmartSearch
+                                action {
+                                    taskManager.checkUseSmartSearch = isSelected
+                                }
+                            }
+
+                            checkbox("최적가 추천 및 자동 경매장 등록") {
+                                isSelected = true
+                                action {
+                                    taskManager.checkAutoCalAndSales = isSelected
+                                }
+                            }
+                        }
+
 
                     }
                 }
@@ -993,7 +1015,7 @@ class MainView : View() {
                 println(e.message)
             }
         }
-        primaryStage.isAlwaysOnTop = true
+        primaryStage.isAlwaysOnTop = false
 
         taskManager.setOnTaskStateChangeListener {
             infoLabel.apply {

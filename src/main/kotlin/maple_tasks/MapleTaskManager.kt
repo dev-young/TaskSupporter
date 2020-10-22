@@ -120,9 +120,12 @@ class MapleTaskManager : BaseTaskManager() {
     var isItemCheckerEnable = false
     var isSimpleTaskEnable = false  // 간단한 작업 사용 여부
     var checkMarketConditionEnable = false  // F1버튼을 통해 시세파악기능 활성화 여부
+    var checkUseSmartSearch = true  // F1버튼을 통해 시세파악기능 사용시 최근 목록 가져올지 여부 확인
+    var checkAutoCalAndSales = true  // F1버튼을 통해 시세파악기능 사용시 자동으로 최적가 계산하여 등록할것인지 여부
     var winTarget = SimpleStringProperty()
     val goodItemList = arrayListOf<String>().asObservable()
     val marketItemList = arrayListOf<String>().asObservable()   //시세 목록
+//    val marketItemList = arrayListOf<ItemInfo>().asObservable()   //시세 목록 // TODO: 이거 테스트 해보자
 
     val selectedSimpleTask = SimpleStringProperty()
 
@@ -576,13 +579,20 @@ class MapleTaskManager : BaseTaskManager() {
                 val task = MarketConditionTask()
                 val point = task.helper.getMousePos()
                 findMarketConditionTarget = point
-                task.findMarketCondition(point).let {
+                task.findMarketCondition(point, checkUseSmartSearch).let {
+                    val itemInfo = it.first!!
                     Platform.runLater {
                         marketItemList.clear()
-                        it.forEach {
+                        it.second.forEach {
                             val upgraded = if (it.isUpgraded == true) "강화된 " else ""
-                            marketItemList.add("$upgraded[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
+                            val targetOption = if (it.getGradeKey() == itemInfo.getGradeKey()) ">" else ""
+                            marketItemList.add("$targetOption$upgraded[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
                         }
+                    }
+                    if (checkAutoCalAndSales) {
+                        ItemManager().findBestPrice(itemInfo)?.let {
+                            AuctionTask().sellItem(point, it.toString(), true)
+                        } ?: logI("최적의 가격을 찾을 수 없습니다.")
                     }
                 }
 

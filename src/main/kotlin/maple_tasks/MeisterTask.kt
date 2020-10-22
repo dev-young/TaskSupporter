@@ -446,7 +446,7 @@ class MeisterTask : MapleBaseTask() {
                     logI("합성창을 찾지 못해 옮기기에 실패했습니다")
                 } else {
                     val windowPos = helper.user32.winGetPos().leftTop()
-                    val synthesizeWindowTitle = Point(okBtn.x, okBtn.y - 165)
+                    val synthesizeWindowTitle = Point(okBtn.x, okBtn.y - 163)
                     val dragDestination = if (mesoBtn.x - windowPos.x < 220) {
                         Point(mesoBtn.x + 760, mesoBtn.y - 286)
                     } else Point(mesoBtn.x - 160, mesoBtn.y - 286)

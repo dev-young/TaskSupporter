@@ -56,7 +56,13 @@ class MarketConditionTask : AdditionalOptionTask() {
                 delayRandom(30, 50)
                 auctionTask.clickCategory(targetCategory)
 
-                val success = auctionTask.inputItemInfo(targetName, "_", targetClickReset, minPrice = targetPrice, potentialGrade = potentialGrade)
+                val success = auctionTask.inputItemInfo(
+                    targetName,
+                    "_",
+                    targetClickReset,
+                    minPrice = targetPrice,
+                    potentialGrade = potentialGrade
+                )
                 if (success) {
                     delayRandom(30, 50)
 
@@ -80,7 +86,7 @@ class MarketConditionTask : AdditionalOptionTask() {
                                 val startRow = heightArr[i]
                                 val endRow = startRow + 11
                                 val priceTem = capture.rowRange(startRow, endRow).colRange(0, 95)
-                                val dateTem = capture.rowRange(startRow+7, endRow+7).colRange(294, 355)
+                                val dateTem = capture.rowRange(startRow + 7, endRow + 7).colRange(294, 355)
                                 priceTem.changeContract()
                                 dateTem.changeContract()
 //                                Imgcodecs.imwrite("testDate.png", dateTem)
@@ -317,14 +323,20 @@ class MarketConditionTask : AdditionalOptionTask() {
         }
     }
 
-    suspend fun findMarketCondition(itemPosition: Point): List<ItemInfo> {
+    suspend fun findMarketCondition(
+        itemPosition: Point,
+        useSmartSearch: Boolean
+    ): Pair<ItemInfo?, List<ItemInfo>> {
         val result = arrayListOf<ItemInfo>()
+        var itemInfo: ItemInfo? = null
         getOptions(itemPosition)?.let {
-            val upgraded = if(it.isUpgraded == true) "강화된 " else ""
+            itemInfo = it
+            val upgraded = if (it.isUpgraded == true) "강화된 " else ""
             logI("$upgraded${it.getInfoText()}")
-            result.addAll(ItemManager().search(it))
+            val im = ItemManager()
+            result.addAll(if (useSmartSearch) im.smartSearch(it) else im.search(it))
         }
 
-        return result
+        return Pair(itemInfo, result)
     }
 }

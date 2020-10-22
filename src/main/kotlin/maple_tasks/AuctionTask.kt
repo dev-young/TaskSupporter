@@ -714,10 +714,10 @@ class AuctionTask : MapleBaseTask() {
         }
     }
 
-    suspend fun sellItem(item: Point, price: String) {
+    suspend fun sellItem(item: Point, price: String, stopBeforeFinish:Boolean = false) {
         Date().let {
-            val newPrice = price.substring(0, price.length - 4) + SimpleDateFormat("MMdd").format(it)
-            logI("$newPrice 가격에 등록 시작")
+            val newPrice = (if (price.length > 4) price.substring(0, price.length - 4) else "10") + SimpleDateFormat("MMdd").format(it)
+//            logI("$newPrice 가격에 등록 시작")
 
             helper.apply {
                 moveMouseSmoothly(item, t = 50)
@@ -725,14 +725,15 @@ class AuctionTask : MapleBaseTask() {
                 simpleClick()
 
                 imageSearch("$defaultImgPath\\sales.png")?.let { it ->
+                    val dropPoint = Point(it.x + 40, it.y + 120)
                     val priceZone = Point(it.x + 200, it.y + 120)
                     val salesBtn = Point(it.x + 210, it.y + 222)
 
-                    smartClick(priceZone, randomRangeY = 3, randomRangeX = 20, maxTime = 80)
+                    smartClick(dropPoint, randomRangeY = 3, randomRangeX = 20, maxTime = 80)
                     simpleClick()
 
                     copyToClipboard(newPrice)
-                    smartClick(priceZone, randomRangeX = 20, randomRangeY = 3, minTime = 50, maxTime = 100)
+                    smartClick(priceZone, randomRangeX = 20, randomRangeY = 3, minTime = 50, maxTime = 50)
                     clearText()
                     delayRandom(20, 50)
                     paste()
@@ -741,6 +742,9 @@ class AuctionTask : MapleBaseTask() {
                     smartClick(salesBtn, randomRangeX = 40, randomRangeY = 5, maxTime = 80)
                     simpleClick()
                     delayRandom(20, 50)
+
+                    if(stopBeforeFinish)
+                        return
 
                     sendEnter()
                     delayRandom(100, 150)
@@ -857,8 +861,12 @@ class AuctionTask : MapleBaseTask() {
                     if (it > pivotPrice)
                         it - decreasePrice2
 
+                    //10001024 이런 가격 9991024로 변경
+                    if((temp / 10000L) % 10 == 0L) temp -= 10000
+
                     if(temp < minPrice)
                         temp = minPrice
+
                     temp
                 }.toString()
 

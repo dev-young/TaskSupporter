@@ -369,10 +369,13 @@ class HelperCore : Robot() {
         delay(random.get(min, max).toLong())
     }
 
-    fun smartDrag(from: Point, to: Point, keyCode: Int = defaultClickKey) {
-        moveMouseSmoothly(from, 100)
+    suspend fun smartDrag(from: Point, to: Point, keyCode: Int = defaultClickKey) {
+        moveMouseSmoothly(from, 50)
+        delay(50L)
         mousePress(keyCode)
-        moveMouseSmoothly(to, random.get(150, 200))
+        delay(50L)
+        moveMouseSmoothly(to, random.get(50, 100))
+        delay(50L)
         mouseRelease(keyCode)
     }
 

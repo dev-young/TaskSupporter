@@ -73,18 +73,18 @@ class ItemInfo(
 
                 if (hp > 2300 || str < 90) {
                     if (hp > 1000 && str < 50)
-                        return Pair(UpgradeItemTask.HP, hp)
+                        return Pair(UpgradeItemTask.HP, hp).apply { grade = this }
                     if (hp > 2900 && str < 79)
-                        return Pair(UpgradeItemTask.HP, hp)
+                        return Pair(UpgradeItemTask.HP, hp).apply { grade = this }
                     if (hp > 3100 && str < 83)
-                        return Pair(UpgradeItemTask.HP, hp)
+                        return Pair(UpgradeItemTask.HP, hp).apply { grade = this }
                     if (hp > 3540 && str < 91)
-                        return Pair(UpgradeItemTask.HP, hp)
+                        return Pair(UpgradeItemTask.HP, hp).apply { grade = this }
 
-                    return Pair(UpgradeItemTask.STR, str)
+                    return Pair(UpgradeItemTask.STR, str).apply { grade = this }
 
                 } else
-                    return Pair(UpgradeItemTask.STR, str)
+                    return Pair(UpgradeItemTask.STR, str).apply { grade = this }
 
             }
 
@@ -92,21 +92,21 @@ class ItemInfo(
                 var int = option[UpgradeItemTask.INT] ?: 0
                 int += (option[UpgradeItemTask.ALL] ?: 0) * 10
                 int += option[UpgradeItemTask.SPELL]?.let { it * 4 } ?: 0
-                return Pair(UpgradeItemTask.INT, int)
+                return Pair(UpgradeItemTask.INT, int).apply { grade = this }
             }
 
             AdditionalOptionTask.ARCHER -> {
                 var dex = option[UpgradeItemTask.DEX] ?: 0
                 dex += (option[UpgradeItemTask.ALL] ?: 0) * 10
                 dex += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
-                return Pair(UpgradeItemTask.DEX, dex)
+                return Pair(UpgradeItemTask.DEX, dex).apply { grade = this }
             }
 
             AdditionalOptionTask.THIEF -> {
                 var luc = option[UpgradeItemTask.LUK] ?: 0
                 luc += (option[UpgradeItemTask.ALL] ?: 0) * 10
                 luc += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
-                return Pair(UpgradeItemTask.LUK, luc)
+                return Pair(UpgradeItemTask.LUK, luc).apply { grade = this }
             }
 
             AdditionalOptionTask.PIRATE -> {
@@ -119,9 +119,9 @@ class ItemInfo(
                 str += option[UpgradeItemTask.ATT]?.let { it * 4 } ?: 0
 
                 if (dex - str > 2) {
-                    return Pair(UpgradeItemTask.DEX, dex)
+                    return Pair(UpgradeItemTask.DEX, dex).apply { grade = this }
                 } else {
-                    return Pair(UpgradeItemTask.STR, str)
+                    return Pair(UpgradeItemTask.STR, str).apply { grade = this }
                 }
             }
             else -> {
@@ -181,12 +181,12 @@ class ItemInfo(
                     }
                 }
                 if (hp > 0 && max < 10)
-                    return Pair(UpgradeItemTask.HP, hp)
+                    return Pair(UpgradeItemTask.HP, hp).apply { grade = this }
 
                 return if (hp < targetHP || max > targetStat)
-                    Pair(optionName, max)
+                    Pair(optionName, max).apply { grade = this }
                 else
-                    Pair(UpgradeItemTask.HP, hp)
+                    Pair(UpgradeItemTask.HP, hp).apply { grade = this }
 
             }
         }
@@ -207,6 +207,15 @@ class ItemInfo(
             }"
         }
         return gradeKey
+    }
+
+    /**옵션에 공 혹은 마력이 grade 에 영향을 줬을 경우 그 수치  ex) [STR 54]{공6, 힘30} -> 6*/
+    fun getAttackSpell() : Int{
+        var r = 0
+        if(getGrade().first == UpgradeItemTask.INT)
+            r = option[UpgradeItemTask.SPELL]?:0
+        else r = option[UpgradeItemTask.ATT]?:0
+        return r
     }
 
     fun getAllInfo(): String {
