@@ -13,7 +13,7 @@ import java.util.*
 class LoginTask : MapleBaseTask() {
 
 
-    suspend fun login(id: String, pw: String, startFirstID:Boolean =false): Boolean {
+    suspend fun login(id: String, pw: String, fileName: String = ""): Boolean {
         helper.apply {
             smartClickTimeMax = 100
 
@@ -55,15 +55,15 @@ class LoginTask : MapleBaseTask() {
 
             sendEnter()
 
-            if (id.contains('@') && startFirstID) {
-                delayRandom(400, 500)
-                send(KeyEvent.VK_DOWN)
-                delayRandom(500, 600)
+            if (fileName.isNotEmpty()) {
+                imageSearchAndClickUntilFind("img\\$fileName", 60.0, maxTime = 100)
+                simpleClick()
+                sendEnter()
                 sendEnter()
             }
 
             //로그인 기록 남기기
-            saveLog(id)
+            saveLog("$id $fileName")
         }
 
         return false

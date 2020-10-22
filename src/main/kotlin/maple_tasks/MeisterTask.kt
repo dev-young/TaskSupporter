@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent
 
 class MeisterTask : MapleBaseTask() {
 
+    val imgpathMoveToMeisterBtn = "img\\meister\\moveMeister.png"
     val imgpathMakebtn = "img\\meister\\makeBtn.png"
     val imgpathOkBtn = "img\\meister\\okBtn.png"
     val imgpathSynOkBtn = "img\\meister\\synOkBtn.png"
@@ -577,6 +578,24 @@ class MeisterTask : MapleBaseTask() {
             moveMouseLB()
         }
 
+    }
+
+    /**전문기술창을 연 뒤 마이스터빌로 이동 */
+    suspend fun moveMeisterVill() {
+
+        openProductionSkill()
+
+        helper.apply {
+            moveMouseLB()
+            imageSearchAndClick(imgpathMoveToMeisterBtn)
+            simpleClick()
+            moveMouseLB()
+
+            clickOkBtn()
+            moveMouseLB()
+            clickOkBtn()
+
+        }
     }
 
 

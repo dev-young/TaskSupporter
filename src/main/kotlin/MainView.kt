@@ -97,15 +97,16 @@ class MainView : View() {
                     paddingAll = defaultItemSpacing
                     spacing = defaultItemSpacing
                     val accountList = taskManager.loadAccountList()
-                    accountList.forEach {
+                    accountList.forEach { account->
                         hbox {
                             alignment = Pos.CENTER_LEFT
                             spacing = defaultItemSpacing
-                            val id = it[0]
-                            val pw = it[1]
-                            val description = if (it.size == 3) it[2] else ""
-                            button(id).setOnAction {
-                                taskManager.login(id, pw)
+                            val id = account[0]
+                            val pw = account[1]
+                            val description = account[2]
+                            val fileName = account[3]
+                            button(fileName.let { if(it.isEmpty()) id else it }).setOnAction {
+                                taskManager.login(id, pw, fileName)
                             }
                             label(description)
                         }

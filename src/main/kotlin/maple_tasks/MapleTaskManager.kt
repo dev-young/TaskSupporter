@@ -234,6 +234,7 @@ class MapleTaskManager : BaseTaskManager() {
         mapleBaseTask = null
     }
 
+    /**@return 아이디,비번,설명,이미지파일 */
     fun loadAccountList(fileName: String = "AccountList"): List<List<String>> {
         val list = ArrayList<List<String>>()
         val file = File("$fileName.txt")
@@ -247,7 +248,18 @@ class MapleTaskManager : BaseTaskManager() {
                     if (s.size < 2) {
                         logI("올바르지 않은 형식입니다. -> $it")
                     } else {
-                        list.add(s)
+                        if (s[0].contains('@')) {
+                            val temp = s[2].split(" ", limit = 2)
+                            list.add(arrayOf(s[0], s[1], temp[1], temp[0]).toList())    //id pw description fileName
+                        } else
+                            list.add(
+                                arrayOf(
+                                    s[0],
+                                    s[1],
+                                    s.let { if (it.size == 2) "" else it[2] },
+                                    ""
+                                ).toList()
+                            )    //id pw description fileName
                     }
 
                 }
@@ -259,10 +271,10 @@ class MapleTaskManager : BaseTaskManager() {
         return list
     }
 
-    fun login(id: String, pw: String) {
+    fun login(id: String, pw: String, fileName: String) {
         runTask("login") {
             if (activateTargetWindow())
-                LoginTask().login(id, pw)
+                LoginTask().login(id, pw, fileName)
         }
     }
 
@@ -635,7 +647,7 @@ class MapleTaskManager : BaseTaskManager() {
         runTask("auctionTask") {
             if (activateTargetWindow()) {
                 AuctionTask().apply {
-                    if(cancelFirst)
+                    if (cancelFirst)
                         cancelSellingItem()
                     resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
                 }
@@ -733,7 +745,7 @@ class MapleTaskManager : BaseTaskManager() {
     }
 
     /**여러 계정으로 자동으로 로그인하며 물품 재등록 및 숙련도아이템 제작*/
-    fun autoMakeAndResaleWithMultipleAccount(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long){
+    fun autoMakeAndResaleWithMultipleAccount(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long) {
         runTask("loginTask") {
             if (activateTargetWindow()) {
                 val loginTask = LoginTask()
@@ -741,7 +753,7 @@ class MapleTaskManager : BaseTaskManager() {
                 val auctionTask = AuctionTask()
 
                 val accountList = loadAccountList("숙련도올릴계정")
-                accountList.forEach { logI("${it[0]}  ${it[2]}번째") }
+                accountList.forEach { logI("${it[0]}${it[3]}  ${it[2]}번째") }
                 run {
                     accountList.forEach {
                         val id = it[0]
@@ -750,10 +762,11 @@ class MapleTaskManager : BaseTaskManager() {
                         val characterIndex = temp[0].toInt()
                         val type = temp[1]
                         val itemName = temp[2]
+                        val fileName = it[3]
 
-                        loginTask.login(id, pw, true)
+                        loginTask.login(id, pw, fileName)
 
-                        if(loginTask.waitLoadingChannel()){
+                        if (loginTask.waitLoadingChannel()) {
                             loginTask.intoChannel(7)
                             logI("서버 선택")
 
@@ -761,10 +774,14 @@ class MapleTaskManager : BaseTaskManager() {
                             loginTask.selectCharacter(characterIndex)
                             logI("$characterIndex 번째 캐릭 선택")
 
-                            if(loginTask.waitLoadingGame()){
+                            if (loginTask.waitLoadingGame()) {
                                 logI("로딩 완료")
                                 delay(1000)
                                 loginTask.clearAd()
+
+                                //마이스터빌 이동
+                                meisterTask.moveMeisterVill()
+                                loginTask.waitLoadingGame()
 
                                 //아이템 재등록
                                 auctionTask.openAuction()
@@ -788,14 +805,15 @@ class MapleTaskManager : BaseTaskManager() {
                                     }
                                     logI("이동 시작")
                                     moveCharacter(targetPosition)
-                                    if(makeItem(itemName, 15)){
+                                    if (makeItem(itemName, 15)) {
                                         logI("제작 성공")
                                     } else {
                                         logI("제작 실패")
                                     }
                                 }
 
-                                loginTask.logOut()
+                                if(it.toString() != accountList.last().toString())
+                                    loginTask.logOut()
 
                             } else {
                                 //거탐뜬 경우
@@ -811,7 +829,6 @@ class MapleTaskManager : BaseTaskManager() {
                             loginTask.waitLoadingLogin()
 
                         }
-
 
 
                     }
