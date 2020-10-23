@@ -13,11 +13,14 @@ import java.util.*
 class LoginTask : MapleBaseTask() {
 
 
-    suspend fun login(id: String, pw: String, fileName: String = ""): Boolean {
+    suspend fun login(id: String, pw: String, fileName: String = "", description:String = ""): Boolean {
         helper.apply {
             smartClickTimeMax = 100
-
-            val loginBtn = imageSearch("img\\login.png")
+            moveMouseLB()
+            val loginBtn = imageSearch("img\\login.png") ?: let {
+                logOut()
+                imageSearch("img\\login.png")
+            }
             if (loginBtn == null) {
                 logI("로그인 버튼 찾기 실패")
                 return false
@@ -63,10 +66,10 @@ class LoginTask : MapleBaseTask() {
             }
 
             //로그인 기록 남기기
-            saveLog("$id $fileName")
+            saveLog("$description  [$id]")
         }
 
-        return false
+        return true
     }
 
     private fun saveLog(id: String) {

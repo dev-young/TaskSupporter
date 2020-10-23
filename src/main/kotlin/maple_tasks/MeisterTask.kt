@@ -118,7 +118,7 @@ class MeisterTask : MapleBaseTask() {
      * @param maxSynCount 합성을 최대 몇번 수행할지 지정 (0 = 끝까지 수행)
      * @param maxTargetItemCount 최대 몇개의 아이템중에서 합성할 아이템을 찾고 수행할지 지정 (0 = 끝까지 찾는다)
      * */
-    suspend fun synthesizeItemSmartly(untilBlank: Boolean, maxSynCount: Int = 0, maxTargetItemCount: Int = 0) :Int {
+    suspend fun synthesizeItemSmartly(untilBlank: Boolean, maxSynCount: Int = 0, maxTargetItemCount: Int = 0, mouseDelay:Int = 50) :Int {
         logI("합성 시작!")
         HelperCore().apply {
             moveMouseLB()
@@ -139,9 +139,13 @@ class MeisterTask : MapleBaseTask() {
             var synCount = 0
             pairList.forEach {
                 if(synCount < maxSynCount || maxSynCount == 0) {
+                    moveMouseSmoothly(it.first, mouseDelay)
                     smartClick(it.first, 15, 15)
+                    moveMouseSmoothly(synItem.first, mouseDelay)
                     smartClick(synItem.first, 6, 6)
+                    moveMouseSmoothly(it.second, mouseDelay)
                     smartClick(it.second, 15, 15)
+                    moveMouseSmoothly(synItem.second, mouseDelay)
                     smartClick(synItem.second, 6, 6)
                     moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
@@ -165,7 +169,7 @@ class MeisterTask : MapleBaseTask() {
                             return synCount
                         }
                     }
-                    moveMouseLB(300)
+                    moveMouseLB()
                     delayRandom(1500, 1700) // 합성 대기시간
                     var failCount = 0
                     while (!clickOkBtn(50)) {

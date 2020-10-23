@@ -26,6 +26,7 @@ class UpgradeItemTask : MapleBaseTask() {
         const val ATT = "attack"
         const val SPELL = "spell"
         const val DMG = "damage"
+        const val CRITICAL = "critical"
     }
 
     private var resultWindowLeftTop: Point? = null
@@ -51,6 +52,8 @@ class UpgradeItemTask : MapleBaseTask() {
             optionNameTemplates[ATT] = Imgcodecs.imread("img\\cube\\att.png")
             optionNameTemplates[SPELL] = Imgcodecs.imread("img\\cube\\spell.png")
             optionNameTemplates[DMG] = Imgcodecs.imread("img\\cube\\dmg.png")
+            optionNameTemplates[CRITICAL] = Imgcodecs.imread("img\\cube\\critical.png")
+            optionValueTemplates[8] = Imgcodecs.imread("img\\cube\\8per.png")
             optionValueTemplates[6] = Imgcodecs.imread("img\\cube\\6per.png")
             optionValueTemplates[4] = Imgcodecs.imread("img\\cube\\4per.png")
             optionValueTemplates[3] = Imgcodecs.imread("img\\cube\\3per.png")
@@ -59,7 +62,7 @@ class UpgradeItemTask : MapleBaseTask() {
             val reoveTargetList = arrayListOf<Any>()
             optionValueTemplates.forEach { t, u ->
                 // 없는 파일 템플릿에서 제거
-                if(!u.isContinuous)
+                if (!u.isContinuous)
                     reoveTargetList.add(t)
             }
             reoveTargetList.forEach {
@@ -69,7 +72,7 @@ class UpgradeItemTask : MapleBaseTask() {
             reoveTargetList.clear()
             optionNameTemplates.forEach { t, u ->
                 // 없는 파일 템플릿에서 제거
-                if(!u.isContinuous)
+                if (!u.isContinuous)
                     reoveTargetList.add(t)
             }
             reoveTargetList.forEach {
@@ -83,12 +86,57 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
 
-
     suspend fun upgradeAndStarforce(starforceCount: Int = 0) {
-        logI("개발중인 기능입니다.")
+        helper.apply {
+
+            moveMouseLB(30)
+            while (true) {
+
+                //스타캐치 해체 클릭
+                imageSearch("img\\upgrade\\starCatch.png", 80.0)?.let {
+                    smartClick(it, 2,2,maxTime = 55)
+                    moveMouseLB(20)
+                }
+
+
+                //확인 클릭
+                imageSearchAndClick("img\\upgrade\\ok.png", 80.0 ,maxTime = 55)?.let {
+                    simpleClick()
+                    simpleClick()
+                    moveMouseLB(20)
+                }
+
+
+                //강화 클릭
+                imageSearch("img\\upgrade\\upgrade.png", 80.0)?.let {
+                    if(imageSearch("img\\upgrade\\starCatch.png", 80.0) == null){
+
+                        // 현재 스타포스가 10 이상인지 확인
+                        if(imageSearch("img\\upgrade\\10star.png", 80.0) != null){
+                            return
+                        }
+
+                        smartClick(it, 2,2,maxTime = 55)
+                        simpleClick()
+                        moveMouseLB(20)
+                    }
+                }
+
+                //끝인지 확인
+                if(imageSearch("img\\upgrade\\end.png", 80.0) != null)
+                    break
+
+                delayRandom(10,30)
+            }
+        }
+
+
+
+
+
     }
 
-    suspend fun runCubeTask(targetOptionsList: List<Map<String, Int>>){
+    suspend fun runCubeTask(targetOptionsList: List<Map<String, Int>>) {
         logI("큐브 작업 시작")
         targetOptionsList.forEach { logI(it.toString()) }
 
@@ -108,7 +156,7 @@ class UpgradeItemTask : MapleBaseTask() {
 
             for (i in 1..targetOptionsList.size) {
                 if (isEmptyOrDisable(Point(vx, vy))) {
-                    logI("큐브 ${usedCubeCounter}개 사용 (${i-1}회 완료)")
+                    logI("큐브 ${usedCubeCounter}개 사용 (${i - 1}회 완료)")
                     soundBeep()
                     return
                 }
@@ -117,12 +165,12 @@ class UpgradeItemTask : MapleBaseTask() {
                 usedCubeCounter++
                 delayRandom(100, 200)
 
-                val targetOptions = targetOptionsList[i-1]
+                val targetOptions = targetOptionsList[i - 1]
                 while (!checkOption(targetOptions) && !checkCubeDisable()) {
                     val delay = random.get(cubeDelayMin, cubeDelayMax) - 1500L
                     if (delay > 0)
                         kotlinx.coroutines.delay(delay)
-                    if(oneMoreCube())
+                    if (oneMoreCube())
                         usedCubeCounter++
                     kotlinx.coroutines.delay(1500)
                 }
@@ -155,7 +203,7 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
     suspend fun useCube(itemCount: Int) {
-        val targetOptionsList =  arrayListOf<Map<String, Int>>()
+        val targetOptionsList = arrayListOf<Map<String, Int>>()
 
         for (i in 1..itemCount) {
             val targetOptions = hashMapOf<String, Int>()
@@ -174,18 +222,18 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
     suspend fun useCube(targetOptions: HashMap<String, Int>, itemCount: Int) {
-        val targetOptionsList =  arrayListOf<Map<String, Int>>()
+        val targetOptionsList = arrayListOf<Map<String, Int>>()
 
         val removeTarget = arrayListOf<String>()
         targetOptions.forEach { (t, u) ->
-            if(u == 0)
+            if (u == 0)
                 removeTarget.add(t)
         }
         removeTarget.forEach {
             targetOptions.remove(it)
         }
 
-        val count = if(itemCount == 0) 128 else itemCount
+        val count = if (itemCount == 0) 128 else itemCount
         for (i in 1..count) {
             targetOptionsList.add(targetOptions)
         }
@@ -202,7 +250,7 @@ class UpgradeItemTask : MapleBaseTask() {
                     30,
                     "img\\cube\\cubeDisable.png"
                 )
-                if(disable != null){
+                if (disable != null) {
 //                    logI("checkCubeDisable true")
                     return true
                 }
@@ -235,28 +283,46 @@ class UpgradeItemTask : MapleBaseTask() {
                 createScreenCapture(Rectangle(option3LT.x, option3LT.y, 150, 20)).toMat()
             )
 
-            //TODO: 각 루프에서 return@forEach 가 제대로 동작하는지 확인 필요
+            var normalAttack = 0
+            var normalSpell = 0
+
             sourceList.forEachIndexed { _, source ->
-                optionNameTemplates.forEach { (name, template) ->
-                    if (imageSearchReturnBoolean(source, template)) {
-                        optionValueTemplates.forEach { (value, template) ->
-                            if (imageSearchReturnBoolean(source, template)) {
-                                val v = when(value) {
-                                    2 -> 3
-                                    4 -> 6
-                                    else -> value
-                                }
-                                resultOption[name] = resultOption[name]?.plus(v) ?: v
+                kotlin.run {
+                    optionNameTemplates.forEach { (name, template) ->
+                        if (imageSearchReturnBoolean(source, template)) {
+                            kotlin.run {
+                                optionValueTemplates.forEach { (value, template) ->
+                                    if (imageSearchReturnBoolean(source, template)) {
+                                        val v = if (name == CRITICAL) {
+                                            value   //레어,에픽인 경우 크리티컬 수치는 렙제와 상관없이 일정하다.
+                                        } else {
+                                            when (value) {
+                                                2 -> 3
+                                                4 -> 6
+                                                else -> value
+                                            }
+                                        }
+                                        resultOption[name] = resultOption[name]?.plus(v) ?: v
+
 
 //                                logI("${index+1}줄 값 추가! $name = ${resultOption[name]}  (+$value)")
-                                return@forEach
+                                        return@run
+                                    }
+                                }
+                                //옵션이 공% 가 아니라 그냥 공격력+ 인 경우
+                                if (name == ATT)
+                                    normalAttack++
+
+                                //옵션이 마% 가 아니라 그냥 마력+ 인 경우
+                                else if (name == SPELL)
+                                    normalSpell++
+
                             }
+                            return@run
                         }
-
-                        return@forEach
                     }
-
                 }
+
             }
 
             resultOption[ALL]?.let {
@@ -265,6 +331,19 @@ class UpgradeItemTask : MapleBaseTask() {
                 resultOption[LUK] = resultOption[LUK]?.plus(it) ?: it
                 resultOption[INT] = resultOption[INT]?.plus(it) ?: it
             }
+
+            /**DMG 값은 1감소시킨 뒤 공마에 추가한다. */
+            resultOption[DMG]?.let {
+                val v = it - 1
+                resultOption[ATT] = resultOption[ATT]?.plus(v) ?: v
+                resultOption[SPELL] = resultOption[SPELL]?.plus(v) ?: v
+            }
+
+            /**일반 공,마력은 수치에 상관없이 해당 %값을 1만큼 증가시킨다.*/
+            if (normalAttack > 0)
+                resultOption[ATT] = resultOption[ATT]?.plus(normalAttack) ?: normalAttack
+            if (normalSpell > 0)
+                resultOption[SPELL] = resultOption[SPELL]?.plus(normalSpell) ?: normalSpell
 
             var result = false
             resultOption.forEach { t, u ->

@@ -34,7 +34,6 @@ class ItemInfo(
 
     private var gradeKey = ""
 
-    @Expose
     private var grade: Pair<String, Int>? = null
     private var uid: String? = null
 

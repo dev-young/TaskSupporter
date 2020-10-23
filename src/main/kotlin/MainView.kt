@@ -18,6 +18,7 @@ import maple_tasks.MapleTaskManager.Companion.MEISTER_2
 import maple_tasks.MapleTaskManager.Companion.MEISTER_3
 import maple_tasks.UpgradeItemTask
 import maple_tasks.UpgradeItemTask.Companion.ATT
+import maple_tasks.UpgradeItemTask.Companion.CRITICAL
 import maple_tasks.UpgradeItemTask.Companion.DEX
 import maple_tasks.UpgradeItemTask.Companion.DMG
 import maple_tasks.UpgradeItemTask.Companion.HP
@@ -106,7 +107,7 @@ class MainView : View() {
                             val description = account[2]
                             val fileName = account[3]
                             button(fileName.let { if(it.isEmpty()) id else it }).setOnAction {
-                                taskManager.login(id, pw, fileName)
+                                taskManager.login(id, pw, fileName, description)
                             }
                             label(description)
                         }
@@ -139,6 +140,14 @@ class MainView : View() {
                             maxWidth = 50.0
                         }
                         label ("= 최대 합성 횟수 (0==64)")
+
+                        spacer { minWidth = 4.0 }
+
+                        label ("마우스 딜레이")
+                        textfield(taskManager.synMouseDelay) {
+                            text = "0"
+                            maxWidth = 50.0
+                        }
                     }
 
                     hbox {
@@ -640,6 +649,7 @@ class MainView : View() {
                 val att = SimpleIntegerProperty()
                 val spell = SimpleIntegerProperty()
                 val dmg = SimpleIntegerProperty()
+                val cri = SimpleIntegerProperty()
 
 
                 vbox {
@@ -720,7 +730,7 @@ class MainView : View() {
                                     minWidth = labelWidth
                                 }
                                 textfield(att) {
-                                    text = "6"
+                                    text = "7"
                                     maxWidth = inputWidth
                                 }
                             }
@@ -730,7 +740,7 @@ class MainView : View() {
                                     minWidth = labelWidth
                                 }
                                 textfield(spell) {
-                                    text = "6"
+                                    text = "7"
                                     maxWidth = inputWidth
                                 }
                             }
@@ -740,7 +750,18 @@ class MainView : View() {
                                     minWidth = labelWidth
                                 }
                                 textfield(dmg) {
-                                    text = "9"
+                                    text = "7"
+                                    maxWidth = inputWidth
+                                }
+                            }
+
+                            hbox {
+                                alignment = Pos.CENTER_LEFT
+                                label(CRITICAL) {
+                                    minWidth = labelWidth
+                                }
+                                textfield(cri) {
+                                    text = "12"
                                     maxWidth = inputWidth
                                 }
                             }
@@ -791,6 +812,7 @@ class MainView : View() {
                                 targetOptions[ATT] = att.let { it.value }
                                 targetOptions[SPELL] = spell.let { it.value }
                                 targetOptions[DMG] = dmg.let { it.value }
+                                targetOptions[CRITICAL] = cri.let { it.value }
 //                                targetOptions[UpgradeItemTask.ATT] = 9
 //                                targetOptions[UpgradeItemTask.SPELL] = 9
                                 taskManager.cubeItem(targetOptions, cubeCount.value.toInt())

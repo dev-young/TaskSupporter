@@ -5,12 +5,12 @@ import helper.BaseTaskManager
 import helper.ConsumeEvent
 import helper.HelperCore
 import javafx.application.Platform
+import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
-import maple_tasks.AdditionalOptionTask.Companion.BELT
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.opencv.imgcodecs.Imgcodecs
@@ -271,10 +271,10 @@ class MapleTaskManager : BaseTaskManager() {
         return list
     }
 
-    fun login(id: String, pw: String, fileName: String) {
+    fun login(id: String, pw: String, fileName: String, description:String) {
         runTask("login") {
             if (activateTargetWindow())
-                LoginTask().login(id, pw, fileName)
+                LoginTask().login(id, pw, fileName, description)
         }
     }
 
@@ -289,7 +289,7 @@ class MapleTaskManager : BaseTaskManager() {
     fun synthesizeItem(untilBlank: Boolean, maxSynCount: Int, maxTargetItemCount: Int) {
         runTask("syn") {
             if (activateTargetWindow())
-                MeisterTask().synthesizeItemSmartly(untilBlank, maxSynCount, maxTargetItemCount)
+                MeisterTask().synthesizeItemSmartly(untilBlank, maxSynCount, maxTargetItemCount, synMouseDelay.value)
             Toolkit.getDefaultToolkit().beep()
         }
     }
@@ -592,19 +592,22 @@ class MapleTaskManager : BaseTaskManager() {
                 val point = task.helper.getMousePos()
                 findMarketConditionTarget = point
                 task.findMarketCondition(point, checkUseSmartSearch).let {
-                    val itemInfo = it.first!!
+                    val itemInfo = it.first
                     Platform.runLater {
                         marketItemList.clear()
                         it.second.forEach {
                             val upgraded = if (it.isUpgraded == true) "강화된 " else ""
-                            val targetOption = if (it.getGradeKey() == itemInfo.getGradeKey()) ">" else ""
+                            val targetOption = if (it.getGradeKey() == itemInfo!!.getGradeKey()) ">" else ""
                             marketItemList.add("$targetOption$upgraded[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
                         }
+                        
                     }
                     if (checkAutoCalAndSales) {
-                        ItemManager().findBestPrice(itemInfo)?.let {
-                            AuctionTask().sellItem(point, it.toString(), true)
-                        } ?: logI("최적의 가격을 찾을 수 없습니다.")
+                        itemInfo?.let {
+                            ItemManager().findBestPrice(itemInfo)?.let {
+                                AuctionTask().sellItem(point, it.toString(), true)
+                            } ?: logI("최적의 가격을 찾을 수 없습니다.")
+                        }
                     }
                 }
 
@@ -660,6 +663,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     /**피로도 혹은 합성할 아이템이 없을때까지 계속 합성
      * 합성 한번 할때마다 추옵 확인 후 가장자리로 옮기는 작업 실시 */
+    val synMouseDelay = SimpleIntegerProperty()
     fun synthesizeUtilEnd(maxSynCount: Int = 66, startWithCheck: Boolean = false) {
         runTask("auctionTask") {
             if (activateTargetWindow()) {
@@ -692,7 +696,7 @@ class MapleTaskManager : BaseTaskManager() {
                         //합성
                         logI("$targetItemCount 개의 아이템 합성여부 확인")
                         logI("남은 합성 횟수: $remainSynCount")
-                        val synCount = synthesizeItemSmartly(false, remainSynCount, targetItemCount)
+                        val synCount = synthesizeItemSmartly(false, remainSynCount, targetItemCount, synMouseDelay.value)
                         remainSynCount -= synCount
                         completeSynCount += synCount
                         targetItemCount -= synCount
@@ -764,7 +768,7 @@ class MapleTaskManager : BaseTaskManager() {
                         val itemName = temp[2]
                         val fileName = it[3]
 
-                        loginTask.login(id, pw, fileName)
+                        loginTask.login(id, pw, fileName, fileName)
 
                         if (loginTask.waitLoadingChannel()) {
                             loginTask.intoChannel(7)
