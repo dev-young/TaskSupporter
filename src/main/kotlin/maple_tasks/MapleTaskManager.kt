@@ -112,6 +112,7 @@ class MapleTaskManager : BaseTaskManager() {
         GlobalScreen.registerNativeHook()
         GlobalScreen.setEventDispatcher(ConsumeEvent.VoidDispatchService())
         GlobalScreen.addNativeKeyListener(keyListener)
+        Settings.load()
     }
 
 
@@ -231,6 +232,7 @@ class MapleTaskManager : BaseTaskManager() {
 
     override fun resetTask() {
         super.resetTask()
+        Settings.load() // TODO: 이걸 여기서 사용하는게 뭔가 이상한것같다
         mapleBaseTask = null
     }
 

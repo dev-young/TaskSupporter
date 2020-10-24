@@ -239,14 +239,13 @@ class ItemManager {
 
     fun saveToDB(fileName: String = "메이플시세목록", overwrite: Boolean) {
         if (itemMap.isEmpty()) return
-
         val file = File("$fileName DB")
         val bw = BufferedWriter(FileWriter(file, !overwrite))
 
         // 문자열을 앞서 지정한 경로에 파일로 저장, 저장시 캐릭터셋은 기본값인 UTF-8으로 저장
         // 이미 파일이 존재할 경우 덮어쓰기로 저장
         try {
-            itemMap.values.forEach {
+            itemMap.values.sortedBy { it.dateText }.forEach {
                 bw.write(it.toDB())
                 bw.newLine()
             }

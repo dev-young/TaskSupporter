@@ -2,14 +2,17 @@ package maple_tasks
 
 import changeBlackAndWhite
 import changeContract
+import getHeight
 import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
 import toMat
+import winGetPos
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
+import java.lang.Exception
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -100,7 +103,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
         this.changeContract()
     }
 
-    suspend fun checkItems(untilBlank: Boolean, moveToEnd:Boolean): ArrayList<String> {
+    suspend fun checkItems(untilBlank: Boolean, moveToEnd: Boolean): ArrayList<String> {
         val blankList = arrayListOf<Point>()
         val items = findItems(untilBlank, blankList)
         val goodItemsInfo = arrayListOf<String>()
@@ -108,9 +111,11 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
         helper.apply {
             moveMouseLB()
+            items.reverse()
+            var last = ""
             items.forEach { item ->
-
-                getOptions(item)?.let {
+                getOptions(item, last)?.let {
+                    last = it.getUid()
                     val optionStr = it.getInfoText()
                     if (isOptionGood(it)) {
                         goodItems.add(item)
@@ -120,8 +125,8 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
             }
 
-            if(moveToEnd) {
-                if(blankList.isEmpty())
+            if (moveToEnd) {
+                if (blankList.isEmpty())
                     findItems(untilBlank, blankList)
                 moveItemsToEnd(blankList)
             }
@@ -132,7 +137,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
     }
 
     /**전달받은 아이템 목록을 인벤토리 제일 뒷쪽으로 이동시킨다. */
-    suspend fun moveItemsToEnd(blankList: ArrayList<Point>, itemList: ArrayList<Point> = goodItems){
+    suspend fun moveItemsToEnd(blankList: ArrayList<Point>, itemList: ArrayList<Point> = goodItems) {
         helper.apply {
             itemList.forEach {
                 if (blankList.isNotEmpty()) {
@@ -158,57 +163,109 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
     }
 
-    suspend fun getOptions(item: Point): ItemInfo? {
+
+    private val jobBeginner1 = Imgcodecs.imread("$baseImgPath\\jobBeginner1.png")
+    private val jobBeginner2 = Imgcodecs.imread("$baseImgPath\\jobBeginner2.png")
+    suspend fun getOptions(item: Point, beforeUid:String = ""): ItemInfo? {
         helper.apply {
             moveMouseSmoothly(item, 15)
-            delayRandom(10, 20)
             mousePress(KeyEvent.BUTTON3_MASK)
-            delayRandom(30, 40)
+            kotlinx.coroutines.delay(1)
 
-            var isUpgraded : Boolean
-            var reqLev : Int? = null
+            kotlinx.coroutines.delay(Settings.instance.delayOnCheckOptions)
+
+            var isUpgraded: Boolean
+            var reqLev: Int? = null
             var job = ""
-            val jobPoint =
-                imageSearch("$baseImgPath\\jobBeginner1.png")
-                    ?: imageSearch("$baseImgPath\\jobBeginner2.png")?.also { job = COMMON }
-            jobPoint?.let {
-                //createScreenCapture(Rectangle(jobPoint.x - 20, jobPoint.y - 3, 240, 300)
-                val temp = createScreenCapture(Rectangle(jobPoint.x - 20, jobPoint.y - 193, 240, 440)).toMat()
+            //기존 소요시간: 30초 (감정의달인 추옵확인)
+            //변경후 소요시간: ???
 
+            fun getTotalInfoMat():Mat? {
+                var source: Mat
+                return user32.winGetPos().let { win ->
+                    var infoWidth = 550 //아이템 정보창의 최대 넓이 (비교대상이 있는 경우 최대 넓이)
+                    //마우스포인트 주변을 캡쳐하여 아이템 정보 확인
+                    val startX = getMousePos().let { mouse ->
+                        val limitX = win.right - infoWidth //마우스위 x값이 이 수치를 넘어가면 아이템 정보를 가리고있는것이다.
+                        if (mouse.x < limitX) {
+                            //마우스가 아이템 정보 왼쪽에 있는 경우
+                            infoWidth = 270 //왼쪽에 있는경우 270의 넓이만큼만 찾으면 아이템의 정보가 있다.
+                            mouse.x-15
+                        } else {
+                            //마우스가 아이템 정보 표시되는 범위 내에 있는경우
+                            limitX-15
+                        }
+                    }
+
+                    source = createScreenCapture(Rectangle(startX, win.top, infoWidth, win.getHeight())).toMat()
+//                    Imgcodecs.imwrite("capt.png", source)
+                    val pointInSource = imageSearch(source, jobBeginner1) ?: imageSearch(source, jobBeginner2).also { job = COMMON }
+                    pointInSource?.let {
+                        val startCol = it.x - 20
+                        val endCol = startCol + 240
+                        val startRow = it.y - 193
+                        val endRow = (startRow + 440).let { if(it > source.rows()) source.rows() else it }
+                        try {
+                            source.colRange(startCol, endCol).rowRange(startRow, endRow)
+                        } catch (e:Exception) {
+                            if(Settings.instance.saveErrorWhenCheckOption)
+                                Imgcodecs.imwrite("error $startCol $endCol $startRow $endRow.png", source)
+                            logI(e.message)
+                            null
+                        }
+
+
+                    }
+                }
+            }
+
+            //렉으로 인해 인식 실패할 가능성이 있으므로 인식 실패시 한번 더 시도
+            val totalInfoMat = getTotalInfoMat()?:getTotalInfoMat()
+            if(totalInfoMat == null) logI("$item 인식 실패")
+            totalInfoMat?.let {
                 //이름에 강화표시 있나 확인
-                temp.rowRange(0, 75).let {
+                it.rowRange(0, 75).let {
 //                    Imgcodecs.imwrite("name.png", it)
                     isUpgraded = checkUpgraded(it)
                 }
 
                 //140제,150제 여부 확인 (둘다 아닐경우 null)
-                temp.rowRange(128, 139).colRange(140, 215).let {
+                it.rowRange(128, 139).colRange(140, 215).let {
                     reqLev = checkRequireLevel(it)
 //                    Imgcodecs.imwrite("ReqLev.png", it)
                 }
 
-                val infoImg = temp.rowRange(190, temp.rows())
+                val infoImg = it.rowRange(190, it.rows())
                 if (job.isEmpty()) {
                     val jobView = infoImg.rowRange(3, 13).colRange(20, 230)
                     job = checkJob(jobView)
                 }
                 infoImg.changeContract()
                 mouseRelease(KeyEvent.BUTTON3_MASK)
+                kotlinx.coroutines.delay(1)
 //                Imgcodecs.imwrite("test.png", infoImg)
                 val resultOption = check(infoImg)
                 val category = checkCategory(infoImg)
-                return ItemInfo(job, category, resultOption).apply {
+                val result = ItemInfo(job, category, resultOption).apply {
                     this.isUpgraded = isUpgraded
                     this.reqLev = reqLev
                 }
+                if(beforeUid == result.getUid()) {
+                    if(Settings.instance.logFindSameOptionWhenCheckOption)
+                        logI("옵션 확인중 중복 옵션이 측정됨 (해당 위치의 아이템을 다시 확인합니다.)")
+                    return getOptions((item))// 재귀시에는 beforeUid 값을 주지 않기때문에 한번만 더 반복하고 리턴한다.
+                }
+                return result
 
             }
             mouseRelease(KeyEvent.BUTTON3_MASK)
+            kotlinx.coroutines.delay(1)
             return null
         }
     }
 
     private val upgradeTemplate = Imgcodecs.imread("$baseImgPath\\upgraded.png").apply { changeBlackAndWhite() }
+
     /**아이템 강화가 적용되었는지 판단하여 반환 */
     private fun checkUpgraded(nameSource: Mat): Boolean {
         nameSource.changeBlackAndWhite()
@@ -220,9 +277,9 @@ open class AdditionalOptionTask : MapleBaseTask() {
     private val reqLev140 = Imgcodecs.imread("$baseImgPath\\req140.png").apply { changeBlackAndWhite() }
     private fun checkRequireLevel(source: Mat): Int? {
         source.changeBlackAndWhite()
-        if(helper.imageSearchReturnBoolean(source, reqLev150))
+        if (helper.imageSearchReturnBoolean(source, reqLev150))
             return 150
-        if(helper.imageSearchReturnBoolean(source, reqLev140))
+        if (helper.imageSearchReturnBoolean(source, reqLev140))
             return 140
         return null
     }
@@ -369,7 +426,8 @@ open class AdditionalOptionTask : MapleBaseTask() {
             val state = it * 4
             val lowState = it * 2   //덱스같은 인기 없는 스텟을 위의 인트와 같은 이유로 배율을 낮게 곱하여 계산
             option[UpgradeItemTask.STR] = option[UpgradeItemTask.STR]?.plus(state) ?: state
-            option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(lowState) ?: lowState  /**추후 덱스가 비싸지면 그냥 state 사용*/
+            option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(lowState) ?: lowState
+            /**추후 덱스가 비싸지면 그냥 state 사용*/
             option[UpgradeItemTask.LUK] = option[UpgradeItemTask.LUK]?.plus(state) ?: state
             option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it * 140) ?: it * 140
         }

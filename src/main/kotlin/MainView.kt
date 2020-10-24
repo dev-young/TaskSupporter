@@ -1,6 +1,8 @@
+import com.sun.jna.platform.win32.User32
 import helper.BaseTaskManager.Companion.STATE_IDEL
 import helper.BaseTaskManager.Companion.STATE_PAUSED
 import helper.BaseTaskManager.Companion.STATE_WORKING
+import helper.HelperCore
 import javafx.application.Platform
 import javafx.beans.property.*
 import javafx.geometry.Pos
@@ -12,6 +14,11 @@ import javafx.scene.image.Image
 import javafx.scene.input.KeyCode
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import maple_tasks.MapleBaseTask
 import maple_tasks.MapleTaskManager
 import maple_tasks.MapleTaskManager.Companion.MEISTER_1
 import maple_tasks.MapleTaskManager.Companion.MEISTER_2
@@ -27,6 +34,8 @@ import maple_tasks.UpgradeItemTask.Companion.LUK
 import maple_tasks.UpgradeItemTask.Companion.SPELL
 import maple_tasks.UpgradeItemTask.Companion.STR
 import tornadofx.*
+import java.awt.Point
+import java.awt.Toolkit
 import java.lang.Exception
 
 class MainView : View() {
@@ -113,9 +122,20 @@ class MainView : View() {
                         }
                     }
 
-                    button("숙련도올릴계정.txt 파일의 계정들의 숙련도작업").setOnAction {
-                        taskManager.autoMakeAndResaleWithMultipleAccount(price1.value*10000, pivot.value*10000, price2.value*10000)
+                    hbox {
+                        alignment = Pos.CENTER_LEFT
+                        spacing = defaultItemSpacing
+
+                        button("숙련도올릴계정.txt 파일의 계정들의 숙련도작업").setOnAction {
+                            taskManager.autoMakeAndResaleWithMultipleAccount(price1.value*10000, pivot.value*10000, price2.value*10000)
+                        }
+                        spacer { minWidth =4.0 }
+                        button("창 이동").setOnAction {
+                            MapleBaseTask().moveWindow(Point(0,0))
+                        }
                     }
+
+
                 }
             }
 
@@ -1038,7 +1058,7 @@ class MainView : View() {
                 println(e.message)
             }
         }
-        primaryStage.isAlwaysOnTop = false
+        primaryStage.isAlwaysOnTop = true
 
         taskManager.setOnTaskStateChangeListener {
             infoLabel.apply {
@@ -1071,6 +1091,35 @@ class MainView : View() {
 
     }
 
+    override fun onBeforeShow() {
+        super.onBeforeShow()
+        println("onBeforeShow")
+
+        GlobalScope.launch(Dispatchers.Default) {
+            delay(500)
+            val hwnd = User32.INSTANCE.FindWindow(null, title).let {
+                var h = it
+                for (i in 1..100) {
+                    if(h != null)
+                        break
+                    delay(100)
+                    h = User32.INSTANCE.FindWindow(null, title)
+                }
+                h
+            }
+            val startPoint = Toolkit.getDefaultToolkit().screenSize.let {
+                val w = if (it.width > 1920) 1920 else it.width
+                val h = it.height
+                User32.INSTANCE.winGetPos(hwnd).let {
+                    Point(w-it.width(), h-it.getHeight() - 40)
+                }
+
+            }
+            User32.INSTANCE.winMove(startPoint, hwnd_ = hwnd)
+            User32.INSTANCE.winActive(hwnd)
+            Platform.runLater { primaryStage.isAlwaysOnTop = false }
+        }
+    }
 
     override fun onDock() {
         currentWindow?.setOnCloseRequest {
@@ -1078,5 +1127,7 @@ class MainView : View() {
         }
         super.onDock()
     }
+
+
 
 }

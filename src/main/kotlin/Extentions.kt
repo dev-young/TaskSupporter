@@ -22,7 +22,7 @@ import kotlin.system.measureTimeMillis
 //val dateFormat = SimpleDateFormat("HH:mm:ss MM.dd")
 val dateFormat = SimpleDateFormat("HH:mm:ss")
 
-fun logI(message: Any?){
+fun logI(message: Any?) {
     val msg = "[${dateFormat.format(Date())}] $message"
     println(msg)
     Platform.runLater {
@@ -58,17 +58,17 @@ fun BufferedImage.toFile(fileName: String) {
 }
 
 /**대비 증가시키기*/
-fun Mat.changeContract(){
+fun Mat.changeContract() {
     convertTo(this, -1, 1.5, -110.0)
 }
 
-fun Mat.changeContract2(){
-    convertTo(this,-1, 1.0, -180.0)
-    convertTo(this,-1, 2.0, 0.0)
+fun Mat.changeContract2() {
+    convertTo(this, -1, 1.0, -180.0)
+    convertTo(this, -1, 2.0, 0.0)
 }
 
 //흑과 백으로만 변경 (반투명한 배경위의 글씨를 읽을때 유용)
-fun Mat.changeBlackAndWhite(){
+fun Mat.changeBlackAndWhite() {
     convertTo(this, -1, 2.0, -100.0)
     Imgproc.cvtColor(this, this, Imgproc.COLOR_BGR2GRAY)
     convertTo(this, -1, 10.0, 0.0)
@@ -136,38 +136,38 @@ fun User32.winIsForeground(title: String): Boolean {
 
 /**윈도우 활성화 (활성화가 완료될때까지 기다린다. 최대 2초)
  * @return 활성화에 실패하면 false 반환 */
-fun User32.winActive(hwnd : WinDef.HWND): Boolean {
+fun User32.winActive(hwnd: WinDef.HWND): Boolean {
 
     val target = CharArray(MAX_TITLE_LENGTH * 2)
     GetWindowText(hwnd, target, MAX_TITLE_LENGTH)
 
     val current = CharArray(MAX_TITLE_LENGTH * 2)
-    for(i in 1..200) {
+    for (i in 1..200) {
         SetForegroundWindow(hwnd)
 //            logI("not yet activate   current:${Native.toString(current)}")
         Thread.sleep(10)
         GetWindowText(GetForegroundWindow(), current, MAX_TITLE_LENGTH)
 
-        if(target.contentEquals(current))
+        if (target.contentEquals(current))
             return true
     }
     return false
 }
 
-fun User32.winActive(title : String): Boolean {
+fun User32.winActive(title: String): Boolean {
     val hwnd = FindWindow(null, title) ?: return false
 
     return winActive(hwnd)
 }
 
-fun User32.winMove( point: Point, title : String? = null, hwnd_: WinDef.HWND? = null)  {
+fun User32.winMove(point: Point, title: String? = null, hwnd_: WinDef.HWND? = null) {
     var hwnd = hwnd_
 
-    if(title != null){
+    if (title != null) {
         hwnd = FindWindow(null, title)
     }
 
-    if(hwnd == null)
+    if (hwnd == null)
         hwnd = GetForegroundWindow()
 
     val rect = WinDef.RECT()
@@ -181,6 +181,16 @@ fun User32.winGetPos(hwnd: WinDef.HWND): WinDef.RECT {
     val rect = WinDef.RECT()
     GetWindowRect(hwnd, rect)
     return rect
+}
+
+fun User32.winGetPos(title: String): WinDef.RECT? {
+    return FindWindow(null, title)?.let {
+        val rect = WinDef.RECT()
+        GetWindowRect(it, rect)
+        rect
+    }
+
+
 }
 
 fun User32.winGetPos(): WinDef.RECT {

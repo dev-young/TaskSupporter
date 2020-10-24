@@ -859,7 +859,7 @@ class AuctionTask : MapleBaseTask() {
 //                    logI("dec1:$decreasePrice1, pivot:$pivotPrice, dec2:$decreasePrice2")
                     var temp = it - decreasePrice1
                     if (it > pivotPrice)
-                        it - decreasePrice2
+                        temp = it - decreasePrice2
 
                     //10001024 이런 가격 9991024로 변경
                     if((temp / 10000L) % 10 == 0L) temp -= 10000

@@ -2,6 +2,7 @@ package helper
 
 import kotlinx.coroutines.*
 import logI
+import maple_tasks.Settings
 import org.opencv.core.Core
 import java.io.File
 import kotlin.system.exitProcess
@@ -80,6 +81,7 @@ open class BaseTaskManager {
     }
 
     open fun finishApp(){
+        Settings.save()
         resetTask()
         exitProcess(0)
     }

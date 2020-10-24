@@ -118,6 +118,7 @@ class MarketConditionTask : AdditionalOptionTask() {
 
                         //새로운 목록일 경우 아이템 가격정보에 맞춰 해당 아이템 옵션 확인 및 저장
                         val nextItemPoint = Point(nextPagePoint!!.x - 389, nextPagePoint!!.y + 59)
+                        var last = ""
                         priceDateList.forEachIndexed { idx, priceDate ->
                             getOptions(nextItemPoint)?.let {
                                 it.price = priceDate.first.first

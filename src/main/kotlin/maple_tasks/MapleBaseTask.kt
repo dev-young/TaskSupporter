@@ -14,6 +14,7 @@ import toMat
 import winActive
 import winGetPos
 import winIsForeground
+import winMove
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
@@ -21,8 +22,6 @@ import kotlin.math.absoluteValue
 
 open class MapleBaseTask {
     val helper: HelperCore = HelperCore()
-
-    var hwnd = User32.INSTANCE.FindWindow("", "MapleStory")
 
     val itemDistance = 42  // 아이템 간격
     var inventoryKey = KeyEvent.VK_I
@@ -695,6 +694,12 @@ open class MapleBaseTask {
             delay(800)
             helper.smartClick(sortBtn, 5,5, maxTime = 50)
             helper.smartClick(sortBtn, 5,5, maxTime = 50)
+        }
+    }
+
+    fun moveWindow(point:Point){
+        User32.INSTANCE.FindWindow(null, "MapleStory")?.let {
+            helper.user32.winMove(point, hwnd_ = it)
         }
     }
 }

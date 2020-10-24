@@ -353,7 +353,7 @@ class HelperCore : Robot() {
     }
 
     fun activeWindow(name: String) {
-        TODO("Not yet implemented")
+        user32.winActive(name)
     }
 
     fun getMousePos(): Point {

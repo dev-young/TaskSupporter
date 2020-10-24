@@ -13,12 +13,12 @@ import java.util.*
 class LoginTask : MapleBaseTask() {
 
 
-    suspend fun login(id: String, pw: String, fileName: String = "", description:String = ""): Boolean {
+    suspend fun login(id: String, pw: String, fileName: String = "", description: String = ""): Boolean {
         helper.apply {
             smartClickTimeMax = 100
             moveMouseLB()
             val loginBtn = imageSearch("img\\login.png") ?: let {
-                logOut()
+                logOut(true)
                 imageSearch("img\\login.png")
             }
             if (loginBtn == null) {
@@ -121,33 +121,42 @@ class LoginTask : MapleBaseTask() {
         }
     }
 
-    suspend fun backToCharacter(): Boolean {
+    suspend fun backToCharacter(fastMode: Boolean = false): Boolean {
         var trycount = 0
         while (getSelectCharacterPoint() == null) {
             helper.apply {
 
-                val menu = imageSearchAndClick("img\\option.png", 90.0, maxTime = 300)?.also {
-                    delayRandom(800, 1000)
-
-                    smartClick(Point(it.x - 14, it.y - 41), 30, 8, 100, 200)
+                imageSearchAndClick("img\\menuCollapse.png", accuracy = 50.0, maxTime = 200)?.let {
+                    kotlinx.coroutines.delay(50)
                     simpleClick()
-                    delayRandom(800, 1000)
+                    delayRandom(500, 800)
+                }
+
+                val menu = imageSearchAndClick("img\\option.png", 90.0, maxTime = 100)?.also {
+                    if (!fastMode) delayRandom(800, 1000)
+
+                    smartClick(
+                        Point(it.x - 14, it.y - 41),
+                        30,
+                        8,
+                        if (fastMode) 50 else 100,
+                        if (fastMode) 80 else 200
+                    )
+                    simpleClick()
+                    if (fastMode) delayRandom(200, 300)
+                    else delayRandom(800, 1000)
                     sendEnter()
                     sendEnter()
                 }
 
-                if (menu == null) {
-                    imageSearchAndClick("img\\menuCollapse.png", maxTime = 300)?.let {
-                        delayRandom(1000, 1500)
-                    }
-                }
+                if (fastMode) kotlinx.coroutines.delay(100)
+                else kotlinx.coroutines.delay(500)
 
-                kotlinx.coroutines.delay(300)
 
             }
 
             trycount++
-            if(trycount > 5) return false
+            if (trycount > 5) return false
         }
         return true
     }
@@ -162,14 +171,14 @@ class LoginTask : MapleBaseTask() {
         helper.apply {
             getSelectCharacterPoint()?.let { selectChar ->
                 val between = 125
-                val x = selectChar.x + 70 + ((characterIndex%4) * between)
-                val y = selectChar.y + if(characterIndex > 3) 400 else 200
+                val x = selectChar.x + 70 + ((characterIndex % 4) * between)
+                val y = selectChar.y + if (characterIndex > 3) 400 else 200
                 val character = Point(x, y)
 
                 smartClick(character, 5, 5, maxTime = 200)
                 delayRandom(400, 500)
                 sendEnter()
-                smartClick(Point(selectChar.x+600, selectChar.y+400), 5, 5, maxTime = 200)
+                smartClick(Point(selectChar.x + 600, selectChar.y + 400), 5, 5, maxTime = 200)
             }
         }
 
@@ -189,7 +198,7 @@ class LoginTask : MapleBaseTask() {
         helper.apply {
             moveMouseLB()
 
-            if(imageSearch("img\\closeAd.png") == null) {
+            if (imageSearch("img\\closeAd.png") == null) {
                 //처음에 광고가 안뜬 경우 (썬데이메이플)
                 send(KeyEvent.VK_ESCAPE)
                 delayRandom(1000, 1100)
@@ -203,41 +212,44 @@ class LoginTask : MapleBaseTask() {
     }
 
     /**로딩 대기 */
-    suspend fun waitLoading(img:String, maxTimeSec: Int = 10): Boolean {
+    suspend fun waitLoading(img: String, maxTimeSec: Int = 10): Boolean {
         helper.apply {
             moveMouseLB()
             var tryCount = 0
-            while (imageSearch(img, 80.0) == null){
+            while (imageSearch(img, 80.0) == null) {
                 kotlinx.coroutines.delay(1000)
 
                 activateMaple()
 
                 tryCount++
-                if(tryCount > maxTimeSec)
+                if (tryCount > maxTimeSec)
                     return false
             }
         }
         return true
     }
 
-    suspend fun logOut() {
+    suspend fun logOut(fastMode: Boolean = false) {
         helper.apply {
             moveMouseLB()
-            if(imageSearch("img\\menu.png") != null) {
-                backToCharacter()
+            if (imageSearch("img\\menu.png") != null || imageSearch("img\\menuCollapse.png") != null) {
+                backToCharacter(fastMode)
                 waitLoadingCharacter()
-                delayRandom(500, 600)
+                if (!fastMode) delayRandom(500, 600)
             }
 
             moveMouseLB()
-            if (imageSearchAndClick("img\\backToLogin.png", 80.5, maxTime = 200) != null) {
+            if (imageSearchAndClick("img\\backToLogin.png", 80.5, maxTime = 100) != null) {
                 simpleClick()
-                delayRandom(1000, 1110)
+                if (fastMode) delayRandom(100, 200)
+                else delayRandom(1000, 1110)
+
                 sendEnter()
                 sendEnter()
             } else {
                 send(KeyEvent.VK_ESCAPE)
-                delayRandom(500, 600)
+                if (fastMode) delayRandom(100, 200)
+                else delayRandom(500, 600)
                 sendEnter()
             }
 
