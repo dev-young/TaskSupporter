@@ -23,6 +23,7 @@ import maple_tasks.MapleTaskManager
 import maple_tasks.MapleTaskManager.Companion.MEISTER_1
 import maple_tasks.MapleTaskManager.Companion.MEISTER_2
 import maple_tasks.MapleTaskManager.Companion.MEISTER_3
+import maple_tasks.Settings
 import maple_tasks.UpgradeItemTask
 import maple_tasks.UpgradeItemTask.Companion.ATT
 import maple_tasks.UpgradeItemTask.Companion.CRITICAL
@@ -165,8 +166,11 @@ class MainView : View() {
 
                         label ("마우스 딜레이")
                         textfield(taskManager.synMouseDelay) {
-                            text = "0"
                             maxWidth = 50.0
+                            text = Settings.instance.synthesizeMouseDelay.toString()
+                            textProperty().addListener { observable, oldValue, newValue ->
+                                Settings.instance.synthesizeMouseDelay = newValue.toIntOrNull()?:100
+                            }
                         }
                     }
 
@@ -863,7 +867,19 @@ class MainView : View() {
 
                     button("강화 및 스타포스") {
                         action {
-                            taskManager.upgradeItem()
+                            taskManager.upgradeItem(true)
+                        }
+                    }
+
+                    button("강화") {
+                        action {
+                            taskManager.upgradeItem(false)
+                        }
+                    }
+
+                    button("주문서목록 사용하여 강화") {
+                        action {
+                            taskManager.upgradeItem("주문서목록")
                         }
                     }
 

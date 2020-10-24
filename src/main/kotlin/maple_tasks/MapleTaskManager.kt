@@ -326,10 +326,13 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun upgradeItem() {
+    fun upgradeItem(starforce : Boolean) {
         runTask("upgrade") {
             if (activateTargetWindow()) {
-                UpgradeItemTask().upgradeAndStarforce()
+                if(starforce)
+                    UpgradeItemTask().upgradeAndStarforce()
+                else
+                    UpgradeItemTask().upgradeUntilEnd()
                 Toolkit.getDefaultToolkit().beep()
             }
         }
@@ -846,6 +849,16 @@ class MapleTaskManager : BaseTaskManager() {
             }
 
 
+        }
+    }
+
+    fun upgradeItem(fileName: String) {
+        runTask("upgrade") {
+            if (activateTargetWindow()) {
+                UpgradeItemTask().apply {
+                    runUpgradeTask(fileName)
+                }
+            }
         }
     }
 

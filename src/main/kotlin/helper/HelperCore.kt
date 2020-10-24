@@ -394,12 +394,12 @@ class HelperCore : Robot() {
         moveMouseSmoothly(Point(x+rect.left, y+rect.top), 100)
     }
 
-    suspend fun mouseWheelSmoothly(move:Int) {
+    suspend fun mouseWheelSmoothly(move:Int, delay:Long = 50) {
         var direction = 1
         if (move < 0) direction = -1
         for (i in 1..abs(move)) {
             mouseWheel(direction)
-            delay(50L)
+            delay(delay)
         }
     }
 

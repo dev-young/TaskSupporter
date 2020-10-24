@@ -8,6 +8,7 @@ import org.opencv.imgcodecs.Imgcodecs
 import toMat
 import java.awt.Point
 import java.awt.Rectangle
+import java.io.File
 import java.util.*
 import kotlin.system.measureTimeMillis
 
@@ -40,6 +41,232 @@ class UpgradeItemTask : MapleBaseTask() {
     init {
         initCubeOptionTemplates()
     }
+
+    suspend fun upgradeUntilEnd() {
+        helper.apply {
+
+            moveMouseLB(30)
+            while (true) {
+
+                //스타포스 강화인경우 나가기
+                imageSearch("img\\upgrade\\starforce.png", 80.0)?.let { return }
+
+
+                //확인 클릭
+                imageSearchAndClick("img\\upgrade\\ok.png", 80.0, maxTime = 55)?.let {
+                    simpleClick()
+                    simpleClick()
+                    moveMouseLB(20)
+                }
+
+
+                //강화 클릭
+                imageSearch("img\\upgrade\\upgrade.png", 80.0)?.let {
+                    imageSearch("img\\upgrade\\starforce.png", 80.0)?.let { return }
+                    smartClick(it, 2, 2, maxTime = 55)
+                    simpleClick()
+                    moveMouseLB(20)
+                }
+
+                //끝인지 확인
+                if (imageSearch("img\\upgrade\\end.png", 80.0) != null)
+                    break
+
+                delayRandom(10, 30)
+            }
+        }
+    }
+
+    suspend fun upgradeAndStarforce(starforceCount: Int = 0) {
+        helper.apply {
+
+            moveMouseLB(30)
+            while (true) {
+
+                //스타캐치 해체 클릭
+                imageSearch("img\\upgrade\\starCatch.png", 80.0)?.let {
+                    smartClick(it, 2, 2, maxTime = 55)
+                    moveMouseLB(20)
+                }
+
+
+                //확인 클릭
+                imageSearchAndClick("img\\upgrade\\ok.png", 80.0, maxTime = 55)?.let {
+                    simpleClick()
+                    simpleClick()
+                    moveMouseLB(20)
+                }
+
+
+                //강화 클릭
+                imageSearch("img\\upgrade\\upgrade.png", 80.0)?.let {
+                    if (imageSearch("img\\upgrade\\starCatch.png", 80.0) == null) {
+
+                        // 현재 스타포스가 10 이상인지 확인
+                        if (imageSearch("img\\upgrade\\10star.png", 80.0) != null) {
+                            return
+                        }
+
+                        smartClick(it, 2, 2, maxTime = 55)
+                        simpleClick()
+                        moveMouseLB(20)
+                    }
+                }
+
+                //끝인지 확인
+                if (imageSearch("img\\upgrade\\end.png", 80.0) != null)
+                    break
+
+                delayRandom(10, 30)
+            }
+        }
+
+    }
+
+    /**인벤토리를 열어서 강화창을 열었을때 강화창의 오른쪽에 인벤토리가 있어야한다.*/
+    suspend fun upgradeItem(itemPoint: Point, scrollNumber: Int): Boolean {
+
+        openUpgradeWindow()
+
+        openInventory()
+
+        helper.apply {
+            smartClickTimeMin = 50
+            smartClickTimeMax = 100
+
+            for (i in 1..50){
+                imageSearch("img\\upgrade\\end.png")?.let {
+                    smartClick(itemPoint,5,5)
+                    delayRandom(50, 100)
+                    smartClick(it, 2,2)
+                } ?: break
+            }
+
+            moveMouseLB()
+
+            //스타포스 강화해야하는 아이템인 경우 true 반환
+            imageSearch("img\\upgrade\\starforce.png")?.let {
+                logI("주문서 강화 불가능")
+                return true
+            }
+
+            //주문서 선택
+            if(selectUpgradeScroll(scrollNumber)) {
+                moveMouseLB()
+
+                //강화 시작
+                upgradeUntilEnd()
+                moveMouseLB(300)
+            }
+
+
+        }
+        return true
+    }
+
+    /**강화창이 열려있을때만 사용, 주문서를 찾고 선택한다.*/
+    private suspend fun selectUpgradeScroll(scrollNumber: Int): Boolean {
+        helper.apply {
+            logI("$scrollNumber 번 스크롤 선택 시작")
+            imageSearch("img\\upgrade\\upgradeScroll.png")?.let {
+                val diff = 30   //주문서 버튼 간격
+                val first = Point(it.x+250, it.y+70)
+                val second = Point(it.x+250, it.y+70+diff)
+                val third = Point(it.x+250, it.y+70+diff+diff)
+
+                val scrollTime = scrollNumber - 3
+                if(scrollTime > 0){
+                    moveMouseSmoothly(first, 300)
+                    delayRandom(100, 200)
+                    mouseWheelSmoothly(scrollTime, 100)
+                    delayRandom(150, 200)
+                    smartClick(third, 3,3)
+                } else {
+                    when (scrollNumber) {
+                        1 -> smartClick(first, 3,3)
+                        2 -> smartClick(second, 3,3)
+                        3 -> smartClick(third, 3,3)
+                    }
+                }
+
+                for (i in 1..50) {
+                    if(imageSearch("img\\upgrade\\upgrade.png") != null) return true
+                    simpleClick()
+                    delayRandom(200, 300)
+                }
+
+                return false
+            }
+        }
+
+        return false
+    }
+
+    private suspend fun openUpgradeWindow() {
+
+        helper.apply {
+            moveMouseLB(20)
+
+            //인벤토라 닫고
+            closeInventory()
+            moveMouseLB(20)
+
+            //혹시 강화창에 장비 올라가있을지도 모르니 취소버튼 클릭
+            imageSearchAndClick("img\\upgrade\\cancel.png", 80.0, maxTime = 55)?.let {
+                simpleClick()
+                simpleClick()
+                moveMouseLB(20)
+            }
+
+            while (imageSearch("img\\upgrade\\end.png") == null) {
+                //강화창여는 버튼 클릭
+                openInventory()
+
+                moveMouseLB()
+                imageSearchAndClick("img\\upgrade\\startUpgrade1.png")
+                    ?: imageSearchAndClick("img\\upgrade\\startUpgrade2.png")
+
+                moveMouseLB()
+            }
+
+
+        }
+    }
+
+    /**파일에 적힌 주문서 순서를 바탕으로 아이템들을 찾은뒤 해당 아이템들을 강화한다. */
+    suspend fun runUpgradeTask(fileName:String){
+        val scrollList = loadUpgradeFile(fileName)
+        logI("순서: $scrollList")
+        val itemList = findItems(untilBlank = false)
+
+
+        scrollList.forEachIndexed {index: Int, scrollNum: Int ->
+            if(index < itemList.size){
+                val item = itemList[index]
+                upgradeItem(item, scrollNum)
+
+            }
+        }
+    }
+
+    private fun loadUpgradeFile(fileName: String): ArrayList<Int> {
+        val list = ArrayList<Int>()
+        val file = File("$fileName")
+        if (file.exists()) {
+            file.readLines().forEach {
+                if (it.startsWith("//") || it.isEmpty()) {
+                    //공백 혹은 주석처리된 line
+                } else {
+                    val num = it.toIntOrNull()?:0
+                    if (num > 0)
+                        list.add(num)
+                }
+            }
+
+        }
+        return list
+    }
+
 
     fun initCubeOptionTemplates() {
         if (optionNameTemplates.isEmpty()) {
@@ -83,57 +310,6 @@ class UpgradeItemTask : MapleBaseTask() {
             optionValueTemplates.forEach { (t, _) -> println(t) }
 
         }
-    }
-
-
-    suspend fun upgradeAndStarforce(starforceCount: Int = 0) {
-        helper.apply {
-
-            moveMouseLB(30)
-            while (true) {
-
-                //스타캐치 해체 클릭
-                imageSearch("img\\upgrade\\starCatch.png", 80.0)?.let {
-                    smartClick(it, 2,2,maxTime = 55)
-                    moveMouseLB(20)
-                }
-
-
-                //확인 클릭
-                imageSearchAndClick("img\\upgrade\\ok.png", 80.0 ,maxTime = 55)?.let {
-                    simpleClick()
-                    simpleClick()
-                    moveMouseLB(20)
-                }
-
-
-                //강화 클릭
-                imageSearch("img\\upgrade\\upgrade.png", 80.0)?.let {
-                    if(imageSearch("img\\upgrade\\starCatch.png", 80.0) == null){
-
-                        // 현재 스타포스가 10 이상인지 확인
-                        if(imageSearch("img\\upgrade\\10star.png", 80.0) != null){
-                            return
-                        }
-
-                        smartClick(it, 2,2,maxTime = 55)
-                        simpleClick()
-                        moveMouseLB(20)
-                    }
-                }
-
-                //끝인지 확인
-                if(imageSearch("img\\upgrade\\end.png", 80.0) != null)
-                    break
-
-                delayRandom(10,30)
-            }
-        }
-
-
-
-
-
     }
 
     suspend fun runCubeTask(targetOptionsList: List<Map<String, Int>>) {
