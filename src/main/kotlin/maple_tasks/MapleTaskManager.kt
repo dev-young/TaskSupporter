@@ -7,6 +7,7 @@ import helper.HelperCore
 import javafx.application.Platform
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -113,6 +114,15 @@ class MapleTaskManager : BaseTaskManager() {
         GlobalScreen.setEventDispatcher(ConsumeEvent.VoidDispatchService())
         GlobalScreen.addNativeKeyListener(keyListener)
         Settings.load()
+    }
+
+    override fun finishApp() {
+        GlobalScope.launch(Dispatchers.IO) {
+            GlobalScreen.removeNativeKeyListener(keyListener)
+            GlobalScreen.unregisterNativeHook()
+            println("훅 해제완료!")
+            super.finishApp()
+        }
     }
 
 
@@ -273,7 +283,7 @@ class MapleTaskManager : BaseTaskManager() {
         return list
     }
 
-    fun login(id: String, pw: String, fileName: String, description:String) {
+    fun login(id: String, pw: String, fileName: String, description: String) {
         runTask("login") {
             if (activateTargetWindow())
                 LoginTask().login(id, pw, fileName, description)
@@ -326,10 +336,10 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
-    fun upgradeItem(starforce : Boolean) {
+    fun upgradeItem(starforce: Boolean) {
         runTask("upgrade") {
             if (activateTargetWindow()) {
-                if(starforce)
+                if (starforce)
                     UpgradeItemTask().upgradeAndStarforce()
                 else
                     UpgradeItemTask().upgradeUntilEnd()
@@ -605,7 +615,7 @@ class MapleTaskManager : BaseTaskManager() {
                             val targetOption = if (it.getGradeKey() == itemInfo!!.getGradeKey()) ">" else ""
                             marketItemList.add("$targetOption$upgraded[${it.getGradeKey()}]  ${it.getSimplePrice()}  [${it.dateTextSimple}]${it.option}   #${it.price}")
                         }
-                        
+
                     }
                     if (checkAutoCalAndSales) {
                         itemInfo?.let {
@@ -701,7 +711,8 @@ class MapleTaskManager : BaseTaskManager() {
                         //합성
                         logI("$targetItemCount 개의 아이템 합성여부 확인")
                         logI("남은 합성 횟수: $remainSynCount")
-                        val synCount = synthesizeItemSmartly(false, remainSynCount, targetItemCount, synMouseDelay.value)
+                        val synCount =
+                            synthesizeItemSmartly(false, remainSynCount, targetItemCount, synMouseDelay.value)
                         remainSynCount -= synCount
                         completeSynCount += synCount
                         targetItemCount -= synCount
@@ -821,7 +832,7 @@ class MapleTaskManager : BaseTaskManager() {
                                     }
                                 }
 
-                                if(it.toString() != accountList.last().toString())
+                                if (it.toString() != accountList.last().toString())
                                     loginTask.logOut()
 
                             } else {

@@ -90,7 +90,7 @@ class MainView : View() {
                 }
             }
 
-            button("인벤 칸 계산") {
+            button("빈칸 계산") {
                 action {
                     taskManager.countEmptyInventory()
                 }

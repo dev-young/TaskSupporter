@@ -3,6 +3,7 @@ package helper
 import kotlinx.coroutines.*
 import logI
 import maple_tasks.Settings
+import org.jnativehook.GlobalScreen
 import org.opencv.core.Core
 import java.io.File
 import kotlin.system.exitProcess

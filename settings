@@ -1,1 +1,1 @@
-{"delayOnCheckOptions":30,"saveErrorWhenCheckOption":true,"logFindSameOptionWhenCheckOption":true,"synthesizeMouseDelay":200}
+{"delayOnCheckOptions":30,"saveErrorWhenCheckOption":true,"logFindSameOptionWhenCheckOption":true,"saveCapturedMatWhenCheckOption":true,"synthesizeMouseDelay":200}

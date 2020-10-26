@@ -143,8 +143,9 @@ class HelperCore : Robot() {
         var notFoundMMR = notFoundMMR_    // 적당한 값을 입력해야하는데 여러 수치를 테스트해본 결과 500000이 적당한듯 하다.
         notFoundMMR -= (notFoundMMR / 100 * accuracy).toInt()
         val outputImage = Mat()
+        Imgproc.matchTemplate(source, template, outputImage, Imgproc.TM_SQDIFF)
         try {
-            Imgproc.matchTemplate(source, template, outputImage, Imgproc.TM_SQDIFF)
+
         } catch (e: Exception) {
 //            print("[Error] 2" + e.message)
 //            logI("사진 파일 확인 필요. error: ${e.message}")

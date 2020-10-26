@@ -2,6 +2,7 @@ package maple_tasks
 
 import changeBlackAndWhite
 import changeContract
+import get
 import getHeight
 import logI
 import moveMouseSmoothly
@@ -163,65 +164,109 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
     }
 
-
+    //아이템 정보를 나누는 칸막이 (불투명하다)
+    private val infoDivider = Imgcodecs.imread("$baseImgPath\\infoDivider.png")
     private val jobBeginner1 = Imgcodecs.imread("$baseImgPath\\jobBeginner1.png")
     private val jobBeginner2 = Imgcodecs.imread("$baseImgPath\\jobBeginner2.png")
-    suspend fun getOptions(item: Point, beforeUid:String = ""): ItemInfo? {
+    suspend fun getOptions(item: Point, beforeUid: String = ""): ItemInfo? {
         helper.apply {
-            moveMouseSmoothly(item, 15)
-            mousePress(KeyEvent.BUTTON3_MASK)
-            kotlinx.coroutines.delay(1)
-
-            kotlinx.coroutines.delay(Settings.instance.delayOnCheckOptions)
 
             var isUpgraded: Boolean
             var reqLev: Int? = null
             var job = ""
-            //기존 소요시간: 30초 (감정의달인 추옵확인)
-            //변경후 소요시간: ???
 
-            fun getTotalInfoMat():Mat? {
+            /**아이템 정보가 담김 화면을 캡쳐한다. */
+            suspend fun getTotalInfoMat(moveDelay: Long): Mat? {
+                val r = random.get(0, 5)
+                mouseMove(item.x, item.y + r)
+                kotlinx.coroutines.delay(moveDelay)
+
                 var source: Mat
                 return user32.winGetPos().let { win ->
-                    var infoWidth = 550 //아이템 정보창의 최대 넓이 (비교대상이 있는 경우 최대 넓이)
+                    val maxInfoWidth = 525  // 실제로는 520
+                    var infoWidth = maxInfoWidth //아이템 정보창의 최대 넓이 (비교대상이 있는 경우 최대 넓이)
                     //마우스포인트 주변을 캡쳐하여 아이템 정보 확인
-                    val startX = getMousePos().let { mouse ->
+                    val mouse = getMousePos()
+                    val startX = mouse.let {
                         val limitX = win.right - infoWidth //마우스위 x값이 이 수치를 넘어가면 아이템 정보를 가리고있는것이다.
                         if (mouse.x < limitX) {
                             //마우스가 아이템 정보 왼쪽에 있는 경우
                             infoWidth = 270 //왼쪽에 있는경우 270의 넓이만큼만 찾으면 아이템의 정보가 있다.
-                            mouse.x-15
+                            mouse.x - 5
                         } else {
                             //마우스가 아이템 정보 표시되는 범위 내에 있는경우
-                            limitX-15
+                            limitX - 5
                         }
                     }
 
-                    source = createScreenCapture(Rectangle(startX, win.top, infoWidth, win.getHeight())).toMat()
-//                    Imgcodecs.imwrite("capt.png", source)
-                    val pointInSource = imageSearch(source, jobBeginner1) ?: imageSearch(source, jobBeginner2).also { job = COMMON }
+                    source = createScreenCapture(Rectangle(startX, win.top, infoWidth + 3, win.getHeight())).toMat()
+//                    if (Settings.instance.saveCapturedMatWhenCheckOption)
+//                        Imgcodecs.imwrite("capture${Date().time} ${item.x} ${item.y}.png", source)
+
+                    //일단 캡쳐된 이미지에 온전히 아이템 정보가 담겨있는지 확인하기 위해 infoDivider를 사용
+                    val pointInSource = let {
+                        if (infoWidth == maxInfoWidth) {
+                            //이미지넓이가 maxInfoWidth 인 경우 왼쪽편부터 살펴본 뒤
+                            // 없으면 마우스 기준으로 오른편
+                            // 거기에도 없으면 오른편에서 찾는다.
+                            val leftSide = source.colRange(0, 270)
+                            val leftSideAtMouse = (mouse.x - startX - 5).let {
+                                val startRange = if (it < 0) 0 else it
+                                val endRange = (startRange + 270).let { if (it > source.cols()) source.cols() else it }
+                                source.colRange(startRange, endRange)
+                            }
+                            val rightSide = source.colRange(250, source.cols())
+                            if (imageSearchReturnBoolean(leftSide, infoDivider, 95.0))
+                                source = leftSide
+                            else if (leftSideAtMouse.cols() >= infoDivider.cols()
+                                && imageSearchReturnBoolean(leftSideAtMouse, infoDivider, 95.0)
+                            ) {
+                                source = leftSideAtMouse
+                            } else if (imageSearchReturnBoolean(rightSide, infoDivider, 95.0))
+                                source = rightSide
+                            else
+                                return@let null
+                        } else {
+                            if (!imageSearchReturnBoolean(source, infoDivider, 95.0)) {
+                                return@let null
+                            }
+                        }
+                        imageSearch(source, jobBeginner1) ?: imageSearch(source, jobBeginner2).also { job = COMMON }
+                    }
+
+                    if (Settings.instance.saveCapturedMatWhenCheckOption)
+                        Imgcodecs.imwrite("${Date().time} ${item.x} ${item.y}.png", source)
+
                     pointInSource?.let {
                         val startCol = it.x - 20
                         val endCol = startCol + 240
                         val startRow = it.y - 193
-                        val endRow = (startRow + 440).let { if(it > source.rows()) source.rows() else it }
+                        val endRow = (startRow + 440).let { if (it > source.rows()) source.rows() else it }
                         try {
                             source.colRange(startCol, endCol).rowRange(startRow, endRow)
-                        } catch (e:Exception) {
-                            if(Settings.instance.saveErrorWhenCheckOption)
+                        } catch (e: Exception) {
+                            if (Settings.instance.saveErrorWhenCheckOption)
                                 Imgcodecs.imwrite("error $startCol $endCol $startRow $endRow.png", source)
                             logI(e.message)
                             null
                         }
 
 
+                    } ?: let {
+                        if (Settings.instance.saveErrorWhenCheckOption)
+                            Imgcodecs.imwrite("error $item.png", source)
+                        null
                     }
                 }
             }
 
-            //렉으로 인해 인식 실패할 가능성이 있으므로 인식 실패시 한번 더 시도
-            val totalInfoMat = getTotalInfoMat()?:getTotalInfoMat()
-            if(totalInfoMat == null) logI("$item 인식 실패")
+            //렉으로 인해 인식 실패할 가능성이 있으므로 인식 실패시 19번 더 시도
+            val totalInfoMat = getTotalInfoMat(Settings.instance.delayOnCheckOptions) ?: let {
+                var mat = getTotalInfoMat(50)
+                for (i in 1..19) if (mat != null) break else mat = getTotalInfoMat(100)
+                mat
+            }
+            if (totalInfoMat == null) logI("$item 인식 실패")
             totalInfoMat?.let {
                 //이름에 강화표시 있나 확인
                 it.rowRange(0, 75).let {
@@ -241,7 +286,6 @@ open class AdditionalOptionTask : MapleBaseTask() {
                     job = checkJob(jobView)
                 }
                 infoImg.changeContract()
-                mouseRelease(KeyEvent.BUTTON3_MASK)
                 kotlinx.coroutines.delay(1)
 //                Imgcodecs.imwrite("test.png", infoImg)
                 val resultOption = check(infoImg)
@@ -250,15 +294,16 @@ open class AdditionalOptionTask : MapleBaseTask() {
                     this.isUpgraded = isUpgraded
                     this.reqLev = reqLev
                 }
-                if(beforeUid == result.getUid()) {
-                    if(Settings.instance.logFindSameOptionWhenCheckOption)
+                if (beforeUid == result.getUid()) {
+                    if (Settings.instance.logFindSameOptionWhenCheckOption)
                         logI("옵션 확인중 중복 옵션이 측정됨 (해당 위치의 아이템을 다시 확인합니다.)")
+                    if (Settings.instance.saveErrorWhenCheckOption)
+                        Imgcodecs.imwrite("${item.x} ${item.y} same.png", totalInfoMat)
                     return getOptions((item))// 재귀시에는 beforeUid 값을 주지 않기때문에 한번만 더 반복하고 리턴한다.
                 }
                 return result
 
             }
-            mouseRelease(KeyEvent.BUTTON3_MASK)
             kotlinx.coroutines.delay(1)
             return null
         }

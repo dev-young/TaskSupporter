@@ -16,6 +16,9 @@ class Settings {
     // 여러개의 추옵 확인시 이전의 아이템과 현재 측정한 아이템이 같은 아이템으로 판단될때 로그를 남길지 여부
     var logFindSameOptionWhenCheckOption = true
 
+    // 여러개의 추옵 확인시 마우스 기준으로 캡쳐할때마다 스샷 남기기
+    var saveCapturedMatWhenCheckOption = true
+
     var synthesizeMouseDelay = 100  //합성시 마우스 딜레이
 
     companion object {
