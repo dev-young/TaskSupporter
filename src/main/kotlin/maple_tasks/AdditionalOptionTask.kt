@@ -178,7 +178,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
             /**아이템 정보가 담김 화면을 캡쳐한다. */
             suspend fun getTotalInfoMat(moveDelay: Long): Mat? {
                 val r = random.get(0, 5)
-                mouseMove(item.x, item.y + r)
+                moveMouseSmoothly(item, 10)
                 kotlinx.coroutines.delay(moveDelay)
 
                 var source: Mat
@@ -253,8 +253,6 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
 
                     } ?: let {
-                        if (Settings.instance.saveErrorWhenCheckOption)
-                            Imgcodecs.imwrite("error $item.png", source)
                         null
                     }
                 }
@@ -381,7 +379,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
         }
     }
 
-    private fun isOptionGood(itemInfo: ItemInfo): Boolean {
+    fun isOptionGood(itemInfo: ItemInfo): Boolean {
         return isOptionGood(itemInfo.job, itemInfo.category, itemInfo.option)
     }
 

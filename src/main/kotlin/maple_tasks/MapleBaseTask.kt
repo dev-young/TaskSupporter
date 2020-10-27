@@ -4,7 +4,6 @@ import com.sun.jna.platform.win32.User32
 import helper.HelperCore
 import kotlinx.coroutines.delay
 import leftBottom
-import leftTop
 import logI
 import moveMouseSmoothly
 import org.opencv.core.Mat
@@ -81,18 +80,20 @@ open class MapleBaseTask {
 
     val emptyItemTemplate = Imgcodecs.imread("img\\emptyItem.png")
     val disableItemTemplate = Imgcodecs.imread("img\\disableItem.png")
+
     /**checkEmptyOrDisable 빠르게 동작하는 버전
      * @param screenImg 전체 이미지
      * @param targetItem 전체 이미지 내에서 좌표
      * */
     fun checkEmptyOrDisableFast(screenImg: Mat, targetItem: Point): Int {
         // 검색할 이미지 범위 (해당위치에서 살짝 넓게)
-        val source = screenImg.colRange(targetItem.x-5, targetItem.x+emptyItemTemplate.rows()+5).rowRange(targetItem.y-5, targetItem.y+emptyItemTemplate.cols()+5)
-        if(helper.imageSearchReturnBoolean(source, emptyItemTemplate)){
+        val source = screenImg.colRange(targetItem.x - 5, targetItem.x + emptyItemTemplate.rows() + 5)
+            .rowRange(targetItem.y - 5, targetItem.y + emptyItemTemplate.cols() + 5)
+        if (helper.imageSearchReturnBoolean(source, emptyItemTemplate)) {
             return 1
         }
 
-        if(helper.imageSearchReturnBoolean(source, disableItemTemplate)){
+        if (helper.imageSearchReturnBoolean(source, disableItemTemplate)) {
             return 2
         }
 
@@ -331,11 +332,98 @@ open class MapleBaseTask {
         }
     }
 
-    var lastUsedImg : Mat? = null   //마지막으로 사용된 이미지(Mat 형식)
+    var lastUsedImg: Mat? = null   //마지막으로 사용된 이미지(Mat 형식)
+
+    /**인벤토리 정보를 생성하여 반환 */
+    suspend fun getInventory(): Inventory {
+//        val items = arrayListOf<Point>()
+        val inventory = Inventory()
+        moveMouseLB()
+        helper.apply {
+            var vx: Int //현재 아이템 x
+            var vy: Int  //현재 아이템 y
+            val point: Point = findFirstItemInInventory() ?: return@apply soundBeep().also {
+                logI("인벤토리 첫칸을 찾는데 실패했습니다.")
+            }
+            point.let {
+                vx = it.x + 2
+                vy = it.y + 2
+                logI("첫째칸 좌상단 위치: $vx, $vy")
+            }
+
+            val isInventoryExpanded = isInventoryExpanded()
+            val repeatCount = if (isInventoryExpanded) 128 else 24
+
+            val itemPosList = arrayListOf<Point>()
+            for (i in 1..repeatCount) {
+                itemPosList.add(Point(vx, vy))
+                if (isInventoryExpanded) {
+                    //확장된 인벤토리인 경우
+                    if (i % 32 == 0) {
+                        vx += itemDistance
+                        vy -= (itemDistance * 7)
+                        continue
+                    }
+                }
+
+                if (i % 4 == 0) {
+                    vx -= (itemDistance * 3)
+                    vy += itemDistance
+                } else {
+                    vx += itemDistance
+                }
+            }
+
+            //0,0 ~ 인벤토리가 다 보이는곳까지의 이미지
+            val screenImg = if (isInventoryExpanded)
+                createScreenCapture(Rectangle(0, 0, point.x + 700, point.y + 370)).toMat()
+            else
+                createScreenCapture(Rectangle(0, 0, point.x + 190, point.y + 330)).toMat()
+            lastUsedImg = screenImg
+
+            var lastPosition = 0
+            kotlin.run {
+                itemPosList.forEachIndexed { index, point ->
+                    kotlinx.coroutines.delay(1)
+//                    logI("${index+1}번째 : 일반아이템? ${checkItemIsNormal(point)}")
+                    val checkResult = checkEmptyOrDisableFast(screenImg, point)
+                    if (checkResult > 0) {
+                        lastPosition = index - 1
+//                        logI("lastPosition: $lastPosition")
+
+                        if (checkResult == 2)
+                            return@run
+
+                        if (checkResult == 1) {
+                            inventory.list.add(Inventory.Item(point, true))
+                        }
+                    } else {
+                        inventory.list.add(Inventory.Item(point, false))
+                    }
+                }
+            }
+
+            if (lastPosition < 0) {
+                logI("아이템을 찾을 수 없습니다.")
+            }
+
+            //아이템이 있는곳에 Mat 저장
+            inventory.list.forEachIndexed { index, item ->
+                if (!item.isEmpty) {
+                    item.setMetFrom(screenImg)
+                }
+            }
+        }
+        return inventory
+    }
 
     /**인벤토리 첫칸부터 빈칸이 나오기 전까지 아이템의 목록을 반환한다.
      * @param untilBlank false로 할 경우 모든 아이템의 위치를 반환한다. */
-    suspend fun findItems(untilBlank: Boolean = true, blankList: ArrayList<Point>? = null, capturedImg: Array<Mat>? = null): ArrayList<Point> {
+    suspend fun findItems(
+        untilBlank: Boolean = true,
+        blankList: ArrayList<Point>? = null,
+        capturedImg: Array<Mat>? = null
+    ): ArrayList<Point> {
         val items = arrayListOf<Point>()
         blankList?.clear()
         moveMouseLB()
@@ -375,10 +463,10 @@ open class MapleBaseTask {
             }
 
             //0,0 ~ 인벤토리가 다 보이는곳까지의 이미지
-            val screenImg = if(isInventoryExpanded)
-                createScreenCapture(Rectangle(0, 0, point.x+700, point.y+370)).toMat()
+            val screenImg = if (isInventoryExpanded)
+                createScreenCapture(Rectangle(0, 0, point.x + 700, point.y + 370)).toMat()
             else
-                createScreenCapture(Rectangle(0, 0, point.x+190, point.y+330)).toMat()
+                createScreenCapture(Rectangle(0, 0, point.x + 190, point.y + 330)).toMat()
             lastUsedImg = screenImg
             capturedImg?.let { it[0] = screenImg }
 
@@ -395,7 +483,7 @@ open class MapleBaseTask {
                         if (checkResult == 2 || untilBlank)
                             return@run
 
-                        if(checkResult == 1) {
+                        if (checkResult == 1) {
                             blankList?.add(point)
                         }
                     } else {
@@ -412,7 +500,10 @@ open class MapleBaseTask {
     }
 
     @Deprecated("느린 방식이다.")
-    private suspend fun findItems_Old(untilBlank: Boolean = true, blankList: ArrayList<Point> = arrayListOf()): List<Point> {
+    private suspend fun findItems_Old(
+        untilBlank: Boolean = true,
+        blankList: ArrayList<Point> = arrayListOf()
+    ): List<Point> {
         val items = arrayListOf<Point>()
         blankList.clear()
         helper.apply {
@@ -464,7 +555,7 @@ open class MapleBaseTask {
                         if (checkResult == 2 || untilBlank)
                             return@run
 
-                        if(checkResult == 1) {
+                        if (checkResult == 1) {
                             blankList.add(point)
                         }
                     } else {
@@ -666,19 +757,19 @@ open class MapleBaseTask {
     }
 
     /**마우스 좌표를 메이플창의 왼쪽 하단으로 이동시킨다. */
-    fun moveMouseLB(time: Int =  80){
+    fun moveMouseLB(time: Int = 80) {
         helper.user32.winGetPos().leftBottom().let {
-            it.x = it.x+8
-            it.y = it.y-8
+            it.x = it.x + 8
+            it.y = it.y - 8
             helper.moveMouseSmoothly(it, t = time)
         }
     }
 
     /**마우스 좌표를 메이플창의 오른쪽 하단으로 이동시킨다. */
-    fun moveMouseRB2(time: Int =  80){
+    fun moveMouseRB2(time: Int = 80) {
         helper.user32.winGetPos().rightBottom().let {
-            it.x = it.x-10
-            it.y = it.y-10
+            it.x = it.x - 10
+            it.y = it.y - 10
             helper.moveMouseSmoothly(it, t = time)
         }
     }
@@ -688,16 +779,16 @@ open class MapleBaseTask {
         moveMouseLB()
         val mesoBtn = findInventory()
         mesoBtn?.let {
-            val sortBtn = Point(it.x+144, it.y)
-            helper.smartClick(sortBtn, 5,5, maxTime = 50)
-            helper.smartClick(sortBtn, 5,5, maxTime = 50)
+            val sortBtn = Point(it.x + 144, it.y)
+            helper.smartClick(sortBtn, 5, 5, maxTime = 50)
+            helper.smartClick(sortBtn, 5, 5, maxTime = 50)
             delay(800)
-            helper.smartClick(sortBtn, 5,5, maxTime = 50)
-            helper.smartClick(sortBtn, 5,5, maxTime = 50)
+            helper.smartClick(sortBtn, 5, 5, maxTime = 50)
+            helper.smartClick(sortBtn, 5, 5, maxTime = 50)
         }
     }
 
-    fun moveWindow(point:Point){
+    fun moveWindow(point: Point) {
         User32.INSTANCE.FindWindow(null, "MapleStory")?.let {
             helper.user32.winMove(point, hwnd_ = it)
         }

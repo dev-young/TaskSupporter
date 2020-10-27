@@ -17,9 +17,11 @@ class Settings {
     var logFindSameOptionWhenCheckOption = true
 
     // 여러개의 추옵 확인시 마우스 기준으로 캡쳐할때마다 스샷 남기기
-    var saveCapturedMatWhenCheckOption = true
+    var saveCapturedMatWhenCheckOption = false
 
     var synthesizeMouseDelay = 100  //합성시 마우스 딜레이
+
+    var logStepWhenSynthesizeUtilEndFast = true //무한합성시 단계별 로그 남기기
 
     companion object {
         var instance = Settings()

@@ -198,14 +198,15 @@ class MainView : View() {
                             isSelected = true
                         }
 
-                        spacer { maxWidth = 10.0 }
+                        spacer { maxWidth = 14.0 }
 
                         val maxSynCount2 = SimpleIntegerProperty()
-                        val additionalFirst = SimpleBooleanProperty()
+//                        val additionalFirst = SimpleBooleanProperty()
                         button("무한합성") {
                             action {
                                 runAsync {
-                                    taskManager.synthesizeUtilEnd(maxSynCount2.value, additionalFirst.value)
+//                                    taskManager.synthesizeUtilEnd(maxSynCount2.value, additionalFirst.value)
+                                    taskManager.synthesizeUtilEndFast(maxSynCount2.value)
                                 }
                             }
                         }
@@ -213,9 +214,9 @@ class MainView : View() {
                             text = "66"
                             maxWidth = 50.0
                         }
-                        checkbox ("추옵부터", additionalFirst) {
-                            isSelected = false
-                        }
+//                        checkbox ("추옵부터", additionalFirst) {
+//                            isSelected = false
+//                        }
 
                     }
 

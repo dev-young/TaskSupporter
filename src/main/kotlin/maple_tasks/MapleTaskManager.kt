@@ -12,6 +12,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
+import moveMouseSmoothly
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.opencv.imgcodecs.Imgcodecs
@@ -760,6 +761,116 @@ class MapleTaskManager : BaseTaskManager() {
 
 
                 }
+            }
+        }
+    }
+
+    fun synthesizeUtilEndFast(maxSynCount: Int = 66) {
+        fun log(message: String) {
+            if (Settings.instance.logStepWhenSynthesizeUtilEndFast) {
+                logI(message)
+            }
+        }
+        runTask("meisterTask") {
+            if (activateTargetWindow()) {
+                if (additionalOptionTask == null) additionalOptionTask = AdditionalOptionTask()
+                val optionTask = additionalOptionTask!!
+                val meisterTask = MeisterTask()
+                meisterTask.apply {
+                    helper.smartClickWaitingDelay = 100
+
+                    //인벤토리 가져오기 (빈칸 포함)
+                    val inventory = getInventory()
+                    log("인벤토리 가져오기 완료(${inventory.list.size}칸, 템:${inventory.getItemList().size}개)")
+
+                    optionTask.goodItems.clear()
+                    Platform.runLater { goodItemList.clear()}
+
+                    //추옵 싹 확인하기
+                    val removeTargets = arrayListOf<Inventory.Item>()
+                    var lastItemInfo = ""
+                    inventory.list.forEachIndexed { index, item ->
+                        if (!item.isEmpty) {
+                            optionTask.getOptions(item.point, lastItemInfo)?.let {
+                                lastItemInfo = it.getUid()
+                                if (optionTask.isOptionGood(it)) {
+                                    optionTask.goodItems.add(item.point)
+                                    Platform.runLater { goodItemList.add(it.getInfoText()) }
+                                    removeTargets.add(item)
+                                }
+                            }
+                        }
+                    }
+
+                    //좋은 추옵은 리스트에서 제외시키기
+                    removeTargets.forEach {
+                        inventory.removeItem(it)
+                    }
+                    log("${removeTargets.size}개 제거, 남은 인벤 칸:${inventory.list.size}")
+
+                    openSynthesize()
+
+                    moveMouseLB(30)
+                    var synCount = 0
+                    while (inventory.isNotEmpty() && synCount < maxSynCount) {
+                        //리스트가 비었거나 합성횟수가 최대치에 도달했거나 피로도부족등의 이유로 진행이 불가능한경우 break
+
+                        val pair = findSynItemWithFirst(inventory)
+                        if (pair == null) {
+                            inventory.removeFirstItem()
+                            log("합성 가능한 대상이 없어서 첫번째 아이템을 제거합니다.")
+                        } else {
+                            val r = synthesizeItem(
+                                pair.first.point,
+                                pair.second.point,
+                                Settings.instance.synthesizeMouseDelay
+                            )
+                            if (r) {
+                                synCount++
+                                val temp = pair.first.mat!!
+                                pair.first.clear()
+                                pair.second.clear()
+
+                                val newItem = inventory.getFirstEmpty()!!
+                                newItem.setMet(temp)
+                                log("합성 성공: ${newItem.point.x},${newItem.point.y}")
+                                //합성된 아이템 추옵 체크
+                                optionTask.getOptions(newItem.point)?.let {
+                                    logI("합성결과: ${it.getInfoText()}")
+                                    if (optionTask.isOptionGood(it)) {
+                                        optionTask.goodItems.add(newItem.point)
+                                        Platform.runLater { goodItemList.add(it.getInfoText()) }
+                                        inventory.removeItem(newItem)
+                                        log("좋은추옵 획득! inventory에서 제거 / 남은 인벤 칸:${inventory.list.size}")
+                                    }
+                                }
+
+                            } else {
+                                logI("합성 실패!")
+                                clickOkBtn()//오류창 닫기
+                                clickOkBtn()//오류창 닫기
+                                break
+                            }
+                        }
+                    }
+
+
+                    moveMouseLB()
+                    clickCancelBtn()    //합성창 닫기
+
+                    logI("합성 횟수:$synCount  유효추옵:${goodItemList.size}개")
+
+                    log("유효 추옵 옮기는 작업 시작")
+                    optionTask.goodItems.forEachIndexed { index, point ->
+                        val destination = inventory.list.get(inventory.list.lastIndex - index).point
+                        helper.apply {
+                            smartClick(point, 10, 10, maxTime = 100)
+                            smartClick(destination, 10, 10, maxTime = 100)
+                            delayRandom(500, 540)
+                        }
+                    }
+                }
+
             }
         }
     }

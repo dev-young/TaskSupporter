@@ -37,6 +37,8 @@ class HelperCore : Robot() {
     var smartClickRange = 5
     var smartClickTimeMin = 50
     var smartClickTimeMax = 500
+    var smartClickWaitingDelay = 10 //스마트 클릭시 해당 위치로 마우스 이동후 몇 ms동안 멈춰있다가 클릭할지 지정
+    var clickDuration = 15L   //클릭시 눌렀다 때는데 걸리는 시간 (ms)
     var defaultClickKey = KeyEvent.BUTTON1_MASK //마우스 클릭시 KeyCode (BUTTON1_MASK == 왼쪽버튼, BUTTON3_MASK == 오쪽버튼)
 
     val defaultAccuracy = 10.0    // 0~100 이미지서치 정확도
@@ -78,7 +80,7 @@ class HelperCore : Robot() {
     suspend fun simpleClick(keyCode: Int = defaultClickKey) {
         kotlinx.coroutines.delay(80)
         mousePress(keyCode)
-        kotlinx.coroutines.delay(10)
+        kotlinx.coroutines.delay(clickDuration)
         mouseRelease(keyCode)
     }
 
@@ -109,6 +111,7 @@ class HelperCore : Robot() {
 //        log(", 적용시간:$time")
 
         moveMouseSmoothly(startPoint.x, startPoint.y, rx, ry, time)
+        delay(smartClickWaitingDelay)
         simpleClick(rx, ry, keyCode = keyCode)
     }
 

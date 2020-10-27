@@ -398,6 +398,7 @@ class MeisterTask : MapleBaseTask() {
     }
 
     suspend fun clickOkBtn(time:Int = 200) : Boolean {
+
         val ok = helper.imageSearchAndClick(imgpathOkBtn, maxTime = time)
         if (ok == null) {
             return false
@@ -432,10 +433,10 @@ class MeisterTask : MapleBaseTask() {
     /**합성창을 연다.*/
     suspend fun openSynthesize(moveWindow: Boolean = true) {
         helper.apply {
+            moveMouseLB(50)
             val window = imageSearch(imgpathSynthesizeWindow)
             val mesoBtn = findInventory()
             if (window == null) {
-
                 var synthesizeBtn = imageSearchAndClick(imgpathSynthesizeBtn1, maxTime = 100)
                     ?: imageSearchAndClick(imgpathSynthesizeBtn2, maxTime = 100)
                 if (synthesizeBtn == null) {
@@ -457,6 +458,7 @@ class MeisterTask : MapleBaseTask() {
                     } else Point(mesoBtn.x - 160, mesoBtn.y - 286)
 
                     smartDrag(synthesizeWindowTitle, dragDestination)
+                    kotlinx.coroutines.delay(100)
                 }
             }
 
@@ -508,6 +510,7 @@ class MeisterTask : MapleBaseTask() {
 
     /**합성/분해 확인 버튼 */
     private suspend fun findSynOkBtn(moveMouse: Boolean = false): Point? {
+        moveMouseLB(30)
         val p = helper.imageSearch(imgpathSynthesizeOKBtn)
         if (p == null) {
             logI("합성창을 찾을 수 없습니다.")
@@ -571,16 +574,64 @@ class MeisterTask : MapleBaseTask() {
         } else null
     }
 
-    suspend fun synthesizeItem(item1: Point, item2: Point) {
+    suspend fun synthesizeItem(item1: Point, item2: Point, mouseDelay: Int): Boolean {
+        val pair = Pair(item1, item2)
+        //확인버튼 중앙 좌표 찾기
+        val synOkBtn = findSynOkBtn(true) ?: return false
+        val synItem = Pair(Point(), Point()) //합성아이템1,2 좌표 담을 변수
+        synOkBtn.let {
+            synItem.first.setLocation(it.x - 12, it.y - 54) //첫번째 합성칸 중앙 좌표
+            synItem.second.setLocation(it.x + 58, it.y - 54)//두번째 합성칸 중앙 좌표
+        }
 
         helper.apply {
-            moveMouseSmoothly(item1, 200)
-            kotlinx.coroutines.delay(300)
-            moveMouseSmoothly(item2, 200)
-            kotlinx.coroutines.delay(300)
+            moveMouseSmoothly(pair.first, mouseDelay)
+            smartClick(pair.first, 15, 15)
+            moveMouseSmoothly(synItem.first, mouseDelay)
+            smartClick(synItem.first, 6, 6)
+            moveMouseSmoothly(pair.second, mouseDelay)
+            smartClick(pair.second, 15, 15)
+            moveMouseSmoothly(synItem.second, mouseDelay)
+            smartClick(synItem.second, 6, 6)
+            moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
+            if(clickSynOkBtn(50)){
+                delayRandom(50, 100)
+                simpleClick()
+                sendEnter()
+            } else {
+                smartClick(pair.first, 15, 15)
+                smartClick(synItem.first, 6, 6)
+                smartClick(pair.second, 15, 15)
+                smartClick(synItem.second, 6, 6)
+                moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
+
+                if(clickSynOkBtn(50)){
+                    delayRandom(50, 100)
+                    simpleClick()
+                    sendEnter()
+                } else {
+                    logI("더이상 합성을 진행할 수 없습니다")
+                    return false
+                }
+            }
             moveMouseLB()
+            delayRandom(1500, 1700) // 합성 대기시간
+            var failCount = 0
+            while (!clickOkBtn(50)) {
+                delayRandom(50, 100)
+                failCount++
+                if(failCount > 30) {
+                    logI("더이상 합성을 진행할 수 없습니다.")
+                    return false
+                }
+            }
+            sendEnter()
+            sendEnter()
+            delayRandom(100, 150)
+
         }
+        return true
 
     }
 
@@ -600,6 +651,27 @@ class MeisterTask : MapleBaseTask() {
             clickOkBtn()
 
         }
+    }
+
+    /**인벤토리에서 첫번째 아이템과 합성 가능한 아이템을 찾는다.
+     * @return 첫번째 아이템과 합성 가능한 아이템이 없는경우 null 반환*/
+    fun findSynItemWithFirst(inventory: Inventory): Pair<Inventory.Item, Inventory.Item>? {
+        val itemList = inventory.getItemList()
+
+        if (itemList.size < 2) return null
+
+        val first = itemList.removeAt(0)
+        val firstMat = first.mat?:return null
+
+        for (item in itemList) {
+            val targetMat = item.mat?:return null
+            if(helper.imageSearchReturnBoolean(firstMat, targetMat)){
+                return Pair(first, item)
+            }
+
+        }
+
+        return null
     }
 
 
