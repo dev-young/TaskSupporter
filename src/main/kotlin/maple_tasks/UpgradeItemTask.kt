@@ -124,7 +124,7 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
     /**인벤토리를 열어서 강화창을 열었을때 강화창의 오른쪽에 인벤토리가 있어야한다.*/
-    suspend fun upgradeItem(itemPoint: Point, scrollNumber: Int): Boolean {
+    suspend fun upgradeItem(itemPoint: Point, scrollNumber: Int, starforce:Boolean): Boolean {
 
         openUpgradeWindow()
 
@@ -147,6 +147,8 @@ class UpgradeItemTask : MapleBaseTask() {
             //스타포스 강화해야하는 아이템인 경우 true 반환
             imageSearch("img\\upgrade\\starforce.png")?.let {
                 logI("주문서 강화 불가능")
+                if(starforce) upgradeAndStarforce()
+
                 return true
             }
 
@@ -155,7 +157,11 @@ class UpgradeItemTask : MapleBaseTask() {
                 moveMouseLB()
 
                 //강화 시작
-                upgradeUntilEnd()
+                if(starforce)
+                    upgradeAndStarforce()
+                else
+                    upgradeUntilEnd()
+
                 moveMouseLB(300)
             }
 
@@ -240,26 +246,30 @@ class UpgradeItemTask : MapleBaseTask() {
         val itemList = findItems(untilBlank = false)
 
 
-        scrollList.forEachIndexed {index: Int, scrollNum: Int ->
+        scrollList.forEachIndexed {index, pair ->
             if(index < itemList.size){
                 val item = itemList[index]
-                upgradeItem(item, scrollNum)
+                upgradeItem(item, pair.first, pair.second)
 
             }
         }
     }
 
-    private fun loadUpgradeFile(fileName: String): ArrayList<Int> {
-        val list = ArrayList<Int>()
+    private fun loadUpgradeFile(fileName: String): ArrayList<Pair<Int, Boolean>> {
+        val list = ArrayList<Pair<Int, Boolean>>()
         val file = File("$fileName")
         if (file.exists()) {
             file.readLines().forEach {
                 if (it.startsWith("//") || it.isEmpty()) {
                     //공백 혹은 주석처리된 line
                 } else {
-                    val num = it.toIntOrNull()?:0
+                    var starforce = false
+                    if(it.contains('*')) {
+                        starforce = true
+                    }
+                    val num = it.replace("*", "").toIntOrNull()?:0
                     if (num > 0)
-                        list.add(num)
+                        list.add(Pair(num, starforce))
                 }
             }
 

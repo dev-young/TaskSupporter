@@ -15,6 +15,7 @@ import java.awt.Rectangle
 import java.awt.event.KeyEvent
 import java.lang.Exception
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
 
@@ -384,8 +385,8 @@ open class AdditionalOptionTask : MapleBaseTask() {
     }
 
     /**추가옵션 값을 확인후 유효한지 여부를 판단한다. */
-    private fun isOptionGood(job: String, category: String, option: java.util.HashMap<String, Int>): Boolean {
-
+    private fun isOptionGood(job: String, category: String, option_: java.util.HashMap<String, Int>): Boolean {
+        val option = option_.clone() as HashMap<String, Int>
         //targetOptions: 아이템의 직업군, 종류에 따라 목표 옵션을 지정한다.
         val targetOptions = hashMapOf<String, Int>().apply {
             if (category == FACE) {

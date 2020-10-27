@@ -836,10 +836,11 @@ class MapleTaskManager : BaseTaskManager() {
                                 log("합성 성공: ${newItem.point.x},${newItem.point.y}")
                                 //합성된 아이템 추옵 체크
                                 optionTask.getOptions(newItem.point)?.let {
-                                    logI("합성결과: ${it.getInfoText()}")
+                                    val infoText = it.getInfoText()
+                                    logI("합성결과: $infoText")
                                     if (optionTask.isOptionGood(it)) {
                                         optionTask.goodItems.add(newItem.point)
-                                        Platform.runLater { goodItemList.add(it.getInfoText()) }
+                                        Platform.runLater { goodItemList.add(infoText) }
                                         inventory.removeItem(newItem)
                                         log("좋은추옵 획득! inventory에서 제거 / 남은 인벤 칸:${inventory.list.size}")
                                     }
