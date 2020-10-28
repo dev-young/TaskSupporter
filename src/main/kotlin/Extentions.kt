@@ -136,13 +136,13 @@ fun User32.winIsForeground(title: String): Boolean {
 
 /**윈도우 활성화 (활성화가 완료될때까지 기다린다. 최대 2초)
  * @return 활성화에 실패하면 false 반환 */
-fun User32.winActive(hwnd: WinDef.HWND): Boolean {
+fun User32.winActive(hwnd: WinDef.HWND, maxTryCount: Int = 200): Boolean {
 
     val target = CharArray(MAX_TITLE_LENGTH * 2)
     GetWindowText(hwnd, target, MAX_TITLE_LENGTH)
 
     val current = CharArray(MAX_TITLE_LENGTH * 2)
-    for (i in 1..200) {
+    for (i in 1..maxTryCount) {
         SetForegroundWindow(hwnd)
 //            logI("not yet activate   current:${Native.toString(current)}")
         Thread.sleep(10)

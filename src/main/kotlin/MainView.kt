@@ -162,7 +162,7 @@ class MainView : View() {
                         }
                         label ("= 최대 합성 횟수 (0==64)")
 
-                        spacer { minWidth = 4.0 }
+                        spacer { maxWidth = 16.0 }
 
                         label ("마우스 딜레이")
                         textfield(taskManager.synMouseDelay) {
@@ -198,7 +198,7 @@ class MainView : View() {
                             isSelected = true
                         }
 
-                        spacer { maxWidth = 14.0 }
+                        spacer { maxWidth = 18.0 }
 
                         val maxSynCount2 = SimpleIntegerProperty()
 //                        val additionalFirst = SimpleBooleanProperty()
@@ -1132,9 +1132,9 @@ class MainView : View() {
                 }
 
             }
-            User32.INSTANCE.winMove(startPoint, hwnd_ = hwnd)
-            User32.INSTANCE.winActive(hwnd)
             Platform.runLater { primaryStage.isAlwaysOnTop = false }
+            User32.INSTANCE.winMove(startPoint, hwnd_ = hwnd)
+            User32.INSTANCE.winActive(hwnd, 1)
         }
     }
 

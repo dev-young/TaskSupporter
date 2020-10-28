@@ -10,6 +10,7 @@ import java.io.*
 import java.lang.Exception
 
 class Settings {
+    var enableF4OnlyForeground = false   //f4를 통해 종료시 Foreground 상태에 있을때만 활성화하기
     var delayOnCheckOptions = 30L   // 아이템 추옵 확인시 마우스 우클릭 후 대기 시간
     var saveErrorWhenCheckOption = true // 아이템 추옵 확인시 오류났을때 이미지 파일 저장 여부
 
@@ -26,10 +27,10 @@ class Settings {
     companion object {
         var instance = Settings()
         private var lastSaved = ""
-        fun load(){
-            GlobalScope.launch (Dispatchers.IO){
+        fun load() {
+            GlobalScope.launch(Dispatchers.IO) {
                 val f = File("settings")
-                if(!f.exists()) {
+                if (!f.exists()) {
                     save()
                     return@launch
                 }
@@ -41,7 +42,7 @@ class Settings {
                 val json = reader.readText()
                 try {
                     instance = Gson().fromJson(json, Settings::class.java)
-                } catch (e:Exception) {
+                } catch (e: Exception) {
                     logI("settings 값 불러오기 오류 ${e.message}")
                 }
                 lastSaved = json
@@ -49,10 +50,10 @@ class Settings {
             }
         }
 
-        fun save(){
+        fun save() {
             GlobalScope.launch(Dispatchers.IO) {
                 val json = Gson().toJson(instance)
-                if(json == lastSaved) return@launch
+                if (json == lastSaved) return@launch
                 lastSaved = json
 
                 val file = File("settings")

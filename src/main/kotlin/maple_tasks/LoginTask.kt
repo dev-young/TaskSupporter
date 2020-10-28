@@ -143,20 +143,23 @@ class LoginTask : MapleBaseTask() {
                         if (fastMode) 80 else 200
                     )
                     simpleClick()
-                    if (fastMode) delayRandom(200, 300)
+                    if (fastMode) delayRandom(50, 100)
                     else delayRandom(800, 1000)
                     sendEnter()
+                    delayRandom(100, 200)
+                    sendEnter()
+                    delayRandom(100, 200)
                     sendEnter()
                 }
 
-                if (fastMode) kotlinx.coroutines.delay(100)
+                if (fastMode) kotlinx.coroutines.delay(50)
                 else kotlinx.coroutines.delay(500)
 
 
             }
 
             trycount++
-            if (trycount > 5) return false
+            if (trycount > 10) return false
         }
         return true
     }
@@ -216,13 +219,14 @@ class LoginTask : MapleBaseTask() {
         helper.apply {
             moveMouseLB()
             var tryCount = 0
+            val maxTry = maxTimeSec * 10
             while (imageSearch(img, 80.0) == null) {
-                kotlinx.coroutines.delay(1000)
+                kotlinx.coroutines.delay(100)
 
                 activateMaple()
 
                 tryCount++
-                if (tryCount > maxTimeSec)
+                if (tryCount > maxTry)
                     return false
             }
         }

@@ -19,6 +19,15 @@ class Inventory {
         return itemList
     }
 
+    fun findIndexFromPoint(point:Point): Int {
+        list.forEachIndexed { index, item ->
+            if(item.point == point) {
+                return index
+            }
+        }
+        return -1
+    }
+
     fun isEmpty():Boolean {
         for (i in list)
             if(!i.isEmpty) return false

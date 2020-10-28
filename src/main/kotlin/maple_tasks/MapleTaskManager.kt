@@ -12,7 +12,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import logI
-import moveMouseSmoothly
 import org.jnativehook.GlobalScreen
 import org.jnativehook.keyboard.NativeKeyEvent
 import org.opencv.imgcodecs.Imgcodecs
@@ -57,7 +56,12 @@ class MapleTaskManager : BaseTaskManager() {
 
                 NativeKeyEvent.VC_F4 -> {
                     if (jobMap.isEmpty())
-                        finishApp()
+                        if(Settings.instance.enableF4OnlyForeground){
+                            if (User32.INSTANCE.winIsForeground("GHelper")){
+                                finishApp()
+                            }
+                        } else
+                            finishApp()
                     else
                         resetTask()
                     false
@@ -784,7 +788,7 @@ class MapleTaskManager : BaseTaskManager() {
                     log("인벤토리 가져오기 완료(${inventory.list.size}칸, 템:${inventory.getItemList().size}개)")
 
                     optionTask.goodItems.clear()
-                    Platform.runLater { goodItemList.clear()}
+                    Platform.runLater { goodItemList.clear() }
 
                     //추옵 싹 확인하기
                     val removeTargets = arrayListOf<Inventory.Item>()
@@ -857,19 +861,20 @@ class MapleTaskManager : BaseTaskManager() {
 
 
                     moveMouseLB()
-                    clickCancelBtn()    //합성창 닫기
+                    clickCancelBtn(true)    //합성창 닫기
 
                     logI("합성 횟수:$synCount  유효추옵:${goodItemList.size}개")
 
-                    log("유효 추옵 옮기는 작업 시작")
                     optionTask.goodItems.forEachIndexed { index, point ->
                         val destination = inventory.list.get(inventory.list.lastIndex - index).point
                         helper.apply {
                             smartClick(point, 10, 10, maxTime = 100)
+                            delayRandom(50, 100)
                             smartClick(destination, 10, 10, maxTime = 100)
                             delayRandom(500, 540)
                         }
                     }
+                    log("유효 추옵 옮기는 작업 완료")
                 }
 
             }

@@ -2,6 +2,7 @@ package maple_tasks
 
 import changeBlackAndWhite
 import helper.HelperCore
+import kotlinx.coroutines.delay
 import leftTop
 import logI
 import moveMouseSmoothly
@@ -419,13 +420,22 @@ class MeisterTask : MapleBaseTask() {
         }
     }
 
-    suspend fun clickCancelBtn(): Boolean {
-        val cancel = helper.imageSearchAndClick(imgpathCancelBtn)
+    /**@param untilEnd 취소버튼이 없어질때까지 클릭*/
+    suspend fun clickCancelBtn(untilFinish:Boolean = false): Boolean {
+        moveMouseLB(30)
+        var cancel = helper.imageSearchAndClick(imgpathCancelBtn)
         if (cancel == null) {
             logI("취소버튼을 찾을 수 없습니다.")
             return false
         } else {
-//            helper.simpleClick()
+            if(untilFinish) {
+                var tryCount = 0
+                while (cancel != null && tryCount++ < 50) {
+                    moveMouseLB(30)
+                    cancel = helper.imageSearchAndClick(imgpathCancelBtn)
+                    delay(100)
+                }
+            }
             return true
         }
     }
