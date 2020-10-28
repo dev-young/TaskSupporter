@@ -261,6 +261,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
             //렉으로 인해 인식 실패할 가능성이 있으므로 인식 실패시 19번 더 시도
             val totalInfoMat = getTotalInfoMat(Settings.instance.delayOnCheckOptions) ?: let {
+                simpleClick(KeyEvent.BUTTON3_MASK)  //
                 var mat = getTotalInfoMat(50)
                 for (i in 1..19) if (mat != null) break else mat = getTotalInfoMat(100)
                 mat

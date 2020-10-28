@@ -7,6 +7,7 @@ import org.opencv.imgcodecs.Imgcodecs
 import toMat
 import java.awt.Point
 import java.awt.Rectangle
+import java.awt.event.KeyEvent
 import java.io.File
 
 class MarketConditionTask : AdditionalOptionTask() {
@@ -330,6 +331,7 @@ class MarketConditionTask : AdditionalOptionTask() {
     ): Pair<ItemInfo?, List<ItemInfo>> {
         val result = arrayListOf<ItemInfo>()
         var itemInfo: ItemInfo? = null
+        helper.simpleClick(KeyEvent.BUTTON3_MASK)
         getOptions(itemPosition)?.let {
             itemInfo = it
             val upgraded = if (it.isUpgraded == true) "강화된 " else ""
