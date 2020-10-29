@@ -276,7 +276,7 @@ class MapleTaskManager : BaseTaskManager() {
                                     s.let { if (it.size == 2) "" else it[2] },
                                     ""
                                 ).toList()
-                            )    //id pw description fileName
+                            )    //{id, pw, description fileName}
                     }
 
                 }
@@ -890,15 +890,15 @@ class MapleTaskManager : BaseTaskManager() {
                 val auctionTask = AuctionTask()
 
                 val accountList = loadAccountList("숙련도올릴계정")
-                accountList.forEach { logI("${it[0]}${it[3]}  ${it[2]}번째") }
+                accountList.forEach { logI("${it[0]}${it[3]}  ${it[2]}") }
                 run {
                     accountList.forEach {
                         val id = it[0]
                         val pw = it[1]
                         val temp = it[2].split(',', limit = 3)
                         val characterIndex = temp[0].toInt()
-                        val type = temp[1]
-                        val itemName = temp[2]
+                        val type = if(temp.size> 1) temp[1] else ""
+                        val itemName = if(temp.size> 2) temp[2] else ""
                         val fileName = it[3]
 
                         loginTask.login(id, pw, fileName, fileName)
@@ -916,9 +916,11 @@ class MapleTaskManager : BaseTaskManager() {
                                 delay(1000)
                                 loginTask.clearAd()
 
-                                //마이스터빌 이동
-                                meisterTask.moveMeisterVill()
-                                loginTask.waitLoadingGame()
+                                if(type.isNotEmpty()) {
+                                    //마이스터빌 이동
+                                    meisterTask.moveMeisterVill()
+                                    loginTask.waitLoadingGame()
+                                }
 
                                 //아이템 재등록
                                 auctionTask.openAuction()
@@ -929,23 +931,25 @@ class MapleTaskManager : BaseTaskManager() {
                                 loginTask.waitLoadingGame()
                                 logI("게임 로딩 완료")
 
-                                meisterTask.apply {
-                                    val targetPosition = when (type) {
-                                        MEISTER_1 -> meisterPosition1
-                                        MEISTER_2 -> meisterPosition2
-                                        MEISTER_3 -> meisterPosition3
-                                        else -> null
-                                    }
-                                    if (targetPosition == null) {
-                                        logI("잘못된 타겟입니다.")
-                                        return@apply
-                                    }
-                                    logI("이동 시작")
-                                    moveCharacter(targetPosition)
-                                    if (makeItem(itemName, 15)) {
-                                        logI("제작 성공")
-                                    } else {
-                                        logI("제작 실패")
+                                if(type.isNotEmpty()) {
+                                    meisterTask.apply {
+                                        val targetPosition = when (type) {
+                                            MEISTER_1 -> meisterPosition1
+                                            MEISTER_2 -> meisterPosition2
+                                            MEISTER_3 -> meisterPosition3
+                                            else -> null
+                                        }
+                                        if (targetPosition == null) {
+                                            logI("잘못된 타겟입니다.")
+                                            return@apply
+                                        }
+                                        logI("이동 시작")
+                                        moveCharacter(targetPosition)
+                                        if (makeItem(itemName, 15)) {
+                                            logI("제작 성공")
+                                        } else {
+                                            logI("제작 실패")
+                                        }
                                     }
                                 }
 
