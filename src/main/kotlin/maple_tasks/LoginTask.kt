@@ -12,6 +12,82 @@ import java.util.*
 
 class LoginTask : MapleBaseTask() {
 
+    suspend fun login(
+        id: String,
+        pw: String,
+        fileName: String = "",
+        wordNumber: Int = 0,
+        characterIndex: Int = 0,
+        description: String = ""
+    ): Boolean {
+        helper.apply {
+            smartClickTimeMax = 100
+            moveMouseLB()
+            val loginBtn = imageSearch("img\\login.png") ?: let {
+                logOut(true)
+                imageSearch("img\\login.png")
+            }
+            if (loginBtn == null) {
+                logI("로그인 버튼 찾기 실패")
+                return false
+            }
+
+            if (id.contains('@')) {
+                imageSearchAndClick("img\\emailId.png", maxTime = 100)?.let {
+                    delayRandom(200, 300)
+                }
+            } else {
+                imageSearchAndClick("img\\mapleId.png", maxTime = 100)?.let {
+                    delayRandom(200, 300)
+                }
+            }
+
+            val idPoint = Point(loginBtn.x - 30, loginBtn.y - 10)
+            val pwPoint = Point(loginBtn.x - 30, loginBtn.y + 15)
+
+            copyToClipboard(id)
+            smartClick(idPoint, randomRangeX = 10, randomRangeY = 5)
+            simpleClick()
+            delayRandom(50, 60)
+            clearText()
+            paste()
+            delayRandom(50, 60)
+
+            copyToClipboard(pw)
+            send(KeyEvent.VK_TAB)
+//            smartClick(pwPoint, randomRangeX = 10, randomRangeY = 5)
+//            simpleClick()
+            delayRandom(50, 60)
+            clearText()
+            paste()
+            delayRandom(50, 60)
+
+            sendEnter()
+
+            if (fileName.isNotEmpty()) {
+                imageSearchAndClickUntilFind("img\\$fileName", 60.0, maxTime = 100)
+                simpleClick()
+                sendEnter()
+                sendEnter()
+            }
+
+            if(wordNumber > 0 && waitLoadingChannel()){
+                intoChannel(wordNumber)
+                logI("$wordNumber 번째 서버 선택")
+
+                if(characterIndex> 0 && waitLoadingCharacter()){
+                    selectCharacter(characterIndex)
+                    logI("$characterIndex 번째 캐릭터 선택")
+                }
+            }
+
+
+            //로그인 기록 남기기
+            saveLog("$description  [$id]")
+        }
+
+        return true
+    }
 
     suspend fun login(id: String, pw: String, fileName: String = "", description: String = ""): Boolean {
         helper.apply {
@@ -71,6 +147,7 @@ class LoginTask : MapleBaseTask() {
 
         return true
     }
+
 
     private fun saveLog(id: String) {
         val file = File("loginLog.txt")
@@ -153,11 +230,11 @@ class LoginTask : MapleBaseTask() {
                 }
 
                 if (fastMode) kotlinx.coroutines.delay(50)
-                else kotlinx.coroutines.delay(500)
+                else kotlinx.coroutines.delay(1500)
 
 
             }
-
+            activateMaple()
             trycount++
             if (trycount > 10) return false
         }

@@ -1,1 +1,1 @@
-{"delayOnCheckOptions":30,"saveErrorWhenCheckOption":true,"logFindSameOptionWhenCheckOption":true,"saveCapturedMatWhenCheckOption":true,"synthesizeMouseDelay":200,"logStepWhenSynthesizeUtilEndFast":true}
+{"enableF4OnlyForeground":false,"delayOnCheckOptions":30,"saveErrorWhenCheckOption":true,"logFindSameOptionWhenCheckOption":true,"saveCapturedMatWhenCheckOption":true,"synthesizeMouseDelay":200,"logStepWhenSynthesizeUtilEndFast":true}

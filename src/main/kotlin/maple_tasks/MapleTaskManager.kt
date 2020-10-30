@@ -56,10 +56,10 @@ class MapleTaskManager : BaseTaskManager() {
 
                 NativeKeyEvent.VC_F4 -> {
                     if (jobMap.isEmpty())
-                        if(Settings.instance.enableF4OnlyForeground){
-                            if (User32.INSTANCE.winIsForeground("GHelper")){
+                        if (Settings.instance.enableF4OnlyForeground) {
+                            if (User32.INSTANCE.winIsForeground("GHelper")) {
                                 finishApp()
-                            }
+                            } else return@setPressedListener true
                         } else
                             finishApp()
                     else
@@ -252,6 +252,7 @@ class MapleTaskManager : BaseTaskManager() {
     }
 
     /**@return 아이디,비번,설명,이미지파일 */
+    /**@return 아이디,비번,이미지파일,월드번호,캐릭터번호,설명 */
     fun loadAccountList(fileName: String = "AccountList"): List<List<String>> {
         val list = ArrayList<List<String>>()
         val file = File("$fileName.txt")
@@ -265,18 +266,26 @@ class MapleTaskManager : BaseTaskManager() {
                     if (s.size < 2) {
                         logI("올바르지 않은 형식입니다. -> $it")
                     } else {
+                        val id = s[0]
+                        val pw = s[1]
+                        var fileName = ""
+                        var wordNumber: String
+                        var characterIndex: String
+                        var description: String
+                        var temp = s[2]
                         if (s[0].contains('@')) {
-                            val temp = s[2].split(" ", limit = 2)
-                            list.add(arrayOf(s[0], s[1], temp[1], temp[0]).toList())    //id pw description fileName
-                        } else
-                            list.add(
-                                arrayOf(
-                                    s[0],
-                                    s[1],
-                                    s.let { if (it.size == 2) "" else it[2] },
-                                    ""
-                                ).toList()
-                            )    //{id, pw, description fileName}
+                            temp.split(" ", limit = 2).let {
+                                fileName = it[0]
+                                temp = it[1]
+                            }
+                        }
+                        temp.split(" ", limit = 3).let {
+                            wordNumber = it[0]
+                            characterIndex = it[1]
+                            description = if(it.size == 3) it[2] else ""
+                        }
+
+                        list.add(arrayOf(id, pw, fileName, wordNumber, characterIndex, description).toList())    //id pw description fileName
                     }
 
                 }
@@ -288,7 +297,7 @@ class MapleTaskManager : BaseTaskManager() {
         return list
     }
 
-    fun login(id: String, pw: String, fileName: String, description: String) {
+    fun login(id: String, pw: String, fileName: String, wordNumber: Int, characterIndex: Int, description: String) {
         runTask("login") {
             if (activateTargetWindow())
                 LoginTask().login(id, pw, fileName, description)
@@ -884,39 +893,32 @@ class MapleTaskManager : BaseTaskManager() {
     /**여러 계정으로 자동으로 로그인하며 물품 재등록 및 숙련도아이템 제작*/
     fun autoMakeAndResaleWithMultipleAccount(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long) {
         runTask("loginTask") {
+            val accountList = loadAccountList("숙련도올릴계정")
+            accountList.forEach { println("${it[0]}${it[2]}  ${it[3]}/${it[4]}/${it[5]}") }
+
             if (activateTargetWindow()) {
                 val loginTask = LoginTask()
                 val meisterTask = MeisterTask()
                 val auctionTask = AuctionTask()
-
-                val accountList = loadAccountList("숙련도올릴계정")
-                accountList.forEach { logI("${it[0]}${it[3]}  ${it[2]}") }
                 run {
                     accountList.forEach {
                         val id = it[0]
                         val pw = it[1]
-                        val temp = it[2].split(',', limit = 3)
-                        val characterIndex = temp[0].toInt()
-                        val type = if(temp.size> 1) temp[1] else ""
-                        val itemName = if(temp.size> 2) temp[2] else ""
-                        val fileName = it[3]
+                        val fileName = it[2]
+                        val wordNumber = it[3].toInt()
+                        val characterIndex = it[4].toInt()
+                        val temp = it[5].split(',', limit = 2)
+                        val type = if (temp.isNotEmpty()) temp[0] else ""
+                        val itemName = if (temp.size > 1) temp[1] else ""
 
-                        loginTask.login(id, pw, fileName, fileName)
-
-                        if (loginTask.waitLoadingChannel()) {
-                            loginTask.intoChannel(7)
-                            logI("서버 선택")
-
-                            loginTask.waitLoadingCharacter()
-                            loginTask.selectCharacter(characterIndex)
-                            logI("$characterIndex 번째 캐릭 선택")
+                        if (loginTask.login(id, pw, fileName, wordNumber, characterIndex, fileName)) {
 
                             if (loginTask.waitLoadingGame()) {
                                 logI("로딩 완료")
                                 delay(1000)
                                 loginTask.clearAd()
 
-                                if(type.isNotEmpty()) {
+                                if (type.isNotEmpty()) {
                                     //마이스터빌 이동
                                     meisterTask.moveMeisterVill()
                                     loginTask.waitLoadingGame()
@@ -931,7 +933,7 @@ class MapleTaskManager : BaseTaskManager() {
                                 loginTask.waitLoadingGame()
                                 logI("게임 로딩 완료")
 
-                                if(type.isNotEmpty()) {
+                                if (type.isNotEmpty()) {
                                     meisterTask.apply {
                                         val targetPosition = when (type) {
                                             MEISTER_1 -> meisterPosition1
