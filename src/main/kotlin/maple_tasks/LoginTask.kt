@@ -64,22 +64,30 @@ class LoginTask : MapleBaseTask() {
 
             sendEnter()
 
+            var log: String
+
             if (fileName.isNotEmpty()) {
                 imageSearchAndClickUntilFind("img\\$fileName", 60.0, maxTime = 100)
                 simpleClick()
                 sendEnter()
                 sendEnter()
-            }
 
-            if(wordNumber > 0 && waitLoadingChannel()){
+                log = fileName
+            } else
+                log = id
+
+
+            if (wordNumber > 0 && waitLoadingChannel()) {
                 intoChannel(wordNumber)
-                logI("$wordNumber 번째 서버 선택")
+                log = "$log > ${wordNumber}번 서버"
 
-                if(characterIndex> 0 && waitLoadingCharacter()){
+                if (characterIndex > 0 && waitLoadingCharacter()) {
                     selectCharacter(characterIndex)
-                    logI("$characterIndex 번째 캐릭터 선택")
+                    log = "$log > ${characterIndex}번째 캐릭터"
                 }
             }
+
+            logI("$log 접속 완료")
 
 
             //로그인 기록 남기기

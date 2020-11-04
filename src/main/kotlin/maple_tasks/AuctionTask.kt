@@ -897,7 +897,7 @@ class AuctionTask : MapleBaseTask() {
         }
 
 
-        logI("$completaCounter 개 재등록 완료")
+        logI("재등록 완료(${completaCounter})")
 
 
     }

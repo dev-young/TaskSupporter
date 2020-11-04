@@ -300,7 +300,7 @@ class MapleTaskManager : BaseTaskManager() {
     fun login(id: String, pw: String, fileName: String, wordNumber: Int, characterIndex: Int, description: String) {
         runTask("login") {
             if (activateTargetWindow())
-                LoginTask().login(id, pw, fileName, description)
+                LoginTask().login(id, pw, fileName, wordNumber, characterIndex,  description)
         }
     }
 
@@ -914,7 +914,6 @@ class MapleTaskManager : BaseTaskManager() {
                         if (loginTask.login(id, pw, fileName, wordNumber, characterIndex, fileName)) {
 
                             if (loginTask.waitLoadingGame()) {
-                                logI("로딩 완료")
                                 delay(1000)
                                 loginTask.clearAd()
 
@@ -929,9 +928,8 @@ class MapleTaskManager : BaseTaskManager() {
                                 auctionTask.cancelSellingItem()
                                 auctionTask.resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
                                 auctionTask.exitAuction()
-                                logI("옥션 종료")
                                 loginTask.waitLoadingGame()
-                                logI("게임 로딩 완료")
+                                logI("옥션 종료")
 
                                 if (type.isNotEmpty()) {
                                     meisterTask.apply {
@@ -945,7 +943,6 @@ class MapleTaskManager : BaseTaskManager() {
                                             logI("잘못된 타겟입니다.")
                                             return@apply
                                         }
-                                        logI("이동 시작")
                                         moveCharacter(targetPosition)
                                         if (makeItem(itemName, 15)) {
                                             logI("제작 성공")

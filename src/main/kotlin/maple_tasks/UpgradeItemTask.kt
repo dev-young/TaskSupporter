@@ -10,6 +10,7 @@ import java.awt.Point
 import java.awt.Rectangle
 import java.io.File
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.system.measureTimeMillis
 
 class UpgradeItemTask : MapleBaseTask() {
@@ -324,7 +325,7 @@ class UpgradeItemTask : MapleBaseTask() {
 
     suspend fun runCubeTask(targetOptionsList: List<Map<String, Int>>) {
         logI("큐브 작업 시작")
-        targetOptionsList.forEach { logI(it.toString()) }
+//        targetOptionsList.forEach { logI(it.toString()) }
 
         helper.apply {
             var isInventoryExpanded = isInventoryExpanded()
@@ -351,15 +352,21 @@ class UpgradeItemTask : MapleBaseTask() {
                 usedCubeCounter++
                 delayRandom(100, 200)
 
+                var startCounter = usedCubeCounter - 1
                 val targetOptions = targetOptionsList[i - 1]
-                while (!checkOption(targetOptions) && !checkCubeDisable()) {
+                var result = checkOption(targetOptions)
+                while (!result.second && !checkCubeDisable()) {
                     val delay = random.get(cubeDelayMin, cubeDelayMax) - 1500L
                     if (delay > 0)
                         kotlinx.coroutines.delay(delay)
                     if (oneMoreCube())
                         usedCubeCounter++
                     kotlinx.coroutines.delay(1500)
+                    result = checkOption(targetOptions)
+                    if (result.first.isNotEmpty()) logI("$usedCubeCounter ${result.first}")
                 }
+                if(result.second)
+                    logI("${usedCubeCounter - startCounter}개 사용하여 옵션 획득")
 
                 clickFinishCube()
 
@@ -454,10 +461,12 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
     /**큐브 결과를 확인하여 원하는 옵션이 나왔나 확인한다. */
-    fun checkOption(options: Map<String, Int>): Boolean {
-        if (resultWindowLeftTop == null) return false
-        val startPoint = resultWindowLeftTop!!
+    fun checkOption(options: Map<String, Int>): Pair<HashMap<String, Int>, Boolean> {
         val resultOption = hashMapOf<String, Int>()
+        if (resultWindowLeftTop == null) return Pair(resultOption, false)
+
+        val startPoint = resultWindowLeftTop!!
+
         helper.apply {
             val option1LT = Point(startPoint.x + 2, startPoint.y + 28)    //첫줄 좌상단
             val option2LT = Point(startPoint.x + 2, startPoint.y + 40)    //둘째줄 좌상단
@@ -478,7 +487,7 @@ class UpgradeItemTask : MapleBaseTask() {
                         if (imageSearchReturnBoolean(source, template)) {
                             kotlin.run {
                                 optionValueTemplates.forEach { (value, template) ->
-                                    if (imageSearchReturnBoolean(source, template)) {
+                                    if (imageSearchReturnBoolean(source, template, 90.0)) {
                                         val v = if (name == CRITICAL) {
                                             value   //레어,에픽인 경우 크리티컬 수치는 렙제와 상관없이 일정하다.
                                         } else {
@@ -539,10 +548,10 @@ class UpgradeItemTask : MapleBaseTask() {
                     }
                 }
             }
-            if (resultOption.isNotEmpty())
-                logI("옵션: $resultOption  결과:$result")
+//            if (resultOption.isNotEmpty())
+//                logI("옵션: $resultOption  결과:$result")
 
-            return result
+            return Pair(resultOption, result)
         }
     }
 
