@@ -413,6 +413,9 @@ open class AdditionalOptionTask : MapleBaseTask() {
             if (category == EAR) {
                 this[UpgradeItemTask.HP] = 2700
             } else if (category == POCKET) {
+                this[UpgradeItemTask.DEX] = 80
+                this[UpgradeItemTask.LUK] = 75
+                this[UpgradeItemTask.INT] = 80
                 this[UpgradeItemTask.HP] = 2900
             }
 

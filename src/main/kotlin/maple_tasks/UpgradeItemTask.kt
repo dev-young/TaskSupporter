@@ -363,7 +363,14 @@ class UpgradeItemTask : MapleBaseTask() {
                         usedCubeCounter++
                     kotlinx.coroutines.delay(1500)
                     result = checkOption(targetOptions)
-                    if (result.first.isNotEmpty()) logI("$usedCubeCounter ${result.first}")
+                    var onlyLabel = true
+                    // 9% 이상 옵션들만 로그로 남긴다.
+                    for (v in result.first.values)
+                        if(v > 8) {
+                            onlyLabel = false
+                            break
+                        }
+                    logI("$usedCubeCounter ${result.first}", onlyLabel)
                 }
                 if(result.second)
                     logI("${usedCubeCounter - startCounter}개 사용하여 옵션 획득")
@@ -511,6 +518,11 @@ class UpgradeItemTask : MapleBaseTask() {
                                 //옵션이 마% 가 아니라 그냥 마력+ 인 경우
                                 else if (name == SPELL)
                                     normalSpell++
+
+                                else {
+                                    //그냥 스텟인 경우
+                                    resultOption[name] = resultOption[name]?.plus(1) ?: 1
+                                }
 
                             }
                             return@run

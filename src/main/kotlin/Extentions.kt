@@ -22,12 +22,14 @@ import kotlin.system.measureTimeMillis
 //val dateFormat = SimpleDateFormat("HH:mm:ss MM.dd")
 val dateFormat = SimpleDateFormat("HH:mm:ss")
 
-fun logI(message: Any?) {
+fun logI(message: Any?, onlyLabel: Boolean = false) {
     val msg = "[${dateFormat.format(Date())}] $message"
     println(msg)
     Platform.runLater {
-        MainView.logList.add(msg)
         MainView.lastLogLabel.text = msg
+        if(!onlyLabel)
+            MainView.logList.add(msg)
+
     }
 
 }
