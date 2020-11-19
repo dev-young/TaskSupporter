@@ -192,7 +192,7 @@ class HelperCore : Robot() {
 
     /**
      *@param accuracy 0~100 사이의 정확성 (100인 경우 정확히 일치하는것만 찾고 0인 경우에는 일치하지 않더라도 가장 비슷한 위치를 찾는다.) */
-    fun imageSearch(leftTop: Point, width: Int, height: Int, imgName: String, accuracy: Double): Point? {
+    fun imageSearch(leftTop: Point, width: Int, height: Int, template: Mat, accuracy: Double): Point? {
         if(width == 0 || height == 0){
             return null
         }
@@ -200,17 +200,14 @@ class HelperCore : Robot() {
         notFoundMMR -= (notFoundMMR / 100 * accuracy).toInt()
         val bi = createScreenCapture(Rectangle(leftTop.x, leftTop.y, width, height))
         var source = bi.toMat()
-        var template = Imgcodecs.imread(imgName)
         setSearchedImgSize(template.cols(), template.rows())
-//        Imgcodecs.imwrite("test.png", source)
 
         val outputImage = Mat()
         val machMethod = Imgproc.TM_SQDIFF
         try {
             Imgproc.matchTemplate(source, template, outputImage, machMethod)
         } catch (e: Exception) {
-//            print("[Error] 2" + e.message)
-            logI("사진 파일 확인 필요 ($imgName). error: ${e.message}")
+            logI("error: ${e.message}")
             return null
         }
 
@@ -225,18 +222,28 @@ class HelperCore : Robot() {
         return Point(leftTop.x + matchLoc.x.toInt(), leftTop.y + matchLoc.y.toInt())
     }
 
+    fun imageSearch(leftTop: Point, width: Int, height: Int, imgName: String, accuracy: Double): Point? {
+        var template = Imgcodecs.imread(imgName)
+        return imageSearch(leftTop, width, height, template, accuracy)
+    }
+
     fun imageSearch(leftTop: Point, width: Int, height: Int, imgName: String): Point? {
         return imageSearch(leftTop, width, height, imgName, defaultAccuracy)
     }
 
     /**@param findOnForeground 활성화된 윈도우 범위 내에서만 찾을지 여부*/
-    fun imageSearch(imgName: String, accuracy: Double, findOnForeground : Boolean = true): Point? {
+    fun imageSearch(template: Mat, accuracy: Double, findOnForeground : Boolean = true): Point? {
         return if(findOnForeground){
             val rect = user32.winGetPos()
-            imageSearch(rect.leftTop(), rect.width(), rect.getHeight(), imgName, accuracy)
+            imageSearch(rect.leftTop(), rect.width(), rect.getHeight(), template, accuracy)
         } else {
-            imageSearch(Point(0, 0), 1920, 1080, imgName, accuracy)
+            imageSearch(Point(0, 0), 1920, 1080, template, accuracy)
         }
+    }
+
+    fun imageSearch(imgName: String, accuracy: Double, findOnForeground : Boolean = true): Point? {
+        val template = Imgcodecs.imread(imgName)
+        return imageSearch(template, accuracy, findOnForeground)
     }
 
     fun imageSearch(imgName: String, findOnForeground : Boolean = true): Point? {
@@ -250,12 +257,13 @@ class HelperCore : Robot() {
         repeatDelay: Int = 250,
         repeatCount: Int = 20
     ): Point? {
-        var point = imageSearch(imgName, accuracy)
+        val template = Imgcodecs.imread(imgName)
+        var point = imageSearch(template, accuracy)
         val delay = repeatDelay.toLong()
         var tryCount = 0
         while (point == null){
             tryCount++
-            point = imageSearch(imgName, accuracy)
+            point = imageSearch(template, accuracy)
             delay(delay)
             if(tryCount > repeatCount) return null
         }

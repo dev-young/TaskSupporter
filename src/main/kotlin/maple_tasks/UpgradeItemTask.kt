@@ -16,8 +16,8 @@ import kotlin.system.measureTimeMillis
 class UpgradeItemTask : MapleBaseTask() {
 
     companion object {
-        var cubeDelayMin = 1500 // 최소 1500 이상
-        var cubeDelayMax = 1600
+        var cubeDelayMin = 0
+        var cubeDelayMax = 5
 
         const val STR = "STR"
         const val DEX = "DEX"
@@ -45,7 +45,7 @@ class UpgradeItemTask : MapleBaseTask() {
 
     suspend fun upgradeUntilEnd() {
         helper.apply {
-
+            smartClickTimeMin = 5
             moveMouseLB(30)
             while (true) {
 
@@ -80,19 +80,20 @@ class UpgradeItemTask : MapleBaseTask() {
 
     suspend fun upgradeAndStarforce(starforceCount: Int = 0) {
         helper.apply {
-
+            smartClickTimeMin = 10
+            smartClickTimeMax = 30
             moveMouseLB(30)
             while (true) {
 
                 //스타캐치 해체 클릭
                 imageSearch("img\\upgrade\\starCatch.png", 80.0)?.let {
-                    smartClick(it, 2, 2, maxTime = 55)
+                    smartClick(it, 2, 2)
                     moveMouseLB(20)
                 }
 
 
                 //확인 클릭
-                imageSearchAndClick("img\\upgrade\\ok.png", 80.0, maxTime = 55)?.let {
+                imageSearchAndClick("img\\upgrade\\ok.png", 80.0)?.let {
                     simpleClick()
                     simpleClick()
                     moveMouseLB(20)
@@ -108,7 +109,7 @@ class UpgradeItemTask : MapleBaseTask() {
                             return
                         }
 
-                        smartClick(it, 2, 2, maxTime = 55)
+                        smartClick(it, 2, 2)
                         simpleClick()
                         moveMouseLB(20)
                     }
@@ -118,7 +119,7 @@ class UpgradeItemTask : MapleBaseTask() {
                 if (imageSearch("img\\upgrade\\end.png", 80.0) != null)
                     break
 
-                delayRandom(10, 30)
+                delayRandom(10, 20)
             }
         }
 
@@ -350,18 +351,15 @@ class UpgradeItemTask : MapleBaseTask() {
 
                 startCube(Point(vx, vy))
                 usedCubeCounter++
-                delayRandom(100, 200)
+                imageSearchUntilFind("img\\cube\\diff.png",95.0, 100, 200)
 
                 var startCounter = usedCubeCounter - 1
                 val targetOptions = targetOptionsList[i - 1]
                 var result = checkOption(targetOptions)
                 while (!result.second && !checkCubeDisable()) {
-                    val delay = random.get(cubeDelayMin, cubeDelayMax) - 1500L
-                    if (delay > 0)
-                        kotlinx.coroutines.delay(delay)
                     if (oneMoreCube())
                         usedCubeCounter++
-                    kotlinx.coroutines.delay(1500)
+                    imageSearchUntilFind("img\\cube\\diff.png",95.0, 100, 200)
                     result = checkOption(targetOptions)
                     var onlyLabel = true
                     // 9% 이상 옵션들만 로그로 남긴다.
@@ -371,6 +369,8 @@ class UpgradeItemTask : MapleBaseTask() {
                             break
                         }
                     logI("$usedCubeCounter ${result.first}", onlyLabel)
+
+                    kotlinx.coroutines.delay(random.get(cubeDelayMin, cubeDelayMax).toLong())
                 }
                 if(result.second)
                     logI("${usedCubeCounter - startCounter}개 사용하여 옵션 획득")
@@ -579,13 +579,15 @@ class UpgradeItemTask : MapleBaseTask() {
             simpleClick()
 
             sendEnter()
-            delayRandom(10, 30)
+            delayRandom(5, 15)
             sendEnter()
-            delayRandom(10, 30)
+            delayRandom(5, 15)
             sendEnter()
-            delayRandom(10, 30)
+            delayRandom(5, 15)
             sendEnter()
-            delayRandom(10, 30)
+            delayRandom(5, 15)
+            sendEnter()
+            delayRandom(5, 15)
         }
         return true
     }
@@ -621,7 +623,7 @@ class UpgradeItemTask : MapleBaseTask() {
             sendEnter()
             delayRandom(10, 30)
 
-            kotlinx.coroutines.delay(1500)
+            kotlinx.coroutines.delay(800)
 
             println("소요시간" + measureTimeMillis {
                 resultWindowLeftTop = findResultWindow()
