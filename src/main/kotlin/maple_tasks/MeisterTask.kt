@@ -684,5 +684,34 @@ class MeisterTask : MapleBaseTask() {
         return null
     }
 
+    /**전달받은 인벤토리에서 합성 가능한 아이템들의 페어를 리스트형태로 반환한다. */
+    fun findSynItems(inventory: Inventory): ArrayList<Pair<Inventory.Item, Inventory.Item>> {
+        val itemList = inventory.getItemList()
+        val result = arrayListOf<Pair<Inventory.Item, Inventory.Item>>()
+        if (itemList.size < 2) return result
+
+        while (itemList.isNotEmpty()) {
+            val first = itemList.removeAt(0)
+            val firstMat = first.mat?:return result
+
+            var targetIdx : Int? = null
+            for (i in itemList.indices) {
+                val item = itemList[i]
+                val targetMat = item.mat?:return result
+                if(helper.imageSearchReturnBoolean(firstMat, targetMat)){
+                    targetIdx = i
+                    break
+                }
+            }
+            targetIdx?.let {
+                result.add(Pair(first, itemList.removeAt(targetIdx)))
+            }
+        }
+
+
+
+        return result
+    }
+
 
 }

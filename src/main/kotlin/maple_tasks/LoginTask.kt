@@ -42,8 +42,8 @@ class LoginTask : MapleBaseTask() {
                 }
             }
 
-            val idPoint = Point(loginBtn.x - 30, loginBtn.y - 10)
-            val pwPoint = Point(loginBtn.x - 30, loginBtn.y + 15)
+            val idPoint = Point(loginBtn.x - 55, loginBtn.y - 95)
+            val pwPoint = Point(loginBtn.x - 55, loginBtn.y + 53)
 
             copyToClipboard(id)
             smartClick(idPoint, randomRangeX = 10, randomRangeY = 5)
@@ -97,66 +97,6 @@ class LoginTask : MapleBaseTask() {
         return true
     }
 
-    suspend fun login(id: String, pw: String, fileName: String = "", description: String = ""): Boolean {
-        helper.apply {
-            smartClickTimeMax = 100
-            moveMouseLB()
-            val loginBtn = imageSearch("img\\login.png") ?: let {
-                logOut(true)
-                imageSearch("img\\login.png")
-            }
-            if (loginBtn == null) {
-                logI("로그인 버튼 찾기 실패")
-                return false
-            }
-
-            if (id.contains('@')) {
-                imageSearchAndClick("img\\emailId.png", maxTime = 100)?.let {
-                    delayRandom(200, 300)
-                }
-            } else {
-                imageSearchAndClick("img\\mapleId.png", maxTime = 100)?.let {
-                    delayRandom(200, 300)
-                }
-            }
-
-            val idPoint = Point(loginBtn.x - 30, loginBtn.y - 10)
-            val pwPoint = Point(loginBtn.x - 30, loginBtn.y + 15)
-
-            copyToClipboard(id)
-            smartClick(idPoint, randomRangeX = 10, randomRangeY = 5)
-            simpleClick()
-            delayRandom(50, 60)
-            clearText()
-            paste()
-            delayRandom(50, 60)
-
-            copyToClipboard(pw)
-            send(KeyEvent.VK_TAB)
-//            smartClick(pwPoint, randomRangeX = 10, randomRangeY = 5)
-//            simpleClick()
-            delayRandom(50, 60)
-            clearText()
-            paste()
-            delayRandom(50, 60)
-
-            sendEnter()
-
-            if (fileName.isNotEmpty()) {
-                imageSearchAndClickUntilFind("img\\$fileName", 60.0, maxTime = 100)
-                simpleClick()
-                sendEnter()
-                sendEnter()
-            }
-
-            //로그인 기록 남기기
-            saveLog("$description  [$id]")
-        }
-
-        return true
-    }
-
-
     private fun saveLog(id: String) {
         val file = File("loginLog.txt")
         val bw = BufferedWriter(FileWriter(file, true))
@@ -192,13 +132,15 @@ class LoginTask : MapleBaseTask() {
             val mouseMoveTime = 200
             moveMouseLB()
             val wordBetween = 32    //월드간 간격   (1: 620, 55)
-            val titlePoint = imageSearchUntilFind("img\\serverImg.png") ?: return false
-            val wordPoint = Point(titlePoint.x + 620, titlePoint.y + 55 + ((wordNumber - 1) * wordBetween))
-            val channelPoint = Point(titlePoint.x + 400, titlePoint.y + 245)
+            val firstWorld = imageSearchUntilFind("img\\serverImg.png") ?: return false
+            val worldPoint = Point(firstWorld.x, firstWorld.y + ((wordNumber - 1) * wordBetween))
+            val channelPoint = Point(firstWorld.x - 330, firstWorld.y + 260)
 
-            smartClick(wordPoint, 20, 5, maxTime = mouseMoveTime)
+            smartClick(worldPoint, 20, 5, maxTime = mouseMoveTime)
 
-            smartClick(channelPoint, 20, 5, maxTime = 5000)
+            imageSearchUntilFind("img\\serverImg.png", repeatCount = 40) ?: logI("채널 목록을 못찾음.")
+
+            smartClick(channelPoint, 20, 5, maxTime = 200)
             sendEnter()
             simpleClick()
 
@@ -258,15 +200,15 @@ class LoginTask : MapleBaseTask() {
         val characterIndex = characterIndex_ - 1
         helper.apply {
             getSelectCharacterPoint()?.let { selectChar ->
-                val between = 125
-                val x = selectChar.x + 70 + ((characterIndex % 4) * between)
-                val y = selectChar.y + if (characterIndex > 3) 400 else 200
+                val between = 122
+                val x = selectChar.x - 740 + ((characterIndex % 6) * between)
+                val y = selectChar.y - if (characterIndex > 5) 1 else 230
                 val character = Point(x, y)
 
                 smartClick(character, 5, 5, maxTime = 200)
-                delayRandom(400, 500)
+                delayRandom(100, 150)
                 sendEnter()
-                smartClick(Point(selectChar.x + 600, selectChar.y + 400), 5, 5, maxTime = 200)
+                smartClick(selectChar, 5, 5, maxTime = 100)
             }
         }
 
