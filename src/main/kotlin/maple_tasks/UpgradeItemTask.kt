@@ -8,6 +8,7 @@ import org.opencv.imgcodecs.Imgcodecs
 import toMat
 import java.awt.Point
 import java.awt.Rectangle
+import java.awt.event.KeyEvent
 import java.io.File
 import java.util.*
 import kotlin.collections.HashMap
@@ -126,7 +127,7 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
     /**인벤토리를 열어서 강화창을 열었을때 강화창의 오른쪽에 인벤토리가 있어야한다.*/
-    suspend fun upgradeItem(itemPoint: Point, scrollNumber: Int, starforce:Boolean): Boolean {
+    suspend fun upgradeItem(itemPoint: Point, scrollNumber: Int, starforce: Boolean): Boolean {
 
         openUpgradeWindow()
 
@@ -136,11 +137,11 @@ class UpgradeItemTask : MapleBaseTask() {
             smartClickTimeMin = 50
             smartClickTimeMax = 100
 
-            for (i in 1..50){
+            for (i in 1..50) {
                 imageSearch("img\\upgrade\\end.png")?.let {
-                    smartClick(itemPoint,5,5)
+                    smartClick(itemPoint, 5, 5)
                     delayRandom(50, 100)
-                    smartClick(it, 2,2)
+                    smartClick(it, 2, 2)
                 } ?: break
             }
 
@@ -149,17 +150,17 @@ class UpgradeItemTask : MapleBaseTask() {
             //스타포스 강화해야하는 아이템인 경우 true 반환
             imageSearch("img\\upgrade\\starforce.png")?.let {
                 logI("주문서 강화 불가능")
-                if(starforce) upgradeAndStarforce()
+                if (starforce) upgradeAndStarforce()
 
                 return true
             }
 
             //주문서 선택
-            if(selectUpgradeScroll(scrollNumber)) {
+            if (selectUpgradeScroll(scrollNumber)) {
                 moveMouseLB()
 
                 //강화 시작
-                if(starforce)
+                if (starforce)
                     upgradeAndStarforce()
                 else
                     upgradeUntilEnd()
@@ -178,27 +179,27 @@ class UpgradeItemTask : MapleBaseTask() {
             logI("$scrollNumber 번 스크롤 선택 시작")
             imageSearch("img\\upgrade\\upgradeScroll.png")?.let {
                 val diff = 30   //주문서 버튼 간격
-                val first = Point(it.x+250, it.y+70)
-                val second = Point(it.x+250, it.y+70+diff)
-                val third = Point(it.x+250, it.y+70+diff+diff)
+                val first = Point(it.x + 250, it.y + 70)
+                val second = Point(it.x + 250, it.y + 70 + diff)
+                val third = Point(it.x + 250, it.y + 70 + diff + diff)
 
                 val scrollTime = scrollNumber - 3
-                if(scrollTime > 0){
+                if (scrollTime > 0) {
                     moveMouseSmoothly(first, 300)
                     delayRandom(100, 200)
                     mouseWheelSmoothly(scrollTime, 100)
                     delayRandom(150, 200)
-                    smartClick(third, 3,3)
+                    smartClick(third, 3, 3)
                 } else {
                     when (scrollNumber) {
-                        1 -> smartClick(first, 3,3)
-                        2 -> smartClick(second, 3,3)
-                        3 -> smartClick(third, 3,3)
+                        1 -> smartClick(first, 3, 3)
+                        2 -> smartClick(second, 3, 3)
+                        3 -> smartClick(third, 3, 3)
                     }
                 }
 
                 for (i in 1..50) {
-                    if(imageSearch("img\\upgrade\\upgrade.png") != null) return true
+                    if (imageSearch("img\\upgrade\\upgrade.png") != null) return true
                     simpleClick()
                     delayRandom(200, 300)
                 }
@@ -242,14 +243,14 @@ class UpgradeItemTask : MapleBaseTask() {
     }
 
     /**파일에 적힌 주문서 순서를 바탕으로 아이템들을 찾은뒤 해당 아이템들을 강화한다. */
-    suspend fun runUpgradeTask(fileName:String){
+    suspend fun runUpgradeTask(fileName: String) {
         val scrollList = loadUpgradeFile(fileName)
         logI("순서: $scrollList")
         val itemList = findItems(untilBlank = false)
 
 
-        scrollList.forEachIndexed {index, pair ->
-            if(index < itemList.size){
+        scrollList.forEachIndexed { index, pair ->
+            if (index < itemList.size) {
                 val item = itemList[index]
                 upgradeItem(item, pair.first, pair.second)
 
@@ -266,10 +267,10 @@ class UpgradeItemTask : MapleBaseTask() {
                     //공백 혹은 주석처리된 line
                 } else {
                     var starforce = false
-                    if(it.contains('*')) {
+                    if (it.contains('*')) {
                         starforce = true
                     }
-                    val num = it.replace("*", "").toIntOrNull()?:0
+                    val num = it.replace("*", "").toIntOrNull() ?: 0
                     if (num > 0)
                         list.add(Pair(num, starforce))
                 }
@@ -351,7 +352,7 @@ class UpgradeItemTask : MapleBaseTask() {
 
                 startCube(Point(vx, vy))
                 usedCubeCounter++
-                imageSearchUntilFind("img\\cube\\diff.png",95.0, 100, 200)
+                imageSearchUntilFind("img\\cube\\diff.png", 95.0, 100, 200)
 
                 var startCounter = usedCubeCounter - 1
                 val targetOptions = targetOptionsList[i - 1]
@@ -359,12 +360,12 @@ class UpgradeItemTask : MapleBaseTask() {
                 while (!result.second && !checkCubeDisable()) {
                     if (oneMoreCube())
                         usedCubeCounter++
-                    imageSearchUntilFind("img\\cube\\diff.png",95.0, 100, 200)
+                    imageSearchUntilFind("img\\cube\\diff.png", 95.0, 100, 200)
                     result = checkOption(targetOptions)
                     var onlyLabel = true
                     // 9% 이상 옵션들만 로그로 남긴다.
                     for (v in result.first.values)
-                        if(v > 8) {
+                        if (v > 8) {
                             onlyLabel = false
                             break
                         }
@@ -372,7 +373,7 @@ class UpgradeItemTask : MapleBaseTask() {
 
                     kotlinx.coroutines.delay(random.get(cubeDelayMin, cubeDelayMax).toLong())
                 }
-                if(result.second)
+                if (result.second)
                     logI("${usedCubeCounter - startCounter}개 사용하여 옵션 획득")
 
                 clickFinishCube()
@@ -518,7 +519,6 @@ class UpgradeItemTask : MapleBaseTask() {
                                 //옵션이 마% 가 아니라 그냥 마력+ 인 경우
                                 else if (name == SPELL)
                                     normalSpell++
-
                                 else {
                                     //그냥 스텟인 경우
                                     resultOption[name] = resultOption[name]?.plus(1) ?: 1
@@ -644,6 +644,26 @@ class UpgradeItemTask : MapleBaseTask() {
         helper.apply {
             return imageSearch("img\\cube\\result.png")
         }
+    }
+
+    suspend fun makeAbility(targetFileName : String) {
+        val mat = Imgcodecs.imread("img\\$targetFileName")
+        helper.apply {
+            val use = imageSearch("img\\useAbility.png") ?: let {
+                logI("어빌리티 사용하기 버튼을 찾을 수 없습니다.")
+                return
+            }
+
+            while (imageSearch(mat, 95.5) == null) {
+                smartClick(use)
+                sendEnter()
+                sendEnter()
+                sendEnter()
+            }
+
+        }
+
+
     }
 
 }

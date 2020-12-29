@@ -1115,6 +1115,18 @@ class MapleTaskManager : BaseTaskManager() {
         }
     }
 
+    fun makeAbility(fileName: String) {
+        runTask("ability") {
+            if (activateTargetWindow()) {
+                UpgradeItemTask().apply {
+                    makeAbility(fileName)
+                    Toolkit.getDefaultToolkit().beep()
+                }
+            }
+        }
+    }
+
+
     companion object {
         const val SIMPLE_TASK_AUTOCLICK = "마우스 광클"
         const val SIMPLE_TASK_AUTOSPACE = "스페이스바 광클"

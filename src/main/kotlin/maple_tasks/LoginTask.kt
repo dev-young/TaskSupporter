@@ -208,7 +208,7 @@ class LoginTask : MapleBaseTask() {
                 smartClick(character, 5, 5, maxTime = 200)
                 delayRandom(100, 150)
                 sendEnter()
-                smartClick(selectChar, 5, 5, maxTime = 100)
+                smartClick(selectChar, 5, 5, maxTime = 500)
             }
         }
 

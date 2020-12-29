@@ -31,7 +31,17 @@ fun logI(message: Any?, onlyLabel: Boolean = false) {
             MainView.logList.add(msg)
 
     }
+}
 
+fun logH(message: Any?, onlyLabel: Boolean = false) {
+    val msg = "[${dateFormat.format(Date())}] $message"
+    println(msg)
+    Platform.runLater {
+        MHHMainView.lastLogLabel.text = msg
+        if(!onlyLabel)
+            MHHMainView.logList.add(msg)
+
+    }
 }
 
 fun NativeKeyEvent.print() {

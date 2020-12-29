@@ -110,7 +110,7 @@ class MainView : View() {
                     val accountList = taskManager.loadAccountList()
                     accountList.forEach { println(it) }
 
-                    accountList.forEach { account->
+                    accountList.forEach { account ->
                         hbox {
                             alignment = Pos.CENTER_LEFT
                             spacing = defaultItemSpacing
@@ -120,7 +120,7 @@ class MainView : View() {
                             val wordNum = account[3].toInt()
                             val characterIndex = account[4].toInt()
                             val description = account[5]
-                            button(fileName.let { if(it.isEmpty()) id else it }).setOnAction {
+                            button(fileName.let { if (it.isEmpty()) id else it }).setOnAction {
                                 taskManager.login(id, pw, fileName, wordNum, characterIndex, description)
                             }
                             label(description)
@@ -132,11 +132,15 @@ class MainView : View() {
                         spacing = defaultItemSpacing
 
                         button("숙련도올릴계정.txt 파일의 계정들의 숙련도작업").setOnAction {
-                            taskManager.autoMakeAndResaleWithMultipleAccount(price1.value*10000, pivot.value*10000, price2.value*10000)
+                            taskManager.autoMakeAndResaleWithMultipleAccount(
+                                price1.value * 10000,
+                                pivot.value * 10000,
+                                price2.value * 10000
+                            )
                         }
-                        spacer { minWidth =4.0 }
+                        spacer { minWidth = 4.0 }
                         button("창 이동").setOnAction {
-                            MapleBaseTask().moveWindow(Point(0,0))
+                            MapleBaseTask().moveWindow(Point(0, 0))
                         }
                     }
 
@@ -164,16 +168,16 @@ class MainView : View() {
                             text = "64"
                             maxWidth = 50.0
                         }
-                        label ("= 최대 합성 횟수 (0==64)")
+                        label("= 최대 합성 횟수 (0==64)")
 
                         spacer { maxWidth = 16.0 }
 
-                        label ("마우스 딜레이")
+                        label("마우스 딜레이")
                         textfield(taskManager.synMouseDelay) {
                             maxWidth = 50.0
                             text = Settings.instance.synthesizeMouseDelay.toString()
                             textProperty().addListener { observable, oldValue, newValue ->
-                                Settings.instance.synthesizeMouseDelay = newValue.toIntOrNull()?:100
+                                Settings.instance.synthesizeMouseDelay = newValue.toIntOrNull() ?: 100
                             }
                         }
                     }
@@ -186,7 +190,7 @@ class MainView : View() {
                             text = "128"
                             maxWidth = 50.0
                         }
-                        label ("= 합성가능여부를 검사할 최대 아이템 수 (0==128)")
+                        label("= 합성가능여부를 검사할 최대 아이템 수 (0==128)")
                     }
                     hbox {
                         alignment = Pos.CENTER_LEFT
@@ -194,11 +198,15 @@ class MainView : View() {
                         button("자동합성") {
                             action {
                                 runAsync {
-                                    taskManager.synthesizeItem(untilBlank.value, maxSynCount.value, maxTargetItemCount.value)
+                                    taskManager.synthesizeItem(
+                                        untilBlank.value,
+                                        maxSynCount.value,
+                                        maxTargetItemCount.value
+                                    )
                                 }
                             }
                         }
-                        checkbox ("첫번째 빈칸까지 수행", untilBlank) {
+                        checkbox("첫번째 빈칸까지 수행", untilBlank) {
                             isSelected = true
                         }
 
@@ -480,22 +488,27 @@ class MainView : View() {
                             textfield(price1) {
                                 text = "111"
                                 maxWidth = 80.0
-                                alignment= Pos.CENTER
+                                alignment = Pos.CENTER
                             }
                             textfield(pivot) {
                                 text = "15000"
                                 maxWidth = 80.0
-                                alignment= Pos.CENTER
+                                alignment = Pos.CENTER
                             }
                             textfield(price2) {
                                 text = "1111"
                                 maxWidth = 80.0
-                                alignment= Pos.CENTER
+                                alignment = Pos.CENTER
                             }
 
                             button("아이템 재등록") {
                                 action {
-                                    taskManager.resaleItems(price1.value*10000, pivot.value*10000, price2.value*10000, cancelFirst.value)
+                                    taskManager.resaleItems(
+                                        price1.value * 10000,
+                                        pivot.value * 10000,
+                                        price2.value * 10000,
+                                        cancelFirst.value
+                                    )
                                 }
                             }
 
@@ -503,13 +516,10 @@ class MainView : View() {
                                 isSelected = true
                             }
                         }
-                        label ("      [감가1]             [기준]              [감가2]       (단위: 만)")
+                        label("      [감가1]             [기준]              [감가2]       (단위: 만)")
                     }
 
-                    label ("아이템가격이 기준보다 낮으면 [감가1] 높으면 [감가2] 적용")
-
-
-
+                    label("아이템가격이 기준보다 낮으면 [감가1] 높으면 [감가2] 적용")
 
 
                 }
@@ -623,7 +633,7 @@ class MainView : View() {
                             textfield(price) {
                                 maxWidth = 90.0
                                 setOnKeyPressed {
-                                    if(it.code == KeyCode.ENTER){
+                                    if (it.code == KeyCode.ENTER) {
                                         taskManager.sellItem("  #${price.value}0000")
                                     }
                                 }
@@ -950,6 +960,17 @@ class MainView : View() {
                         label("초간 지속")
                     }
 
+                    button("어빌리티 - 레전드리") {
+                        action {
+                            taskManager.makeAbility("abilityL.png")
+                        }
+                    }
+
+                    button("어빌리티 - 유니크") {
+                        action {
+                            taskManager.makeAbility("abilityU.png")
+                        }
+                    }
                 }
             }
 
@@ -1121,7 +1142,7 @@ class MainView : View() {
             val hwnd = User32.INSTANCE.FindWindow(null, title).let {
                 var h = it
                 for (i in 1..100) {
-                    if(h != null)
+                    if (h != null)
                         break
                     delay(100)
                     h = User32.INSTANCE.FindWindow(null, title)
@@ -1132,7 +1153,7 @@ class MainView : View() {
                 val w = if (it.width > 1920) 1920 else it.width
                 val h = it.height
                 User32.INSTANCE.winGetPos(hwnd).let {
-                    Point(w-it.width(), h-it.getHeight() - 40)
+                    Point(w - it.width(), h - it.getHeight() - 40)
                 }
 
             }
@@ -1148,7 +1169,6 @@ class MainView : View() {
         }
         super.onDock()
     }
-
 
 
 }

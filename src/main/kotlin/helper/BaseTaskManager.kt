@@ -30,7 +30,7 @@ open class BaseTaskManager {
         System.load(File("").absolutePath + "\\libs\\${Core.NATIVE_LIBRARY_NAME}.dll")
     }
 
-    fun runTask(id:String, block: suspend CoroutineScope.() -> Unit){
+    open fun runTask(id:String, block: suspend CoroutineScope.() -> Unit){
         jobMap[id]?.cancel()
         jobMap[id] = GlobalScope.launch(dispatcher) {
             notifyTaskStateChanged(STATE_WORKING)

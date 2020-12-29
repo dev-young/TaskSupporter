@@ -32,8 +32,8 @@ compileTestKotlin {
 jar {
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     manifest {
-        attributes 'Main-Class': 'MyApp'
+        attributes 'Main-Class': 'MHH'
         destinationDirectory = file("$rootDir/out")
     }
-    archiveName('TaskSupporter.jar')
+    archiveName('MHH.jar')
 }

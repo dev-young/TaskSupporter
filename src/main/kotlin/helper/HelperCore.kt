@@ -47,6 +47,23 @@ class HelperCore : Robot() {
 
     val toolkit = Toolkit.getDefaultToolkit()
 
+    val pressedKeySet = hashSetOf<Int>()
+
+    override fun keyPress(keycode: Int) {
+        super.keyPress(keycode)
+        pressedKeySet.add(keycode)
+    }
+
+    override fun keyRelease(keycode: Int) {
+        super.keyRelease(keycode)
+        pressedKeySet.remove(keycode)
+    }
+
+    fun releaseAll(){
+        pressedKeySet.forEach { super.keyRelease(it) }
+        pressedKeySet.clear()
+    }
+
     private fun setSearchedImgSize(width: Int = 0, height: Int = 0) {
         searchedImgWidth = width
         searchedImgHeight = height

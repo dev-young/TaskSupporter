@@ -456,6 +456,16 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
         }
 
+        if(job != COMMON) {
+            option.forEach { t, u ->
+                if(u > 49) {
+                    //깡추가 50이 넘는 경우 10 추가하여 계산
+                    option[t] = u+10
+                }
+            }
+        }
+
+
         option[UpgradeItemTask.ALL]?.let {
             val state = it * 10
             option[UpgradeItemTask.STR] = option[UpgradeItemTask.STR]?.plus(state) ?: state

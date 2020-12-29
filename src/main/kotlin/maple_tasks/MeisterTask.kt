@@ -329,13 +329,13 @@ class MeisterTask : MapleBaseTask() {
             delayRandom(20, 40)
             simpleClick()
             delayRandom(200, 250)
-            val okBtn = imageSearchAndClick(imgpathOkBtn, maxTime = 150)
-            if (okBtn == null) {
+            imageSearchAndClickUntilFind(imgpathOkBtn, maxTime = 150, repeatCount = 10)?:let {
                 logI("확인버튼 찾을 수 없음")
                 moveMouseSmoothly(Point(0, 0))
+                return false
             }
-            delayRandom(2800, 2950)
-            imageSearchAndClick(imgpathOkBtn, maxTime = 150)
+            delay(2000L)
+            imageSearchAndClickUntilFind(imgpathOkBtn, repeatDelay = 400)?:return false
 
         }
         return true
@@ -605,15 +605,15 @@ class MeisterTask : MapleBaseTask() {
             smartClick(synItem.second, 6, 6)
             moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
-            if(clickSynOkBtn(50)){
+            if(clickSynOkBtn(mouseDelay)){
                 delayRandom(50, 100)
                 simpleClick()
                 sendEnter()
             } else {
-                smartClick(pair.first, 15, 15)
-                smartClick(synItem.first, 6, 6)
-                smartClick(pair.second, 15, 15)
-                smartClick(synItem.second, 6, 6)
+                smartClick(pair.first, 15, 15, maxTime = mouseDelay)
+                smartClick(synItem.first, 6, 6, maxTime = mouseDelay)
+                smartClick(pair.second, 15, 15, maxTime = mouseDelay)
+                smartClick(synItem.second, 6, 6, maxTime = mouseDelay)
                 moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
                 if(clickSynOkBtn(50)){
