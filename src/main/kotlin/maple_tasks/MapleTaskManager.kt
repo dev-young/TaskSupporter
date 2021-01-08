@@ -1008,6 +1008,7 @@ class MapleTaskManager : BaseTaskManager() {
                     log("유효 추옵 옮기는 작업 완료")
                 }
 
+                Toolkit.getDefaultToolkit().beep()
             }
         }
     }

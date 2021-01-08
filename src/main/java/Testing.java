@@ -8,15 +8,15 @@ public class Testing {
     private static final int MAX_TITLE_LENGTH = 1024;
 
     public static void main(String[] args) throws Exception {
-        Thread.sleep(1000);
-        char[] buffer = new char[MAX_TITLE_LENGTH * 2];
-
-        WinDef.HWND hwnd = User32.INSTANCE.GetForegroundWindow();
-        User32.INSTANCE.GetWindowText(hwnd, buffer, MAX_TITLE_LENGTH);
-        System.out.println("Active window title: " + Native.toString(buffer));
-        WinDef.RECT rect = new WinDef.RECT();
-        User32.INSTANCE.GetWindowRect(hwnd, rect);
-        System.out.println("rect = " + rect);
+//        Thread.sleep(1000);
+//        char[] buffer = new char[MAX_TITLE_LENGTH * 2];
+//
+//        WinDef.HWND hwnd = User32.INSTANCE.GetForegroundWindow();
+//        User32.INSTANCE.GetWindowText(hwnd, buffer, MAX_TITLE_LENGTH);
+//        System.out.println("Active window title: " + Native.toString(buffer));
+//        WinDef.RECT rect = new WinDef.RECT();
+//        User32.INSTANCE.GetWindowRect(hwnd, rect);
+//        System.out.println("rect = " + rect);
 
 //        String s = "!@#";
 //        System.out.println(s, "%s test");
@@ -26,6 +26,13 @@ public class Testing {
 //        Pointer process = Kernel32.OpenProcess(Kernel32.PROCESS_QUERY_INFORMATION | Kernel32.PROCESS_VM_READ, false, pointer.getValue());
 //        Psapi.GetModuleBaseNameW(process, null, buffer, MAX_TITLE_LENGTH);
 //        System.out.println("Active window process: " + Native.toString(buffer));
-    }
 
+        try {
+            Serial serial =new Serial();
+            serial.connect("COM7");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

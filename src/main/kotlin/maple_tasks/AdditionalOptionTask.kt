@@ -115,16 +115,20 @@ open class AdditionalOptionTask : MapleBaseTask() {
             moveMouseLB()
             items.reverse()
             var last = ""
+            val unsortedList = arrayListOf<Pair<ItemInfo, Point>>()
             items.forEach { item ->
                 getOptions(item, last)?.let {
                     last = it.getUid()
-                    val optionStr = it.getInfoText()
                     if (isOptionGood(it)) {
-                        goodItems.add(item)
-                        goodItemsInfo.add(optionStr)
+                        unsortedList.add(Pair(it, item))
                     }
                 }
 
+            }
+            unsortedList.sortByDescending { it.first.getGrade().second }
+            unsortedList.forEach {
+                goodItems.add(it.second)
+                goodItemsInfo.add(it.first.getInfoText())
             }
 
             if (moveToEnd) {

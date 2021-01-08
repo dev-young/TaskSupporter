@@ -3,12 +3,10 @@ package maple_tasks
 import com.sun.jna.platform.win32.User32
 import helper.BaseTaskManager
 import helper.ConsumeEvent
+import helper.HelperCore
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import logH
 import maple_tasks.hunt.AdelTask
 import maple_tasks.hunt.HuntBaseTask
@@ -19,6 +17,7 @@ import org.jnativehook.keyboard.NativeKeyEvent
 import tornadofx.runLater
 import winActive
 import winIsForeground
+import java.io.File
 import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
@@ -33,7 +32,7 @@ class MHHTaskManager : BaseTaskManager() {
             when (it.keyCode) {
 
                 NativeKeyEvent.VC_F1 -> {
-                    currentHuntTask.findCharacter()?.let {
+                    currentHuntTask.getCharacterPos()?.let {
                         logH("${it.x}, ${it.y}")
                         runLater { limitLeft.value = it.x }
                     }
@@ -41,7 +40,7 @@ class MHHTaskManager : BaseTaskManager() {
                 }
 
                 NativeKeyEvent.VC_F2 -> {
-                    currentHuntTask.findCharacter()?.let {
+                    currentHuntTask.getCharacterPos()?.let {
                         logH("${it.x}, ${it.y}")
                         runLater { limitRight.value = it.x }
                     }
@@ -53,7 +52,6 @@ class MHHTaskManager : BaseTaskManager() {
                     //pause, resume
                     activateTargetWindow()
                     toggle()
-                    releaseAllKey()
                     false
                 }
 
@@ -99,8 +97,17 @@ class MHHTaskManager : BaseTaskManager() {
         }
     }
 
+    fun connectHW(){
+        if(HelperCore.serial.connect(portName.value))
+            logH("HW 연결 성공!")
+        else
+            logH("HW 연결 실패!")
+
+    }
+
 
     private var currentHuntTask = HuntBaseTask()
+    val portName = SimpleStringProperty("COM7")
     val winTarget = SimpleStringProperty()
     val fileName = SimpleStringProperty()
     val limitLeft = SimpleIntegerProperty(65)
@@ -124,6 +131,7 @@ class MHHTaskManager : BaseTaskManager() {
 
     override fun resetTask() {
         super.resetTask()
+        releaseAllKey()
     }
 
     fun horizontalHuntAdel() {
@@ -132,6 +140,17 @@ class MHHTaskManager : BaseTaskManager() {
                 AdelTask(huntRange).apply {
                     currentHuntTask = this
                     startHorizontal()
+                }
+            }
+        }
+    }
+
+    fun shadowerLachelein1() {
+        runTask("hunt") {
+            if (activateTargetWindow()) {
+                ShadowerTask(huntRange, attackDelayMin).apply {
+                    currentHuntTask = this
+                    startLachelein1()
                 }
             }
         }
@@ -170,6 +189,22 @@ class MHHTaskManager : BaseTaskManager() {
             }
         }
         super.runTask(id, block)
+    }
+
+    override fun toggle() {
+        super.toggle()
+        releaseAllKey()
+    }
+
+    fun keyTest(key: Int) {
+        super.runTask("test") {
+            if (activateTargetWindow()) {
+                delay(500)
+                HelperCore(true).apply {
+                    send(key)
+                }
+            }
+        }
     }
 
 }

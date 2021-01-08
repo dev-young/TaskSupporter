@@ -1,6 +1,8 @@
 package maple_tasks.hunt
 
 import getHeight
+import helper.HWKey
+import helper.HelperCore
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleLongProperty
@@ -18,9 +20,8 @@ import winGetPos
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.Toolkit
-import java.awt.event.KeyEvent
 
-open class HuntBaseTask : MapleBaseTask() {
+open class HuntBaseTask {
     class HuntRange(
         val left: SimpleIntegerProperty,
         val right: SimpleIntegerProperty,
@@ -61,9 +62,10 @@ open class HuntBaseTask : MapleBaseTask() {
 
     }
 
+    val helper: HelperCore = HelperCore(true)
     var zenTime = System.currentTimeMillis()
 
-    suspend open fun waitZen(zenDelay:Long) {
+    suspend open fun waitZen(zenDelay: Long) {
         val current = System.currentTimeMillis()
         val nextZenTime = zenTime + zenDelay
         if (nextZenTime > current) {
@@ -88,8 +90,9 @@ open class HuntBaseTask : MapleBaseTask() {
     var mapWidth = 250
     var mapHeight = 100
 
-    var jumpKey = KeyEvent.VK_ALT
-    var jumpKey2 = KeyEvent.VK_END
+    var jumpKey = HWKey.VK_ALT
+    var jumpKey2 = HWKey.VK_END
+    var ropeConnectKey = HWKey.VK_V
 
     /**상대위치 반환*/
     fun getCharacterPos(): Point? {
@@ -227,10 +230,10 @@ open class HuntBaseTask : MapleBaseTask() {
         }
     }
 
-    suspend fun send(keyEvent: Int, delayMin: Int = 45, delayMax: Int = 65) {
-        helper.keyPress(keyEvent)
+    suspend fun send(HWKey: Int, delayMin: Int = 45, delayMax: Int = 65) {
+        helper.keyPress(HWKey)
         helper.delayRandom(delayMin, delayMax)
-        helper.keyRelease(keyEvent)
+        helper.keyRelease(HWKey)
     }
 
     open suspend fun jump() {
@@ -249,36 +252,55 @@ open class HuntBaseTask : MapleBaseTask() {
         send(jumpKey2)
     }
 
+    open suspend fun ropeConnect(finishDelay: Long = 0) {
+        send(ropeConnectKey)
+        if (finishDelay > 0) {
+            delay(finishDelay)
+            send(ropeConnectKey)
+        }
+    }
+
+    open suspend fun downJump(afterDelay: Int = 0) {
+        helper.apply {
+            downPress()
+            delayRandom(200, 300)
+            send(jumpKey)
+            delayRandom(100, 200)
+            downRelease()
+            delayRandom(afterDelay, afterDelay + 100)
+        }
+    }
+
     fun leftPress() {
-        helper.keyPress(KeyEvent.VK_LEFT)
+        helper.keyPress(HWKey.VK_LEFT)
     }
 
     fun leftRelease() {
-        helper.keyRelease(KeyEvent.VK_LEFT)
+        helper.keyRelease(HWKey.VK_LEFT)
     }
 
     fun rightPress() {
-        helper.keyPress(KeyEvent.VK_RIGHT)
+        helper.keyPress(HWKey.VK_RIGHT)
     }
 
     fun rightRelease() {
-        helper.keyRelease(KeyEvent.VK_RIGHT)
+        helper.keyRelease(HWKey.VK_RIGHT)
     }
 
     fun upPress() {
-        helper.keyPress(KeyEvent.VK_UP)
+        helper.keyPress(HWKey.VK_UP)
     }
 
     fun upRelease() {
-        helper.keyRelease(KeyEvent.VK_UP)
+        helper.keyRelease(HWKey.VK_UP)
     }
 
     fun downPress() {
-        helper.keyPress(KeyEvent.VK_DOWN)
+        helper.keyPress(HWKey.VK_DOWN)
     }
 
     fun downRelease() {
-        helper.keyRelease(KeyEvent.VK_DOWN)
+        helper.keyRelease(HWKey.VK_DOWN)
     }
 
 

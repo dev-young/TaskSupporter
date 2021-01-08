@@ -23,31 +23,31 @@ class Settings {
     var synthesizeMouseDelay = 100  //합성시 마우스 딜레이
 
     var logStepWhenSynthesizeUtilEndFast = true //무한합성시 단계별 로그 남기기
+    var logStepWhenBuyItemListUntilEnd = false //구매 및 제작시 단계별 로그 남기기
+
+    var beepLongTimeWhenTaskFinished = false //작업 끝날때 비프 오랫동안 울리기
 
     companion object {
         var instance = Settings()
         private var lastSaved = ""
         fun load() {
-            GlobalScope.launch(Dispatchers.IO) {
-                val f = File("settings")
-                if (!f.exists()) {
-                    save()
-                    return@launch
-                }
-                val reader = BufferedReader(
-                    InputStreamReader(
-                        FileInputStream("settings"), "euc-kr"
-                    )
-                )
-                val json = reader.readText()
-                try {
-                    instance = Gson().fromJson(json, Settings::class.java)
-                } catch (e: Exception) {
-                    logI("settings 값 불러오기 오류 ${e.message}")
-                }
-                lastSaved = json
-
+            val f = File("settings")
+            if (!f.exists()) {
+                save()
+                return
             }
+            val reader = BufferedReader(
+                InputStreamReader(
+                    FileInputStream("settings"), "euc-kr"
+                )
+            )
+            val json = reader.readText()
+            try {
+                instance = Gson().fromJson(json, Settings::class.java)
+            } catch (e: Exception) {
+                logI("settings 값 불러오기 오류 ${e.message}")
+            }
+            lastSaved = json
         }
 
         fun save() {

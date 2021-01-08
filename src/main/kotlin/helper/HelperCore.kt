@@ -1,8 +1,8 @@
 package helper
 
+import JSerial
 import winActive
 import com.sun.jna.platform.win32.User32
-import com.sun.jna.platform.win32.WinDef
 import get
 import getHeight
 import kotlinx.coroutines.delay
@@ -27,7 +27,10 @@ import kotlin.math.abs
 import kotlin.system.exitProcess
 
 
-class HelperCore : Robot() {
+class HelperCore(var useHWKey:Boolean = false) : Robot() {
+    companion object {
+        val serial by lazy { Serial() }
+    }
     val random = Random()
 
     val user32 = User32.INSTANCE
@@ -50,17 +53,36 @@ class HelperCore : Robot() {
     val pressedKeySet = hashSetOf<Int>()
 
     override fun keyPress(keycode: Int) {
-        super.keyPress(keycode)
+        if(useHWKey && serial.isConnected){
+            if(keycode > 127)
+                serial.out.write(("kp+"+(keycode-128).toChar()).toByteArray())
+            else
+                serial.out.write(("kp"+keycode.toChar()).toByteArray())
+            serial.out.flush()
+        } else
+            super.keyPress(keycode)
         pressedKeySet.add(keycode)
     }
 
     override fun keyRelease(keycode: Int) {
-        super.keyRelease(keycode)
+        if(useHWKey && serial.isConnected){
+            if(keycode > 127)
+                serial.out.write(("kr+"+(keycode-128).toChar()).toByteArray())
+            else
+                serial.out.write(("kr"+keycode.toChar()).toByteArray())
+
+            serial.out.flush()
+        } else
+            super.keyRelease(keycode)
         pressedKeySet.remove(keycode)
     }
 
     fun releaseAll(){
-        pressedKeySet.forEach { super.keyRelease(it) }
+        if(useHWKey && serial.isConnected){
+            serial.out.write('k'.toInt())
+            serial.out.flush()
+        } else
+            pressedKeySet.forEach { super.keyRelease(it) }
         pressedKeySet.clear()
     }
 
@@ -337,7 +359,7 @@ class HelperCore : Robot() {
     }
 
     fun soundBeep() {
-//        toolkit.beep()
+        toolkit.beep()
     }
 
     fun showDialog(msg: String) {
@@ -399,12 +421,12 @@ class HelperCore : Robot() {
     }
 
     suspend fun smartDrag(from: Point, to: Point, keyCode: Int = defaultClickKey) {
-        moveMouseSmoothly(from, 50)
-        delay(50L)
+        moveMouseSmoothly(from, 100)
+        delay(150L)
         mousePress(keyCode)
-        delay(50L)
-        moveMouseSmoothly(to, random.get(50, 100))
-        delay(50L)
+        delay(250L)
+        moveMouseSmoothly(to, random.get(100, 200))
+        delay(250L)
         mouseRelease(keyCode)
     }
 

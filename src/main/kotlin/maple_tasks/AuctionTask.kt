@@ -90,6 +90,10 @@ class AuctionTask : MapleBaseTask() {
         extract: Boolean = false,
         usePurchasedTab: Boolean = true
     ) {
+        fun log(msg:Any) {
+            if (Settings.instance.logStepWhenBuyItemListUntilEnd)
+                logI(msg)
+        }
         val itemList = loadItemList(filePath) ?: let {
             logI("파일을 찾을 수 없습니다.")
             return
@@ -157,7 +161,7 @@ class AuctionTask : MapleBaseTask() {
                             buyStack = 0
                             targetIndex = (targetIndex + itemList.size - 1) % itemList.size // 이전 아이템
                             if (success) {
-                                logI("모두받기 완료.")
+                                log("모두받기 완료. (전체:$buyCount)")
                                 sendEnter() //완료창 종료
                                 break@sub
                             } else {
@@ -187,14 +191,33 @@ class AuctionTask : MapleBaseTask() {
                     //시간 확인 및 장비 제작
                     if (System.currentTimeMillis() - lastMakeTime > waitingTime) {
                         //지정한 시간이 지난경우 아이템 제작
+                        log("옥션 종료")
                         exitAuction()
-                        delayRandom(2000, 3000)
-                        moveCharacter(meisterTask.meisterPosition1)
-                        if (meisterTask.makeItemAndExtractIfNormal(itemName))
-                            lastMakeTime = System.currentTimeMillis()
+                        delayRandom(2000, 2200)
+                        if (openInventory() && closeInventory()) {
+
+                        } else {
+                            logI("인벤토리 확인 실패")
+                        }
+                        log("캐릭터 이동 시작")
+                        if(moveCharacter(meisterTask.meisterPosition1)){
+                            log("제작 시작")
+                            if (meisterTask.makeItemAndExtractIfNormal(itemName))
+                                lastMakeTime = System.currentTimeMillis()
+                        } else {
+                            logI("캐릭터 이동 실패")
+                        }
+
 
                         delayRandom(500, 700)
-                        openAuction()
+                        log("옥션 실행")
+                        if(openAuction()){
+                            delayRandom(1000, 1700)
+                            log("옥션 실행완료")
+                        } else {
+                            logI("옥션 실행 실패")
+                        }
+
                     }
                 }
 
@@ -208,7 +231,7 @@ class AuctionTask : MapleBaseTask() {
                     itemInInventoryCount += buyStack
                     buyStack = 0
                     if (getAllItems(usePurchasedTab)) {
-                        logI("모두받기 완료.")
+                        logI("모두받기 완료. (전체:$buyCount)")
                         sendEnter() //완료창 종료
                     } else {
                         logI("모두받기 실패.")
@@ -247,7 +270,8 @@ class AuctionTask : MapleBaseTask() {
         }
     }
 
-    suspend fun openAuction() {
+    suspend fun openAuction() : Boolean {
+        var c = 0
         while (!isAuctionAvailable()) {
             helper.apply {
                 val menu = imageSearchAndClick("img\\menu.png", maxTime = 300)?.also {
@@ -264,21 +288,30 @@ class AuctionTask : MapleBaseTask() {
                 }
 
                 kotlinx.coroutines.delay(300)
+                c++
+                if(c > 70) {
+                    return false
+                }
 
             }
         }
+        return true
     }
 
     suspend fun exitAuction() {
+        var tryCount = 0
         while (isAuctionAvailable()) {
             helper.apply {
-                moveMouseOnForeground(1, 10)
-
+                moveMouseLB()
                 imageSearchAndClick("$defaultImgPath\\exit.png", maxTime = 200)?.let {
                     delayRandom(4000, 5000)
                 }
-
                 delayRandom(300, 500)
+            }
+            tryCount++
+            if(tryCount > 10){
+                logI("옥션 종료에 실패했습니다.")
+                break
             }
         }
 
@@ -714,9 +747,12 @@ class AuctionTask : MapleBaseTask() {
         }
     }
 
-    suspend fun sellItem(item: Point, price: String, stopBeforeFinish:Boolean = false) {
+    suspend fun sellItem(item: Point, price: String, stopBeforeFinish: Boolean = false) {
         Date().let {
-            val newPrice = (if (price.length > 4) price.substring(0, price.length - 4) else "10") + SimpleDateFormat("MMdd").format(it)
+            val newPrice = (if (price.length > 4) price.substring(
+                0,
+                price.length - 4
+            ) else "10") + SimpleDateFormat("MMdd").format(it)
 //            logI("$newPrice 가격에 등록 시작")
 
             helper.apply {
@@ -743,7 +779,7 @@ class AuctionTask : MapleBaseTask() {
                     simpleClick()
                     delayRandom(20, 50)
 
-                    if(stopBeforeFinish)
+                    if (stopBeforeFinish)
                         return
 
                     sendEnter()
@@ -759,7 +795,7 @@ class AuctionTask : MapleBaseTask() {
     }
 
     /**판매중인 아이템 전부 취소하기 */
-    suspend fun cancelSellingItem(){
+    suspend fun cancelSellingItem() {
         helper.apply {
             clickSalesTab()
             for (i in 1..60) {
@@ -849,7 +885,8 @@ class AuctionTask : MapleBaseTask() {
             priceSource.changeContract2()
             while (!helper.imageSearchReturnBoolean(priceSource, resalePriceHeadTemplate)) {
                 helper.smartClick(resaleBtn)
-                priceSource = helper.createScreenCapture(Rectangle(completeTab.x - 440, completeTab.y + 250, 142, 12)).toMat()
+                priceSource =
+                    helper.createScreenCapture(Rectangle(completeTab.x - 440, completeTab.y + 250, 142, 12)).toMat()
                 priceSource.changeContract2()
                 delay(100)
             }
@@ -862,9 +899,9 @@ class AuctionTask : MapleBaseTask() {
                         temp = it - decreasePrice2
 
                     //10001024 이런 가격 9991024로 변경
-                    if((temp / 10000L) % 10 == 0L) temp -= 10000
+                    if ((temp / 10000L) % 10 == 0L) temp -= 10000
 
-                    if(temp < minPrice)
+                    if (temp < minPrice)
                         temp = minPrice
 
                     temp
@@ -952,8 +989,8 @@ class AuctionTask : MapleBaseTask() {
 
         helper.apply {
             imageSearch("$defaultImgPath\\sales.png")?.let { it ->
-                val scrollPointUp = Point(it.x-21, it.y+47)
-                val scrollPointDown = Point(it.x-21, it.y+249)
+                val scrollPointUp = Point(it.x - 21, it.y + 47)
+                val scrollPointDown = Point(it.x - 21, it.y + 249)
 
                 //최상단으로 스크롤 업
                 moveMouseSmoothly(scrollPointDown, 50)
@@ -998,7 +1035,6 @@ class AuctionTask : MapleBaseTask() {
 
 
             }
-
 
 
         }

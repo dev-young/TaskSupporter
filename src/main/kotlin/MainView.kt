@@ -56,12 +56,11 @@ class MainView : View() {
 
     override val root = borderpane {
         top = hbox {
-
+            alignment = Pos.CENTER_LEFT
             spacing = defaultItemSpacing
+            paddingHorizontal = defaultItemSpacing
             checkbox {
-                paddingHorizontal = defaultItemSpacing
-                paddingVertical = 5
-                text = "항상 위에 표시"
+                text = "항상 위"
                 isSelected = false
                 action { primaryStage.isAlwaysOnTop = isSelected }
             }
@@ -90,9 +89,16 @@ class MainView : View() {
                 }
             }
 
-            button("빈칸 계산") {
+            button("빈칸계산") {
                 action {
                     taskManager.countEmptyInventory()
+                }
+            }
+
+            checkbox("Beep") {
+                isSelected = Settings.instance.beepLongTimeWhenTaskFinished
+                action {
+                    Settings.instance.beepLongTimeWhenTaskFinished = isSelected
                 }
             }
         }

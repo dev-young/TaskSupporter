@@ -1,13 +1,13 @@
 package maple_tasks.hunt
 
+import helper.HWKey
 import kotlinx.coroutines.delay
-import java.awt.event.KeyEvent
 
 class AdelTask(var limit : HuntRange) : HuntBaseTask() {
     suspend fun startHorizontal() {
         while (true) {
             delay(1)
-            while (limit.left.value < findCharacter()?.x ?: 100) {
+            while (limit.left.value < getCharacterPos()?.x ?: 100) {
                 //왼쪽으로 이동
                 leftPress()
                 attack()
@@ -16,7 +16,7 @@ class AdelTask(var limit : HuntRange) : HuntBaseTask() {
             leftRelease()
 
             delay(1)
-            while (limit.right.value > findCharacter()?.x ?: 100) {
+            while (limit.right.value > getCharacterPos()?.x ?: 100) {
                 //오른쪽으로 이동
                 rightPress()
                 attack()
@@ -42,7 +42,7 @@ class AdelTask(var limit : HuntRange) : HuntBaseTask() {
         if(current - lastAttack > attackDelayMin){
             doubleJump2()
             helper.delayRandom(10, 50)
-            send(KeyEvent.VK_CONTROL)
+            send(HWKey.VK_CONTROL)
             lastAttack = current
         }
     }

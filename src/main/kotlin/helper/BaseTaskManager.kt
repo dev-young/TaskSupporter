@@ -5,6 +5,7 @@ import logI
 import maple_tasks.Settings
 import org.jnativehook.GlobalScreen
 import org.opencv.core.Core
+import java.awt.Toolkit
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -22,7 +23,7 @@ open class BaseTaskManager {
     var errorListener: ((String) -> Unit)? = null
 
     var taskStateListener: ((String) -> Unit)? = null
-    fun setOnTaskStateChangeListener(taskStateListener: ((String) -> Unit)){
+    fun setOnTaskStateChangeListener(taskStateListener: ((String) -> Unit)) {
         this.taskStateListener = taskStateListener
     }
 
@@ -30,7 +31,7 @@ open class BaseTaskManager {
         System.load(File("").absolutePath + "\\libs\\${Core.NATIVE_LIBRARY_NAME}.dll")
     }
 
-    open fun runTask(id:String, block: suspend CoroutineScope.() -> Unit){
+    open fun runTask(id: String, block: suspend CoroutineScope.() -> Unit) {
         jobMap[id]?.cancel()
         jobMap[id] = GlobalScope.launch(dispatcher) {
             notifyTaskStateChanged(STATE_WORKING)
@@ -39,12 +40,17 @@ open class BaseTaskManager {
             jobMap.remove(id)
             println("$id 실행 완료.  jobMapSize: ${jobMap.size}")
             notifyTaskStateChanged()
+            if (Settings.instance.beepLongTimeWhenTaskFinished)
+                for (i in 1..3) {
+                    delay(1700)
+                    Toolkit.getDefaultToolkit().beep()
+                }
         }
 
     }
 
-    fun toggle(){
-        if(jobMap.isNotEmpty()){
+    open fun toggle() {
+        if (jobMap.isNotEmpty()) {
             GlobalScope.launch(Dispatchers.Default) {
                 dispatcher.toggle()
                 notifyTaskStateChanged()
@@ -52,16 +58,16 @@ open class BaseTaskManager {
         }
     }
 
-    private fun notifyTaskStateChanged(state:String? = null) {
+    private fun notifyTaskStateChanged(state: String? = null) {
 //        logI("jobMapSize: ${jobMap.size}")
         state?.let {
             taskStateListener?.invoke(it)
             return
         }
-        if(dispatcher.isPaused()){
+        if (dispatcher.isPaused()) {
             taskStateListener?.invoke(STATE_PAUSED)
         } else {
-            if(jobMap.isEmpty()){
+            if (jobMap.isEmpty()) {
                 taskStateListener?.invoke(STATE_IDEL)
             } else {
                 taskStateListener?.invoke(STATE_WORKING)
@@ -70,25 +76,25 @@ open class BaseTaskManager {
 
     }
 
-    fun pause(){
+    fun pause() {
         // TODO: 실행중인 작업이 있을때만 일시정지 되도록 수정하기
         dispatcher.pause()
         notifyTaskStateChanged()
     }
 
-    fun resume(){
+    fun resume() {
         dispatcher.resume()
         notifyTaskStateChanged()
     }
 
-    open fun finishApp(){
+    open fun finishApp() {
         Settings.save()
         resetTask()
         exitProcess(0)
     }
 
     open fun resetTask() {
-        if(jobMap.isEmpty()){
+        if (jobMap.isEmpty()) {
 //            logI("진행중인 작업이 없습니다.")
         } else
             logI("모든 작업 취소")

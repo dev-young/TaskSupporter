@@ -1,11 +1,9 @@
 package maple_tasks.hunt
 
+import helper.HWKey
 import javafx.application.Platform
 import javafx.beans.property.SimpleIntegerProperty
 import kotlinx.coroutines.delay
-import logH
-import tornadofx.c
-import java.awt.event.KeyEvent
 
 class ShadowerTask(var limit : HuntRange,
                    var attackDelayMin: SimpleIntegerProperty
@@ -16,22 +14,23 @@ class ShadowerTask(var limit : HuntRange,
             limit.left.value = 40
             limit.right.value = 130
         }
+        ropeConnectKey = HWKey.VK_V
     }
-    var attackCode1 = KeyEvent.VK_CONTROL //암살
-    var attackCode2 = KeyEvent.VK_SHIFT //메잌
-    var attackCode3 = KeyEvent.VK_F10 //부스
-    var attackCode4 = KeyEvent.VK_HOME //서든레이든
-    var attackCode5 = KeyEvent.VK_PAGE_DOWN //절개
-    var attackCodeMove = KeyEvent.VK_X //어썰트
+    var attackCode1 = HWKey.VK_CONTROL //암살
+    var attackCode2 = HWKey.VK_SHIFT //메잌
+    var attackCode3 = HWKey.VK_F10 //부스
+    var attackCode4 = HWKey.VK_HOME //서든레이든
+    var attackCode5 = HWKey.VK_PAGE_DOWN //절개
+    var attackCodeMove = HWKey.VK_X //어썰트
 
     var buffList = arrayListOf<Buff>().apply {
-        add(Buff(KeyEvent.VK_1, 185, delayBefore = 800))
-        add(Buff(KeyEvent.VK_2, 185))
-        add(Buff(KeyEvent.VK_3, 185))
-//        add(Buff(KeyEvent.VK_INSERT, 62, delayBefore = 1000))
-        add(Buff(KeyEvent.VK_PAGE_UP, 62))
+        add(Buff(HWKey.VK_1, 185, delayBefore = 800))
+        add(Buff(HWKey.VK_2, 185))
+        add(Buff(HWKey.VK_3, 185))
+//        add(Buff(HWKey.VK_INSERT, 62, delayBefore = 1000))
+        add(Buff(HWKey.VK_PAGE_UP, 62))
         add(Buff(attackCode5, 15, 200, 200, withStop = false))
-        add(Buff(KeyEvent.VK_DELETE, 25, 200, 200, withStop = false))
+        add(Buff(HWKey.VK_DELETE, 25, 200, 200, withStop = false))
     }
 
     suspend fun waitZen(){
@@ -59,7 +58,7 @@ class ShadowerTask(var limit : HuntRange,
             }
             leftRelease()
             waitZen()
-            moveAttack(KeyEvent.VK_RIGHT)
+            moveAttack(HWKey.VK_RIGHT)
             while (limit.right.value > getCharacterPos()?.x ?: 100) {
                 //오른쪽으로 이동
                 rightPress()
@@ -72,7 +71,77 @@ class ShadowerTask(var limit : HuntRange,
             }
             rightRelease()
             waitZen()
-            moveAttack(KeyEvent.VK_LEFT)
+            moveAttack(HWKey.VK_LEFT)
+        }
+    }
+
+    //본색을 드러내는곳1
+    suspend fun startLachelein1() {
+        limit.zenDelay.value = 1500
+        Platform.runLater {
+            attackDelayMin.value = 500
+            limit.left.value = 50
+            limit.right.value = 150
+        }
+
+        //3층 95,  2층 114
+        while (true) {
+            var currentPosition = getCharacterPos()
+            delay(1)
+            while (limit.left.value < currentPosition?.x ?: 100) {
+                //왼쪽으로 이동
+                leftPress()
+                attack()
+                if(helper.random.nextBoolean())
+                    leftRelease()
+                buff()
+                delay(50)
+                currentPosition = getCharacterPos()
+            }
+            leftRelease()
+            waitZen()
+            currentPosition?.let {
+                if(it.y > 115) {
+                    if(!moveAttack(HWKey.VK_RIGHT)){
+                        rightPress()
+                        helper.delayRandom(80,100)
+                        ropeConnect()
+                        rightRelease()
+                        helper.delayRandom(700,900)
+                    }
+                } else {
+                    downJump(500)
+                }
+            }
+
+
+
+            while (limit.right.value > currentPosition?.x ?: 100) {
+                //오른쪽으로 이동
+                rightPress()
+                attack()
+                if(helper.random.nextBoolean())
+                    rightRelease()
+                buff()
+                delay(50)
+                currentPosition = getCharacterPos()
+            }
+            rightRelease()
+            waitZen()
+            currentPosition?.let {
+                if(it.y > 115) {
+                    if(!moveAttack(HWKey.VK_LEFT)){
+                        leftPress()
+                        helper.delayRandom(80,100)
+                        ropeConnect()
+                        leftRelease()
+                        helper.delayRandom(700,900)
+                    }
+                } else {
+                    downJump(500)
+                }
+            }
+
         }
     }
 
@@ -105,7 +174,7 @@ class ShadowerTask(var limit : HuntRange,
             send(attackCode1)
             helper.delayRandom(5, 15)
             send(attackCode2)
-            helper.delayRandom(500, 550)
+            helper.delayRandom(attackDelayMin.value, attackDelayMin.value+80)
             isAttacking = false
         }
     }   // 더블점프 공격
@@ -114,7 +183,7 @@ class ShadowerTask(var limit : HuntRange,
         if (!isAttacking) {
             isAttacking = true
             doubleJump2()
-            helper.delayRandom(30, 50)
+            helper.delayRandom(15, 30)
             send(attackCode1)
             helper.delayRandom(5, 15)
             send(attackCode2)
@@ -127,8 +196,7 @@ class ShadowerTask(var limit : HuntRange,
                 helper.delayRandom(5, 15)
                 send(attackCode2)
             }
-
-            helper.delayRandom(500, 550)
+            helper.delayRandom(attackDelayMin.value, attackDelayMin.value+80)
             isAttacking = false
         }
     }   // 더블점프 공격 후 점프공격
@@ -192,7 +260,7 @@ class ShadowerTask(var limit : HuntRange,
     //어썰트공격
     val moveAttackDelay = 20 * 1000
     var moveAttackTime = 0L
-    suspend fun moveAttack(directionKey:Int = KeyEvent.VK_UP){
+    suspend fun moveAttack(directionKey:Int = HWKey.VK_UP) : Boolean{
         val current = System.currentTimeMillis()
         if(current - moveAttackTime > moveAttackDelay) {
             jump()
@@ -204,7 +272,9 @@ class ShadowerTask(var limit : HuntRange,
             upRelease()
 
             moveAttackTime = current
+            return true
         }
+        return false
     }
 
     val buffCheckDelay = 5000   //버프 확인 주기
@@ -222,7 +292,7 @@ class ShadowerTask(var limit : HuntRange,
 
     override suspend fun doubleJump2() {
         send(jumpKey)
-        helper.delayRandom(24, 50)
+        helper.delayRandom(20, 40)
         send(jumpKey2)
     }
 }

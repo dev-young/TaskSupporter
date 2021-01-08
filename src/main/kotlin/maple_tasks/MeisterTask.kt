@@ -361,9 +361,17 @@ class MeisterTask : MapleBaseTask() {
     suspend fun extractItem(itemPosList: List<Point>) {
         logI("${itemPosList.size}개의 아이템 분해 시작")
         //인벤토리 열기
-        openInventory()
-        //분해창 열기
-        openExtract()
+        if(openInventory()){
+            //분해창 열기
+            if(openExtract()){
+
+            } else {
+                logI("분해창 열기 실패!!")
+            }
+        } else {
+            logI("인벤토리를 여는데 실패했습니다.")
+        }
+
 
         var maxCount = getMasExtractSize()    //한번에 분해할 수 있는 아이템 최대 수
 
@@ -380,7 +388,17 @@ class MeisterTask : MapleBaseTask() {
                     clickOkBtn()
                     delayRandom(100, 150)
                     sendEnter()
-                    delayRandom(2800, 2950)
+                    delayRandom(2000, 2150)
+                    var failCount = 0
+                    while (!clickOkBtn(100)) {
+                        moveMouseLB()
+                        delayRandom(200, 230)
+                        failCount++
+                        if(failCount > 20) {
+                            logI("분해 완료 확인창 찾을 수 없습니다.")
+                            return
+                        }
+                    }
                     sendEnter()
                     sendEnter()
                     delayRandom(200, 300)
@@ -477,20 +495,24 @@ class MeisterTask : MapleBaseTask() {
 
     /**분해창을 연다.
      * @param moveWindow 분해창을 인벤토리 옆으로 이동시킨다.*/
-    suspend fun openExtract(moveWindow: Boolean = true) {
+    suspend fun openExtract(moveWindow: Boolean = true): Boolean {
         helper.apply {
-            val window = imageSearch(imgpathExtractWindow)
             val mesoBtn = findInventory()
-            if (window == null) {
-
+            var tryCount = 0
+            while (imageSearch(imgpathExtractWindow) == null) {
                 var extractBtn = imageSearchAndClick(imgpathExtractBtn1, maxTime = 100)
                     ?: imageSearchAndClick(imgpathExtractBtn2, maxTime = 100)
                 if (extractBtn == null) {
                     logI("분해버튼을 찾을 수 없습니다.")
-                    return
+                    return false
                 }
                 simpleClick()
-                delayRandom(200, 300)
+                delayRandom(800, 1000)
+                moveMouseLB(100)
+                tryCount++
+                if(tryCount > 10) {
+                    return false
+                }
             }
             if (moveWindow) {
                 val okBtn = imageSearch(imgpathSynthesizeOKBtn)
@@ -504,10 +526,12 @@ class MeisterTask : MapleBaseTask() {
                         Point(mesoBtn.x + 770, mesoBtn.y - 286)
                     } else Point(mesoBtn.x - 160, mesoBtn.y - 286)
                     smartDrag(extractWindowTitle, dragDestination)
+                    delayRandom(200, 300)
                 }
             }
 
         }
+        return true
     }
 
     suspend fun extractItem(item: Point) {

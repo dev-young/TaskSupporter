@@ -1,11 +1,11 @@
 package maple_tasks.hunt
 
+import helper.HWKey
 import javafx.application.Platform
 import javafx.beans.property.SimpleIntegerProperty
 import kotlinx.coroutines.delay
 import logH
 import tornadofx.c
-import java.awt.event.KeyEvent
 
 class PathfinderTask(
     var limit: HuntRange,
@@ -18,14 +18,14 @@ class PathfinderTask(
             limit.right.value = 190
         }
     }
-    var attackCode1 = KeyEvent.VK_1 //블디
-    var attackCode2 = KeyEvent.VK_SHIFT //미스텔
-    var attackCode3 = KeyEvent.VK_END //어썰트
-    var attackCode4 = KeyEvent.VK_HOME //레조넌스
-    var attackCodeMove = KeyEvent.VK_X //트랜지션
+    var attackCode1 = HWKey.VK_1 //블디
+    var attackCode2 = HWKey.VK_SHIFT //미스텔
+    var attackCode3 = HWKey.VK_END //어썰트
+    var attackCode4 = HWKey.VK_HOME //레조넌스
+    var attackCodeMove = HWKey.VK_X //트랜지션
 
     var buffList = arrayListOf<Buff>().apply {
-        add(Buff(KeyEvent.VK_2, 220))
+        add(Buff(HWKey.VK_2, 220))
     }
 
 
@@ -46,8 +46,8 @@ class PathfinderTask(
                 currentPosition = getCharacterPos()
             }
             leftRelease()
-            send(KeyEvent.VK_RIGHT, 100, 120)
-//            moveAttack(directionKey2 = KeyEvent.VK_RIGHT)
+            send(HWKey.VK_RIGHT, 100, 120)
+//            moveAttack(directionKey2 = HWKey.VK_RIGHT)
             while (limit.right.value > currentPosition?.x ?: 100) {
                 //오른쪽으로 이동
                 rightPress()
@@ -66,7 +66,7 @@ class PathfinderTask(
                 currentPosition = getCharacterPos()
             }
             rightRelease()
-            send(KeyEvent.VK_LEFT, 100, 120)
+            send(HWKey.VK_LEFT, 100, 120)
         }
     }
 
@@ -136,7 +136,7 @@ class PathfinderTask(
     //트렌지션
     val moveAttackDelay = 1500
     var moveAttackTime = 0L
-    suspend fun moveAttack(directionKey1: Int = KeyEvent.VK_UP) {
+    suspend fun moveAttack(directionKey1: Int = HWKey.VK_UP) {
         val current = System.currentTimeMillis()
         if (current - moveAttackTime > moveAttackDelay) {
             helper.delayRandom(50, 80)

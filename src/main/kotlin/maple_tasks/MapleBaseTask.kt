@@ -264,25 +264,28 @@ open class MapleBaseTask {
     }
 
     /**인벤토리창을 연다. */
-    suspend fun openInventory() {
-        val mesoBtn = findInventory()
+    suspend fun openInventory(repeatDelay: Int = 800):Boolean {
 
-        if (mesoBtn == null) {
+        var tryCount = 0
+        while (findInventory() == null) {
+            tryCount++
+            if(tryCount > 50) return false
             helper.send(inventoryKey)
-            delay(100)
-            openInventory()
+            delay(repeatDelay.toLong())
         }
+        return true
     }
 
     /**인벤토리창을 닫는다. */
-    suspend fun closeInventory(repeatDelay: Int = 100) {
-        val mesoBtn = findInventory()
-
-        if (mesoBtn != null) {
+    suspend fun closeInventory(repeatDelay: Int = 800): Boolean {
+        var tryCount = 0
+        while (findInventory() != null) {
+            tryCount++
+            if(tryCount > 50) return false
             helper.send(inventoryKey)
             delay(repeatDelay.toLong())
-            closeInventory()
         }
+        return true
     }
 
     /**전문기술 창을 연다.*/
@@ -299,10 +302,12 @@ open class MapleBaseTask {
                     it
                 }
             }
-
+            var tryCount = 0
             while (findInventory() != null) {
                 closeInventory(1000)
                 delay(500) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
+                if(tryCount++ > 40)
+                    return null
             }
             delay(500)
 
@@ -621,6 +626,7 @@ open class MapleBaseTask {
     suspend fun moveCharacter(destination: Point, range: Int = 1): Boolean {
         helper.apply {
             //y좌표 이동
+            var tryCount = 0
             while (true) {
                 var current = findCharacter()
                 if (current != null) {
@@ -635,7 +641,13 @@ open class MapleBaseTask {
                         moveUpFloor()
                     }
                 }
+                tryCount++
+                if(tryCount > 10){
+                    releaseAll()
+                    return false
+                }
             }
+            delayRandom(1000,2000)
 
             //x좌표 이동
             while (true) {
@@ -643,28 +655,37 @@ open class MapleBaseTask {
                 if (current != null) {
                     val dx = destination.x - current.x
                     if (dx.absoluteValue <= range) {
-                        keyRelease(KeyEvent.VK_LEFT)
-                        keyRelease(KeyEvent.VK_RIGHT)
+                        releaseAll()
                         break
                     }
 
                     if (dx < 0) {    //왼쪽으로 가야하는 경우
+                        if(pressedKeySet.contains(KeyEvent.VK_RIGHT))
+                            keyRelease(KeyEvent.VK_RIGHT)
                         keyPress(KeyEvent.VK_LEFT)
                     } else {    //오른쪽으로 가야하는 경우
+                        if(pressedKeySet.contains(KeyEvent.VK_LEFT))
+                            keyRelease(KeyEvent.VK_LEFT)
                         keyPress(KeyEvent.VK_RIGHT)
                     }
-                    kotlinx.coroutines.delay(5)
+                    kotlinx.coroutines.delay(10)
+                }
+                tryCount++
+                if(tryCount > 1200000){
+                    releaseAll()
+                    return false
                 }
             }
 
         }
 
-        return false
+        return true
     }
 
     /**밑점프 사용*/
     suspend fun moveDownFloor(afterDelay: Int = 500) {
         helper.apply {
+            releaseAll()
             keyPress(KeyEvent.VK_DOWN)
             delayRandom(200, 300)
             send(KeyEvent.VK_ALT)

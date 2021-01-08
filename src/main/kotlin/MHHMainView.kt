@@ -2,12 +2,12 @@ import com.sun.jna.platform.win32.User32
 import helper.BaseTaskManager.Companion.STATE_IDEL
 import helper.BaseTaskManager.Companion.STATE_PAUSED
 import helper.BaseTaskManager.Companion.STATE_WORKING
+import helper.HelperCore
 import javafx.application.Platform
 import javafx.beans.property.*
 import javafx.geometry.Pos
 import javafx.scene.control.Label
 import javafx.scene.control.SelectionMode
-import javafx.scene.control.TextField
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.FontWeight
@@ -69,13 +69,32 @@ class MHHMainView : View() {
         }
 
         center = tabpane {
-
             tab("사냥") {
                 isClosable = false
 
                 vbox {
                     paddingAll = defaultItemSpacing
                     spacing = defaultItemSpacing
+
+                    hbox {
+                        textfield(taskManager.portName){
+                            maxWidth = 80.0
+                        }
+                        button("연결") {
+                            action {
+                                taskManager.connectHW()
+                            }
+                        }
+                        val keyCode = SimpleIntegerProperty(128)
+                        textfield(keyCode){
+                            maxWidth = 80.0
+                        }
+                        button("연결") {
+                            action {
+                                taskManager.keyTest(keyCode.value)
+                            }
+                        }
+                    }
 
                     hbox {
                         spacing = defaultItemSpacing
@@ -150,16 +169,25 @@ class MHHMainView : View() {
 
                     }
 
-                    button("아델 일자맵") {
+                    button("섀도어 본색1") {
                         action {
-                            taskManager.horizontalHuntAdel()
+                            taskManager.shadowerLachelein1()
                         }
                     }
+
+
                     button("섀도어 머쉬버드숲") {
                         action {
                             taskManager.mushBirdHuntShadower()
                         }
                     }
+
+                    button("아델 일자맵") {
+                        action {
+                            taskManager.horizontalHuntAdel()
+                        }
+                    }
+
                     button("패파 안개숲") {
                         action {
                             taskManager.mistyForestHuntPathfinder()
