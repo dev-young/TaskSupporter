@@ -57,7 +57,7 @@ class MapleTaskManager : BaseTaskManager() {
                 NativeKeyEvent.VC_F4 -> {
                     if (jobMap.isEmpty())
                         if (Settings.instance.enableF4OnlyForeground) {
-                            if (User32.INSTANCE.winIsForeground("GHelper")) {
+                            if (User32.INSTANCE.winIsForeground("MSH")) {
                                 finishApp()
                             } else return@setPressedListener true
                         } else

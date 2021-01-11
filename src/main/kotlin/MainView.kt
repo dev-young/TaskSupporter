@@ -1099,7 +1099,7 @@ class MainView : View() {
 
     init {
         root.titledpane {
-            title = "GHelper"
+            title = "MSH"
             try {
                 addStageIcon(Image("https://upload2.inven.co.kr/upload/2019/10/14/bbs/i15774573889.png"))
             } catch (e: Exception) {
