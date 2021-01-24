@@ -34,9 +34,11 @@ open class HuntBaseTask {
     class CheckTargets(
         val violeta: SimpleBooleanProperty = SimpleBooleanProperty(true),
         val rune: SimpleBooleanProperty = SimpleBooleanProperty(true),
-        val bounty: SimpleBooleanProperty = SimpleBooleanProperty(true),
-        val boss: SimpleBooleanProperty = SimpleBooleanProperty(false),
-        val stony: SimpleBooleanProperty = SimpleBooleanProperty(false),
+        val rune2: SimpleBooleanProperty = SimpleBooleanProperty(false),
+        val bounty: SimpleBooleanProperty = SimpleBooleanProperty(false),
+        val boss: SimpleBooleanProperty = SimpleBooleanProperty(true),
+        val stony: SimpleBooleanProperty = SimpleBooleanProperty(true),
+        val event: SimpleBooleanProperty = SimpleBooleanProperty(false),
         var delay: SimpleLongProperty = SimpleLongProperty(4000)
     )
 
@@ -82,10 +84,12 @@ open class HuntBaseTask {
 
     val characterMat = Imgcodecs.imread("img\\myChar.png")
     val runeMat = Imgcodecs.imread("img\\hunt\\rune.png")
+    val rune2Mat = Imgcodecs.imread("img\\hunt\\rune2.png")
     val bountyMat = Imgcodecs.imread("img\\hunt\\bounty.png")
     val violetaMat = Imgcodecs.imread("img\\hunt\\violeta.png")
     val bossMat = Imgcodecs.imread("img\\hunt\\boss.png")
     val stonyMat = Imgcodecs.imread("img\\hunt\\stony.png")
+    val eventMat = Imgcodecs.imread("img\\hunt\\eventComplete.png")
     val mapStart = Point(10, 80)
     var mapWidth = 250
     var mapHeight = 100
@@ -105,83 +109,6 @@ open class HuntBaseTask {
                     it.y - rect.top
                 )
             }
-        }
-    }
-
-    fun checkRune(): Point? {
-        helper.apply {
-            val rect = user32.winGetPos()
-            val mapLeftTop = Point(rect.left + mapStart.x, rect.top + mapStart.y)
-            return imageSearch(mapLeftTop, mapWidth, mapHeight, runeMat, 95.0)
-        }
-    }
-
-    fun checkRuneAndBounty(source: Mat? = null): Point? {
-        source?.let { it ->
-            val halfRB = it.rowRange(it.rows() / 2, it.rows()).colRange(it.cols() / 2, it.cols())
-            return helper.imageSearch(halfRB, violetaMat, 95.0)
-        }
-        helper.apply {
-            val rect = user32.winGetPos()
-            val mapLeftTop = Point(rect.left + mapStart.x, rect.top + mapStart.y)
-            val source = createScreenCapture(Rectangle(mapLeftTop.x, mapLeftTop.y, mapWidth, mapHeight)).toMat()
-            return imageSearch(source, runeMat, 95.0) ?: imageSearch(source, bountyMat, 95.0)
-        }
-    }
-
-    /**@param source 메이플창의 Mat*/
-    fun checkVioleta(source: Mat? = null): Point? {
-        source?.let { it ->
-            val halfRB = it.rowRange(it.rows() / 2, it.rows()).colRange(it.cols() / 2, it.cols())
-            return helper.imageSearch(halfRB, violetaMat, 95.0)
-        }
-        helper.apply {
-            val rect = user32.winGetPos()
-            val halfWidth = rect.width() / 2
-            val halfHeight = rect.getHeight() / 2
-            val violetaLeftTop = Point(rect.left + halfWidth, rect.top + halfHeight)
-            return imageSearch(violetaLeftTop, halfWidth, halfHeight, violetaMat, 95.0)
-        }
-    }
-
-    var checkTime = 0L
-    fun checkRuneAndVioleta(checkDelay: Int = 3000) {
-        val c = System.currentTimeMillis()
-        if (c - checkTime > checkDelay) {
-            checkTime = c
-            GlobalScope.launch(Dispatchers.Default) {
-                checkRune()?.let {
-                    Toolkit.getDefaultToolkit().beep()
-                }
-                checkVioleta()?.let {
-                    Toolkit.getDefaultToolkit().beep()
-                    delay(850)
-                    Toolkit.getDefaultToolkit().beep()
-                    delay(850)
-                    Toolkit.getDefaultToolkit().beep()
-                }
-            }
-
-        }
-    }
-
-    fun checkRuneBountyAndVioleta(checkDelay: Int = 3000) {
-        val c = System.currentTimeMillis()
-        if (c - checkTime > checkDelay) {
-            checkTime = c
-            GlobalScope.launch(Dispatchers.Default) {
-                checkRuneAndBounty()?.let {
-                    Toolkit.getDefaultToolkit().beep()
-                }
-                checkVioleta()?.let {
-                    Toolkit.getDefaultToolkit().beep()
-                    delay(850)
-                    Toolkit.getDefaultToolkit().beep()
-                    delay(850)
-                    Toolkit.getDefaultToolkit().beep()
-                }
-            }
-
         }
     }
 
@@ -212,6 +139,10 @@ open class HuntBaseTask {
                         Toolkit.getDefaultToolkit().beep()
                         logH("룬")
                     }
+                    if (rune2.value && helper.imageSearchReturnBoolean(source, rune2Mat, 35.0)) {
+                        Toolkit.getDefaultToolkit().beep()
+                        logH("룬2")
+                    }
                     if (bounty.value && helper.imageSearchReturnBoolean(map, bountyMat, 95.0)) {
                         Toolkit.getDefaultToolkit().beep()
                         logH("현상금/불늑")
@@ -223,6 +154,10 @@ open class HuntBaseTask {
                     if (stony.value && helper.imageSearchReturnBoolean(source, stonyMat, 95.0)) {
                         Toolkit.getDefaultToolkit().beep()
                         logH("석화")
+                    }
+                    if (event.value && helper.imageSearchReturnBoolean(source, eventMat, 95.0)) {
+                        Toolkit.getDefaultToolkit().beep()
+                        logH("코인 완료")
                     }
                 }
 
@@ -246,9 +181,9 @@ open class HuntBaseTask {
         send(jumpKey)
     }
 
-    open suspend fun doubleJump2() {
+    open suspend fun doubleJump2(delayMin: Int = 50, delayMax: Int = 80) {
         send(jumpKey)
-        helper.delayRandom(50, 80)
+        helper.delayRandom(delayMin, delayMax)
         send(jumpKey2)
     }
 

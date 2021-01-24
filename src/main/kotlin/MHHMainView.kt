@@ -162,37 +162,62 @@ class MHHMainView : View() {
                         spacing = 9.0
                         checkbox("비올레타", taskManager.checkTargets.violeta)
                         checkbox("룬", taskManager.checkTargets.rune)
-                        checkbox("현상금", taskManager.checkTargets.bounty)
                         checkbox("엘보", taskManager.checkTargets.boss)
                         checkbox("석화", taskManager.checkTargets.stony)
+                    }
+
+                    hbox {
+                        alignment = Pos.CENTER
+                        spacing = 9.0
+                        checkbox("룬2", taskManager.checkTargets.rune2)
+                        checkbox("현상금", taskManager.checkTargets.bounty)
+                        checkbox("코인", taskManager.checkTargets.event)
                         textfield(taskManager.checkTargets.delay) { maxWidth = 50.0 }
-
                     }
 
-                    button("섀도어 본색1") {
-                        action {
-                            taskManager.shadowerLachelein1()
+                    hbox {
+
+                        vbox {
+                            spacing = 8.0
+                            button("섀도어 물햇살숲") {
+                                action {
+                                    taskManager.shadowerArcana1()
+                                }
+                            }
+
+                            button("섀도어 본색1") {
+                                action {
+                                    taskManager.shadowerLachelein1()
+                                }
+                            }
+
+                            button("섀도어 머쉬버드숲") {
+                                action {
+                                    taskManager.mushBirdHuntShadower()
+                                }
+                            }
                         }
-                    }
 
-
-                    button("섀도어 머쉬버드숲") {
-                        action {
-                            taskManager.mushBirdHuntShadower()
+                        vbox {
+                            spacing = 8.0
+                            button("패파 안개숲") {
+                                action {
+                                    taskManager.mistyForestHuntPathfinder()
+                                }
+                            }
                         }
+
+                        vbox {
+                            spacing = 8.0
+                            button("아델 일자맵") {
+                                action {
+                                    taskManager.horizontalHuntAdel()
+                                }
+                            }
+                        }
+
                     }
 
-                    button("아델 일자맵") {
-                        action {
-                            taskManager.horizontalHuntAdel()
-                        }
-                    }
-
-                    button("패파 안개숲") {
-                        action {
-                            taskManager.mistyForestHuntPathfinder()
-                        }
-                    }
                 }
             }
 

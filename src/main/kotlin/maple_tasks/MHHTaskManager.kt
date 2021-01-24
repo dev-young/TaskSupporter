@@ -124,14 +124,17 @@ class MHHTaskManager : BaseTaskManager() {
         return User32.INSTANCE.winActive(winTarget.value)
     }
 
-    private fun releaseAllKey() {
+    private suspend fun releaseAllKey(delayBefore:Long = 100) {
+        delay(delayBefore)
         currentHuntTask.helper.releaseAll()
     }
 
 
     override fun resetTask() {
         super.resetTask()
-        releaseAllKey()
+        GlobalScope.launch(Dispatchers.Default){
+            releaseAllKey(300)
+        }
     }
 
     fun horizontalHuntAdel() {
@@ -151,6 +154,17 @@ class MHHTaskManager : BaseTaskManager() {
                 ShadowerTask(huntRange, attackDelayMin).apply {
                     currentHuntTask = this
                     startLachelein1()
+                }
+            }
+        }
+    }
+
+    fun shadowerArcana1() {
+        runTask("hunt") {
+            if (activateTargetWindow()) {
+                ShadowerTask(huntRange, attackDelayMin).apply {
+                    currentHuntTask = this
+                    startArcana1()
                 }
             }
         }
@@ -193,7 +207,9 @@ class MHHTaskManager : BaseTaskManager() {
 
     override fun toggle() {
         super.toggle()
-        releaseAllKey()
+        GlobalScope.launch(Dispatchers.Default){
+            releaseAllKey(300)
+        }
     }
 
     fun keyTest(key: Int) {

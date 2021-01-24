@@ -29,19 +29,19 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-jar {
-    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-    manifest {
-        attributes 'Main-Class': 'MyApp'
-        destinationDirectory = file("$rootDir/out")
-    }
-    archiveName('TaskSupporter.jar')
-}
 //jar {
 //    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 //    manifest {
-//        attributes 'Main-Class': 'MHH'
+//        attributes 'Main-Class': 'MyApp'
 //        destinationDirectory = file("$rootDir/out")
 //    }
-//    archiveName('MHH.jar')
+//    archiveName('TaskSupporter.jar')
 //}
+jar {
+    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest {
+        attributes 'Main-Class': 'MHH'
+        destinationDirectory = file("$rootDir/out")
+    }
+    archiveName('MHH.jar')
+}

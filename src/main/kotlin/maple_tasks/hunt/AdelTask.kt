@@ -30,7 +30,7 @@ class AdelTask(var limit : HuntRange) : HuntBaseTask() {
     override suspend fun doubleJump(delayMin: Int, delayMax: Int) {
         val current = System.currentTimeMillis()
         if(current - lastJump > jumpDelayMin){
-            super.doubleJump2()
+            super.doubleJump2(delayMin, delayMax)
             lastJump = current
         }
     }

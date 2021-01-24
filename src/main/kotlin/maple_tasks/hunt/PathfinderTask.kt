@@ -41,12 +41,10 @@ class PathfinderTask(
                 if(helper.random.nextBoolean())
                     leftRelease()
 //                buff()
-                checkRuneAndVioleta()
                 delay(10)
                 currentPosition = getCharacterPos()
             }
             leftRelease()
-            send(HWKey.VK_RIGHT, 100, 120)
 //            moveAttack(directionKey2 = HWKey.VK_RIGHT)
             while (limit.right.value > currentPosition?.x ?: 100) {
                 //오른쪽으로 이동
@@ -54,6 +52,10 @@ class PathfinderTask(
                 currentPosition?.let {
                     if(it.y > 122){ //1층인 거
                         delay(800)
+                        if(helper.random.nextBoolean()){
+                            helper.delayRandom(50, 80)
+                            jump()
+                        }
                         moveAttack()
                     }
                 }
@@ -61,7 +63,6 @@ class PathfinderTask(
                 if(helper.random.nextBoolean())
                     rightRelease()
 //                buff()
-                checkRuneAndVioleta()
                 delay(10)
                 currentPosition = getCharacterPos()
             }
@@ -71,7 +72,7 @@ class PathfinderTask(
     }
 
     suspend fun attack() {
-        if(helper.random.nextInt(100) < 85) {
+        if(helper.random.nextInt(100) < 90) {
             attack3()
             attack1()
         } else {
@@ -86,8 +87,8 @@ class PathfinderTask(
     suspend fun attack1() {
         val current = System.currentTimeMillis()
         if (current - lastAttack > attackDelayMin.value) {
-            doubleJump(50, 70)
-            helper.delayRandom(20, 40)
+            doubleJump(40, 60)
+            helper.delayRandom(10, 20)
             send(attackCode1)
             lastAttack = current
             helper.delayRandom(30, 60)
@@ -139,13 +140,9 @@ class PathfinderTask(
     suspend fun moveAttack(directionKey1: Int = HWKey.VK_UP) {
         val current = System.currentTimeMillis()
         if (current - moveAttackTime > moveAttackDelay) {
-            helper.delayRandom(50, 80)
-            jump()
-            helper.delayRandom(50, 80)
-            helper.keyPress(directionKey1)
-            helper.delayRandom(50, 80)
             jump()
             helper.delayRandom(200, 250)
+            helper.keyPress(directionKey1)
             send(attackCodeMove)
 
             helper.delayRandom(25, 50)
