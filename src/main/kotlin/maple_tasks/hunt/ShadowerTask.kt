@@ -163,9 +163,6 @@ class ShadowerTask(
             while (limit.left.value < currentPosition?.x ?: 100) {
                 //왼쪽으로 이동
                 leftPress()
-                if (currentPosition != null && currentPosition.y < 105 && currentPosition.x > 93 && currentPosition.x < 130) {
-                    attack3()
-                }
                 attack()
                 if (helper.random.nextBoolean())
                     leftRelease()
@@ -193,9 +190,6 @@ class ShadowerTask(
             while (limit.right.value > currentPosition?.x ?: 100) {
                 //오른쪽으로 이동
                 rightPress()
-                if (currentPosition != null && currentPosition.y < 105 && currentPosition.x > 83 && currentPosition.x < 117) {
-                    attack3()
-                }
                 attack()
                 if (helper.random.nextBoolean())
                     rightRelease()

@@ -22,6 +22,8 @@ class Settings {
 
     var synthesizeMouseDelay = 100  //합성시 마우스 딜레이
 
+    var buyItemMaxTimeMinute = 360  //경매장 구매시 최대 동작 시간 (단위: 분)
+
     var logStepWhenSynthesizeUtilEndFast = true //무한합성시 단계별 로그 남기기
     var logStepWhenBuyItemListUntilEnd = false //구매 및 제작시 단계별 로그 남기기
 

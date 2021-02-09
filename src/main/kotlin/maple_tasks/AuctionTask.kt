@@ -88,12 +88,14 @@ class AuctionTask : MapleBaseTask() {
         itemName: String? = null,
         waitingTime: Long = 900000,
         extract: Boolean = false,
-        usePurchasedTab: Boolean = true
+        usePurchasedTab: Boolean = true,
+        maxTimeMinute: Int = Settings.instance.buyItemMaxTimeMinute
     ) {
         fun log(msg:Any) {
             if (Settings.instance.logStepWhenBuyItemListUntilEnd)
                 logI(msg)
         }
+        val endTime = (maxTimeMinute.toLong() * 60 * 1000) + System.currentTimeMillis()
         val itemList = loadItemList(filePath) ?: let {
             logI("파일을 찾을 수 없습니다.")
             return
@@ -184,6 +186,10 @@ class AuctionTask : MapleBaseTask() {
                     delay(500L)
                     sendEnter()
                     noResultCount++
+                    if(System.currentTimeMillis() > endTime) {
+                        logI("시간 종료!")
+                        break@root
+                    }
                 }
 
                 //아이템 제작 사용하는 경우
