@@ -198,17 +198,19 @@ class AuctionTask : MapleBaseTask() {
                     if (System.currentTimeMillis() - lastMakeTime > waitingTime) {
                         //지정한 시간이 지난경우 아이템 제작
                         log("옥션 종료")
+                        delayRandom(1000, 2000)
                         exitAuction()
                         delayRandom(2000, 2200)
-                        if (openInventory() && closeInventory()) {
+                        if (openInventory(1500) && closeInventory(1500)) {
 
                         } else {
                             logI("인벤토리 확인 실패")
                         }
                         log("캐릭터 이동 시작")
                         if(moveCharacter(meisterTask.meisterPosition1)){
+                            delayRandom(1000, 2000)
                             log("제작 시작")
-                            if (meisterTask.makeItemAndExtractIfNormal(itemName))
+                            if (meisterTask.makeItemAndExtractIfNormal(itemName, 10))
                                 lastMakeTime = System.currentTimeMillis()
                         } else {
                             logI("캐릭터 이동 실패")

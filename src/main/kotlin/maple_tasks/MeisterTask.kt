@@ -209,8 +209,8 @@ class MeisterTask : MapleBaseTask() {
     }
 
     /**장비 제작후 일반등급 아이템이면 분해한다. */
-    suspend fun makeItemAndExtractIfNormal(itemName: String): Boolean {
-        val success = makeItem(itemName)
+    suspend fun makeItemAndExtractIfNormal(itemName: String, waitTimeMinute: Int = 0): Boolean {
+        val success = makeItem(itemName, waitTimeMinute)
         if (success) {
             helper.apply {
                 //신규 아이템 표시 제거

@@ -395,16 +395,16 @@ open class AdditionalOptionTask : MapleBaseTask() {
         //targetOptions: 아이템의 직업군, 종류에 따라 목표 옵션을 지정한다.
         val targetOptions = hashMapOf<String, Int>().apply {
             if (category == FACE) {
-                this[UpgradeItemTask.STR] = 40
-                this[UpgradeItemTask.DEX] = 40
-                this[UpgradeItemTask.LUK] = 40
-                this[UpgradeItemTask.INT] = 40
+                this[UpgradeItemTask.STR] = 50
+                this[UpgradeItemTask.DEX] = 50
+                this[UpgradeItemTask.LUK] = 50
+                this[UpgradeItemTask.INT] = 50
                 this[UpgradeItemTask.HP] = 2300
             } else if (category == EYE) {
-                this[UpgradeItemTask.STR] = 40
-                this[UpgradeItemTask.DEX] = 40
-                this[UpgradeItemTask.LUK] = 40
-                this[UpgradeItemTask.INT] = 40
+                this[UpgradeItemTask.STR] = 50
+                this[UpgradeItemTask.DEX] = 50
+                this[UpgradeItemTask.LUK] = 50
+                this[UpgradeItemTask.INT] = 50
                 this[UpgradeItemTask.HP] = 2100
             } else {
                 this[UpgradeItemTask.STR] = 70
@@ -463,8 +463,8 @@ open class AdditionalOptionTask : MapleBaseTask() {
         if(job != COMMON) {
             option.forEach { t, u ->
                 if(u > 49) {
-                    //깡추가 50이 넘는 경우 10 추가하여 계산
-                    option[t] = u+10
+                    //깡추가 50이 넘는 경우 6 추가하여 계산
+                    option[t] = u+3
                 }
             }
         }
@@ -485,10 +485,10 @@ open class AdditionalOptionTask : MapleBaseTask() {
         }
 
         option[UpgradeItemTask.ATT]?.let {
-            val state = it * 4
+            val state = it * 3
             val lowState = it * 2   //덱스같은 인기 없는 스텟을 위의 인트와 같은 이유로 배율을 낮게 곱하여 계산
             option[UpgradeItemTask.STR] = option[UpgradeItemTask.STR]?.plus(state) ?: state
-            option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(lowState) ?: lowState
+            option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(state) ?: state
             /**추후 덱스가 비싸지면 그냥 state 사용*/
             option[UpgradeItemTask.LUK] = option[UpgradeItemTask.LUK]?.plus(state) ?: state
             option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it * 140) ?: it * 140

@@ -290,31 +290,32 @@ open class MapleBaseTask {
 
     /**전문기술 창을 연다.*/
     suspend fun openProductionSkill(): Point? {
-        val searchBtn = helper.imageSearch("img\\meister\\searchBtn.png")
+        var searchBtn = helper.imageSearch("img\\meister\\searchBtn.png")
 
-        if (searchBtn == null) {
+        var tryCount = 0
+        while (searchBtn == null) {
+            if (tryCount++ > 10) return null
             helper.apply {
-                openInventory()
+                openInventory(1500)
+                delayRandom(200, 400)
                 send(productionSkillKey)
                 delayRandom(200, 400)
-                val p = imageSearch("img\\meister\\productionSkill.png")?.let {
+                imageSearch("img\\meister\\productionSkill.png")?.let {
+                    //3번째 탭 클릭
                     smartClick(Point(it.x + 4, it.y + 21), 28, 10, maxTime = 150)
-                    it
                 }
             }
-            var tryCount = 0
+            var tryCount2 = 0
             while (findInventory() != null) {
-                closeInventory(1000)
-                delay(500) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
-                if(tryCount++ > 40)
+                closeInventory(1500)
+                delay(1000) //전문기술창 로딩 (시간이 생각보다 오래 걸린다.)
+                if(tryCount2++ > 40)
                     return null
             }
             delay(500)
-
-            return openProductionSkill()
-        } else {
-            return searchBtn
+            searchBtn = helper.imageSearch("img\\meister\\searchBtn.png")
         }
+        return searchBtn
     }
 
     /**전문기술 창을 닫는다.*/
@@ -687,9 +688,9 @@ open class MapleBaseTask {
         helper.apply {
             releaseAll()
             keyPress(KeyEvent.VK_DOWN)
-            delayRandom(200, 300)
+            delayRandom(300, 500)
             send(KeyEvent.VK_ALT)
-            delayRandom(100, 200)
+            delayRandom(200, 400)
             keyRelease(KeyEvent.VK_DOWN)
             delayRandom(afterDelay, afterDelay + 100)
         }
