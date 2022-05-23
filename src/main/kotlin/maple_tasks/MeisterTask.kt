@@ -620,13 +620,9 @@ class MeisterTask : MapleBaseTask() {
 
         helper.apply {
             moveMouseSmoothly(pair.first, mouseDelay)
-            smartClick(pair.first, 15, 15)
-            moveMouseSmoothly(synItem.first, mouseDelay)
-            smartClick(synItem.first, 6, 6)
+            smartClick(pair.first, 15, 15, KeyEvent.BUTTON3_MASK)
             moveMouseSmoothly(pair.second, mouseDelay)
-            smartClick(pair.second, 15, 15)
-            moveMouseSmoothly(synItem.second, mouseDelay)
-            smartClick(synItem.second, 6, 6)
+            smartClick(pair.second, 15, 15, KeyEvent.BUTTON3_MASK)
             moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
             if(clickSynOkBtn(mouseDelay)){
@@ -634,10 +630,8 @@ class MeisterTask : MapleBaseTask() {
                 simpleClick()
                 sendEnter()
             } else {
-                smartClick(pair.first, 15, 15, maxTime = mouseDelay)
-                smartClick(synItem.first, 6, 6, maxTime = mouseDelay)
-                smartClick(pair.second, 15, 15, maxTime = mouseDelay)
-                smartClick(synItem.second, 6, 6, maxTime = mouseDelay)
+                smartClick(pair.first, 15, 15, maxTime = mouseDelay, keyCode = KeyEvent.BUTTON3_MASK)
+                smartClick(pair.second, 15, 15, maxTime = mouseDelay, keyCode = KeyEvent.BUTTON3_MASK)
                 moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
                 if(clickSynOkBtn(50)){
