@@ -395,22 +395,22 @@ open class AdditionalOptionTask : MapleBaseTask() {
         //targetOptions: 아이템의 직업군, 종류에 따라 목표 옵션을 지정한다.
         val targetOptions = hashMapOf<String, Int>().apply {
             if (category == FACE) {
-                this[UpgradeItemTask.STR] = 50
-                this[UpgradeItemTask.DEX] = 50
-                this[UpgradeItemTask.LUK] = 50
-                this[UpgradeItemTask.INT] = 50
+                this[UpgradeItemTask.STR] = 55
+                this[UpgradeItemTask.DEX] = 55
+                this[UpgradeItemTask.LUK] = 55
+                this[UpgradeItemTask.INT] = 55
                 this[UpgradeItemTask.HP] = 2300
             } else if (category == EYE) {
-                this[UpgradeItemTask.STR] = 50
-                this[UpgradeItemTask.DEX] = 50
-                this[UpgradeItemTask.LUK] = 50
-                this[UpgradeItemTask.INT] = 50
+                this[UpgradeItemTask.STR] = 55
+                this[UpgradeItemTask.DEX] = 55
+                this[UpgradeItemTask.LUK] = 55
+                this[UpgradeItemTask.INT] = 55
                 this[UpgradeItemTask.HP] = 2100
             } else {
-                this[UpgradeItemTask.STR] = 70
-                this[UpgradeItemTask.DEX] = 70
-                this[UpgradeItemTask.LUK] = 70
-                this[UpgradeItemTask.INT] = 70
+                this[UpgradeItemTask.STR] = 82
+                this[UpgradeItemTask.DEX] = 82
+                this[UpgradeItemTask.LUK] = 82
+                this[UpgradeItemTask.INT] = 82
                 this[UpgradeItemTask.HP] = 3150
             }
 
