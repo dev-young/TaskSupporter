@@ -272,7 +272,7 @@ class MapleTaskManager : BaseTaskManager() {
                         var wordNumber: String
                         var characterIndex: String
                         var description: String
-                        var temp = s[2]
+                        var temp = s.getOrNull(2)?:""
                         if (s[0].contains('@')) {
                             temp.split(" ", limit = 2).let {
                                 fileName = it[0]
@@ -281,7 +281,7 @@ class MapleTaskManager : BaseTaskManager() {
                         }
                         temp.split(" ", limit = 3).let {
                             wordNumber = it[0]
-                            characterIndex = it[1]
+                            characterIndex = it.getOrNull(1)?:""
                             description = if(it.size == 3) it[2] else ""
                         }
 
