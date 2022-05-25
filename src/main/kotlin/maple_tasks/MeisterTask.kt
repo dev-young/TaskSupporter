@@ -620,26 +620,42 @@ class MeisterTask : MapleBaseTask() {
 
         helper.apply {
             moveMouseSmoothly(pair.first, mouseDelay)
-            smartClick(pair.first, 15, 15, KeyEvent.BUTTON3_MASK)
+            smartClick(pair.first, 10, 10, KeyEvent.BUTTON3_MASK)
+            smartClick(pair.first, 10, 10, KeyEvent.BUTTON3_MASK)
             moveMouseSmoothly(pair.second, mouseDelay)
-            smartClick(pair.second, 15, 15, KeyEvent.BUTTON3_MASK)
+            smartClick(pair.second, 10, 10, KeyEvent.BUTTON3_MASK)
+            smartClick(pair.second, 10, 10, KeyEvent.BUTTON3_MASK)
             moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
             if(clickSynOkBtn(mouseDelay)){
-                delayRandom(50, 100)
+                delayRandom(100, 200)
                 simpleClick()
                 sendEnter()
             } else {
-                smartClick(pair.first, 15, 15, maxTime = mouseDelay, keyCode = KeyEvent.BUTTON3_MASK)
-                smartClick(pair.second, 15, 15, maxTime = mouseDelay, keyCode = KeyEvent.BUTTON3_MASK)
+                logI("합성 1차 실패")
+                //올라가있는 아이템 해제
+                delayRandom(500, 1000)
+                moveMouseSmoothly(synItem.first, mouseDelay)
+                simpleClick(synItem.first, count = 3)
+                delayRandom(300, 500)
+                moveMouseSmoothly(synItem.second, mouseDelay)
+                simpleClick(synItem.second, count = 3)
+
+                //재시도
+                delayRandom(500, 1000)
+                smartClick(pair.first, 10, 10, KeyEvent.BUTTON3_MASK)
+                smartClick(pair.first, 10, 10, KeyEvent.BUTTON3_MASK)
+                moveMouseSmoothly(pair.second, mouseDelay)
+                smartClick(pair.second, 10, 10, KeyEvent.BUTTON3_MASK)
+                smartClick(pair.second, 10, 10, KeyEvent.BUTTON3_MASK)
                 moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
 
-                if(clickSynOkBtn(50)){
-                    delayRandom(50, 100)
+                if(clickSynOkBtn(mouseDelay)){
+                    delayRandom(100, 200)
                     simpleClick()
                     sendEnter()
                 } else {
-                    logI("더이상 합성을 진행할 수 없습니다")
+                    logI("더이상 합성을 진행할 수 없습니다.(합성 2차 실패)")
                     return false
                 }
             }
