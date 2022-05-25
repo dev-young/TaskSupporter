@@ -641,7 +641,8 @@ class MeisterTask : MapleBaseTask() {
                 simpleClick(synItem.second, count = 3)
 
                 //재시도
-                delayRandom(500, 1000)
+                delayRandom(500, 800)
+                moveMouseSmoothly(pair.first, mouseDelay)
                 smartClick(pair.first, 10, 10, KeyEvent.BUTTON3_MASK)
                 moveMouseSmoothly(pair.second, mouseDelay)
                 smartClick(pair.second, 10, 10, KeyEvent.BUTTON3_MASK)

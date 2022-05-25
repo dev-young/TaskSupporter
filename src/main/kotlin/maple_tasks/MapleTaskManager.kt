@@ -913,6 +913,8 @@ class MapleTaskManager : BaseTaskManager() {
                     optionTask.goodItems.clear()
                     Platform.runLater { goodItemList.clear() }
 
+                    val goodItemInfoList = arrayListOf<Pair<ItemInfo, Point>>()
+
                     //추옵 싹 확인하기
                     val removeTargets = arrayListOf<Inventory.Item>()
                     var lastItemInfo = ""
@@ -921,6 +923,7 @@ class MapleTaskManager : BaseTaskManager() {
                             optionTask.getOptions(item.point, lastItemInfo)?.let {
                                 lastItemInfo = it.getUid()
                                 if (optionTask.isOptionGood(it)) {
+                                    goodItemInfoList.add(Pair(it, item.point))
                                     optionTask.goodItems.add(item.point)
                                     Platform.runLater { goodItemList.add(it.getInfoText()) }
                                     removeTargets.add(item)
@@ -938,6 +941,7 @@ class MapleTaskManager : BaseTaskManager() {
                     openSynthesize()
 
                     moveMouseLB(30)
+
 
                     var synCount = 0
                     out@while (inventory.isNotEmpty() && synCount < maxSynCount) {
@@ -964,10 +968,11 @@ class MapleTaskManager : BaseTaskManager() {
                                 newItem.setMet(temp)
                                 log("합성 성공: ${pair.first.point.x},${pair.first.point.y} + ${pair.second.point.x},${pair.second.point.y} = ${newItem.point.x},${newItem.point.y}")
                                 //합성된 아이템 추옵 체크
-                                optionTask.getOptions(newItem.point)?.let {
+                                optionTask.getOptions(newItem.point, useRightBtn = false)?.let {
                                     val infoText = it.getInfoText()
                                     if (optionTask.isOptionGood(it)) {
                                         optionTask.goodItems.add(newItem.point)
+                                        goodItemInfoList.add(Pair(it, newItem.point))
                                         Platform.runLater { goodItemList.add(infoText) }
                                         inventory.removeItem(newItem)
                                         logI("◈합성결과: $infoText")
@@ -993,7 +998,13 @@ class MapleTaskManager : BaseTaskManager() {
 
                     logI("합성 횟수:$synCount  유효추옵:${goodItemList.size}개")
 
-                    optionTask.goodItems.forEachIndexed { index, point ->
+                    goodItemInfoList.sortByDescending { it.first.getGrade().second }
+                    Platform.runLater {
+                        goodItemList.clear()
+                        goodItemList.addAll(goodItemInfoList.map { it.first.getInfoText() })
+                    }
+
+                    goodItemInfoList.forEachIndexed { index, (info, point) ->
                         val destination = inventory.list.get(inventory.list.lastIndex - index).point
                         helper.apply {
                             smartClick(point, 10, 10, maxTime = 100)

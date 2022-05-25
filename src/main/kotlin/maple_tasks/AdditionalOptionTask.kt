@@ -173,7 +173,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
     private val infoDivider = Imgcodecs.imread("$baseImgPath\\infoDivider.png")
     private val jobBeginner1 = Imgcodecs.imread("$baseImgPath\\jobBeginner1.png")
     private val jobBeginner2 = Imgcodecs.imread("$baseImgPath\\jobBeginner2.png")
-    suspend fun getOptions(item: Point, beforeUid: String = ""): ItemInfo? {
+    suspend fun getOptions(item: Point, beforeUid: String = "", useRightBtn:Boolean = true): ItemInfo? {
         helper.apply {
 
             var isUpgraded: Boolean
@@ -265,7 +265,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
 
             //렉으로 인해 인식 실패할 가능성이 있으므로 인식 실패시 19번 더 시도
             val totalInfoMat = getTotalInfoMat(Settings.instance.delayOnCheckOptions) ?: let {
-                simpleClick(KeyEvent.BUTTON3_MASK)  //
+                if(useRightBtn) simpleClick(KeyEvent.BUTTON3_MASK)  //합성할때는 사용 안하게 하기위해 조건문 처리
                 var mat = getTotalInfoMat(50)
                 for (i in 1..19) if (mat != null) break else mat = getTotalInfoMat(100)
                 mat
