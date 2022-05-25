@@ -962,7 +962,7 @@ class MapleTaskManager : BaseTaskManager() {
 
                                 val newItem = inventory.getFirstEmpty()!!
                                 newItem.setMet(temp)
-                                log("합성 성공: ${newItem.point.x},${newItem.point.y}")
+                                log("합성 성공: ${pair.first.point.x},${pair.first.point.y} + ${pair.second.point.x},${pair.second.point.y} = ${newItem.point.x},${newItem.point.y}")
                                 //합성된 아이템 추옵 체크
                                 optionTask.getOptions(newItem.point)?.let {
                                     val infoText = it.getInfoText()
@@ -977,7 +977,7 @@ class MapleTaskManager : BaseTaskManager() {
                                 }
 
                             } else {
-                                logI("합성 실패!")
+                                logI("합성 실패! ${pair.first.point.x},${pair.first.point.y} + ${pair.second.point.x},${pair.second.point.y}")
                                 clickOkBtn(300)//오류창 닫기
                                 clickOkBtn()//오류창 닫기
                                 break@out
