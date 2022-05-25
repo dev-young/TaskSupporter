@@ -118,7 +118,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
             val unsortedList = arrayListOf<Pair<ItemInfo, Point>>()
             items.forEach { item ->
                 getOptions(item, last)?.let {
-                    last = it.getUid()
+                    last = it.getInfoText()
                     if (isOptionGood(it)) {
                         unsortedList.add(Pair(it, item))
                     }
@@ -298,7 +298,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
                     this.isUpgraded = isUpgraded
                     this.reqLev = reqLev
                 }
-                if (beforeUid == result.getUid()) {
+                if (beforeUid == result.getInfoText()) {
                     if (Settings.instance.logFindSameOptionWhenCheckOption)
                         logI("옵션 확인중 중복 옵션이 측정됨 (해당 위치의 아이템을 다시 확인합니다.)")
                     if (Settings.instance.saveErrorWhenCheckOption)

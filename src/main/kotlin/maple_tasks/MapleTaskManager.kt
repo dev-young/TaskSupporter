@@ -978,7 +978,7 @@ class MapleTaskManager : BaseTaskManager() {
 
                             } else {
                                 logI("합성 실패!")
-                                clickOkBtn()//오류창 닫기
+                                clickOkBtn(300)//오류창 닫기
                                 clickOkBtn()//오류창 닫기
                                 break@out
                             }
@@ -989,9 +989,6 @@ class MapleTaskManager : BaseTaskManager() {
                         }
 
                     }
-
-
-                    moveMouseLB()
                     clickCancelBtn(true)    //합성창 닫기
 
                     logI("합성 횟수:$synCount  유효추옵:${goodItemList.size}개")

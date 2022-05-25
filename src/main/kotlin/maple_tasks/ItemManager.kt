@@ -46,6 +46,8 @@ class ItemManager {
             list.add(info)
 
             itemMap[info.getUid()] = info
+        } else {
+            logI("중복! ${info.getUid()}")
         }
     }
 
