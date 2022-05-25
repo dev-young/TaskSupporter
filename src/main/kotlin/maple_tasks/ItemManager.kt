@@ -44,8 +44,11 @@ class ItemManager {
                 }
             val list = gradeMap.computeIfAbsent(gradeKey) { arrayListOf() }
             list.add(info)
+            logI(info.getUid())
 
             itemMap[info.getUid()] = info
+        } else {
+            logI("중복! ${info.getUid()}")
         }
     }
 
