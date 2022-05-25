@@ -396,31 +396,32 @@ open class AdditionalOptionTask : MapleBaseTask() {
         val targetOptions = hashMapOf<String, Int>().apply {
             if (category == FACE) {
                 this[UpgradeItemTask.STR] = 55
-                this[UpgradeItemTask.DEX] = 55
+                this[UpgradeItemTask.DEX] = 60
                 this[UpgradeItemTask.LUK] = 55
-                this[UpgradeItemTask.INT] = 55
-                this[UpgradeItemTask.HP] = 2300
+                this[UpgradeItemTask.INT] = 60
+                this[UpgradeItemTask.HP] = 2311
             } else if (category == EYE) {
                 this[UpgradeItemTask.STR] = 55
-                this[UpgradeItemTask.DEX] = 55
+                this[UpgradeItemTask.DEX] = 60
                 this[UpgradeItemTask.LUK] = 55
-                this[UpgradeItemTask.INT] = 55
-                this[UpgradeItemTask.HP] = 2100
+                this[UpgradeItemTask.INT] = 60
+                this[UpgradeItemTask.HP] = 2101
             } else {
-                this[UpgradeItemTask.STR] = 82
-                this[UpgradeItemTask.DEX] = 82
-                this[UpgradeItemTask.LUK] = 82
-                this[UpgradeItemTask.INT] = 82
-                this[UpgradeItemTask.HP] = 3150
+                this[UpgradeItemTask.STR] = 85
+                this[UpgradeItemTask.DEX] = 90
+                this[UpgradeItemTask.LUK] = 85
+                this[UpgradeItemTask.INT] = 90
+                this[UpgradeItemTask.HP] = 3151
             }
 
             if (category == EAR) {
-                this[UpgradeItemTask.HP] = 2700
+                this[UpgradeItemTask.HP] = 2731
             } else if (category == POCKET) {
-                this[UpgradeItemTask.DEX] = 80
-                this[UpgradeItemTask.LUK] = 75
-                this[UpgradeItemTask.INT] = 80
-                this[UpgradeItemTask.HP] = 2900
+                this[UpgradeItemTask.STR] = 90
+                this[UpgradeItemTask.DEX] = 95
+                this[UpgradeItemTask.LUK] = 90
+                this[UpgradeItemTask.INT] = 95
+                this[UpgradeItemTask.HP] = 2941
             }
 
             when (job) {
@@ -463,7 +464,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
         if(job != COMMON) {
             option.forEach { t, u ->
                 if(u > 49) {
-                    //깡추가 50이 넘는 경우 6 추가하여 계산
+                    //깡추가 50이 넘는 경우 3 추가하여 계산
                     option[t] = u+3
                 }
             }
@@ -489,9 +490,9 @@ open class AdditionalOptionTask : MapleBaseTask() {
             val lowState = it * 2   //덱스같은 인기 없는 스텟을 위의 인트와 같은 이유로 배율을 낮게 곱하여 계산
             option[UpgradeItemTask.STR] = option[UpgradeItemTask.STR]?.plus(state) ?: state
             option[UpgradeItemTask.DEX] = option[UpgradeItemTask.DEX]?.plus(state) ?: state
-            /**추후 덱스가 비싸지면 그냥 state 사용*/
             option[UpgradeItemTask.LUK] = option[UpgradeItemTask.LUK]?.plus(state) ?: state
-            option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it * 140) ?: it * 140
+//            option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it * 140) ?: it * 140 //원래 공식
+            option[UpgradeItemTask.HP] = option[UpgradeItemTask.HP]?.plus(it) ?: it //피추옵은 기본 1추이상만 사용해서 그에 맞게 수정
         }
 
         var result = false
@@ -501,6 +502,8 @@ open class AdditionalOptionTask : MapleBaseTask() {
                     if (it <= u) {
                         result = true
                         return@run
+                    } else if (UpgradeItemTask.HP != t && u > 140){
+                        logI("모루용 $t $u")
                     }
                 }
             }
