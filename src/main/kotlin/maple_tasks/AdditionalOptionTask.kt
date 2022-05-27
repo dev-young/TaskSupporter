@@ -502,8 +502,11 @@ open class AdditionalOptionTask : MapleBaseTask() {
                     if (it <= u) {
                         result = true
                         return@run
-                    } else if (UpgradeItemTask.HP != t && u > 140){
+                    }
+                } ?: kotlin.run {
+                    if (UpgradeItemTask.HP != t && u > 140){
                         logI("모루용 $t $u")
+                        result = true
                     }
                 }
             }
