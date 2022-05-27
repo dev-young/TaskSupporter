@@ -332,17 +332,17 @@ class AuctionTask : MapleBaseTask() {
     private suspend fun getAllItems(usePurchasedTab: Boolean): Boolean {
         clickCompleteTab()
 
-        helper.delayRandom(100, 200)
+        helper.delayRandom(1000, 2000)
         if (usePurchasedTab) {
             clickCompletePurchasedTab()
         }
         clickGetAll()
 
         helper.apply {
-            delayRandom(100, 200)
+            delayRandom(500, 1000)
             sendEnter()
 
-            delayRandom(100, 200)
+            delayRandom(500, 1000)
             val success = waitGetAll()
 
             if (success) {
