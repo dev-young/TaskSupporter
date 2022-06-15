@@ -140,15 +140,11 @@ class MeisterTask : MapleBaseTask() {
             var synCount = 0
             pairList.forEach {
                 if(synCount < maxSynCount || maxSynCount == 0) {
-                    moveMouseSmoothly(it.first, mouseDelay)
-                    smartClick(it.first, 15, 15)
-                    moveMouseSmoothly(synItem.first, mouseDelay)
-                    smartClick(synItem.first, 6, 6)
-                    moveMouseSmoothly(it.second, mouseDelay)
-                    smartClick(it.second, 15, 15)
-                    moveMouseSmoothly(synItem.second, mouseDelay)
-                    smartClick(synItem.second, 6, 6)
-                    moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
+                    moveMouseSmoothly(it.first, 50)
+                    smartClick(it.first, 10, 10, KeyEvent.BUTTON3_MASK)
+                    moveMouseSmoothly(it.second, 50)
+                    smartClick(it.second, 10, 10, KeyEvent.BUTTON3_MASK)
+                    moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 50)
 
                     if(clickSynOkBtn(50)){
                         delayRandom(50, 100)
@@ -620,11 +616,11 @@ class MeisterTask : MapleBaseTask() {
         }
 
         helper.apply {
-            moveMouseSmoothly(pair.first, mouseDelay)
+            moveMouseSmoothly(pair.first, 50)
             smartClick(pair.first, 10, 10, KeyEvent.BUTTON3_MASK)
-            moveMouseSmoothly(pair.second, mouseDelay)
+            moveMouseSmoothly(pair.second, 50)
             smartClick(pair.second, 10, 10, KeyEvent.BUTTON3_MASK)
-            moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 100)
+            moveMouseSmoothly(Point(synItem.second.x-25, synItem.second.y), 50)
 
             if(clickSynOkBtn(mouseDelay)){
                 delayRandom(100, 200)
