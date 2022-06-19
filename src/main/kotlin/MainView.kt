@@ -2,7 +2,6 @@ import com.sun.jna.platform.win32.User32
 import helper.BaseTaskManager.Companion.STATE_IDEL
 import helper.BaseTaskManager.Companion.STATE_PAUSED
 import helper.BaseTaskManager.Companion.STATE_WORKING
-import helper.HelperCore
 import javafx.application.Platform
 import javafx.beans.property.*
 import javafx.geometry.Pos
@@ -53,6 +52,7 @@ class MainView : View() {
     val price2 = SimpleLongProperty()
     val pivot = SimpleLongProperty()
     val cancelFirst = SimpleBooleanProperty()
+    val marketConditionFileName = SimpleStringProperty()
 
     override val root = borderpane {
         top = hbox {
@@ -141,7 +141,8 @@ class MainView : View() {
                             taskManager.autoMakeAndResaleWithMultipleAccount(
                                 price1.value * 10000,
                                 pivot.value * 10000,
-                                price2.value * 10000
+                                price2.value * 10000,
+                                marketConditionFileName.value
                             )
                         }
                         spacer { minWidth = 4.0 }
@@ -502,7 +503,7 @@ class MainView : View() {
                                 alignment = Pos.CENTER
                             }
                             textfield(price2) {
-                                text = "1111"
+                                text = "222"
                                 maxWidth = 80.0
                                 alignment = Pos.CENTER
                             }
@@ -533,7 +534,6 @@ class MainView : View() {
 
             tab("시세") {
                 isClosable = false
-                val fileName = SimpleStringProperty()
                 val resultFileName = SimpleStringProperty()
                 val maxCount = SimpleStringProperty()
                 val overwriteDB = SimpleBooleanProperty()
@@ -547,14 +547,14 @@ class MainView : View() {
                             alignment = Pos.CENTER_LEFT
                             spacing = defaultItemSpacing
 
-                            textfield(fileName) {
+                            textfield(marketConditionFileName) {
                                 text = "시세조사대상"
                                 maxWidth = 90.0
                             }
 
                             button("시세정보 만들기") {
                                 action {
-                                    taskManager.makeMarketConditionInfo(fileName.value, maxCount.value.toInt())
+                                    taskManager.makeMarketConditionInfo(marketConditionFileName.value, maxCount.value.toInt())
                                 }
                             }
 

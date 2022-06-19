@@ -823,7 +823,7 @@ class MapleTaskManager : BaseTaskManager() {
     }
 
     /**여러 계정으로 자동으로 로그인하며 물품 재등록 및 숙련도아이템 제작*/
-    fun autoMakeAndResaleWithMultipleAccount(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long) {
+    fun autoMakeAndResaleWithMultipleAccount(decreasePrice1: Long, pivotPrice: Long, decreasePrice2: Long, marketConditionFile:String) {
         runTask("loginTask") {
             val accountList = loadAccountList("숙련도올릴계정")
             accountList.forEach { println("${it[0]}${it[2]}  ${it[3]}/${it[4]}/${it[5]}") }
@@ -834,7 +834,8 @@ class MapleTaskManager : BaseTaskManager() {
                 val auctionTask = AuctionTask()
                 run {
                     accountList.forEach {
-                        val id = it[0]
+                        val makeMarketCondition = it[0].endsWith('*')
+                        val id = if(makeMarketCondition) it[0].removeSuffix("*") else it[0]
                         val pw = it[1]
                         val fileName = it[2]
                         val wordNumber = it[3].toInt()
@@ -859,9 +860,14 @@ class MapleTaskManager : BaseTaskManager() {
                                 auctionTask.openAuction()
                                 auctionTask.cancelSellingItem()
                                 auctionTask.resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
+                                if(makeMarketCondition) {
+                                    MarketConditionTask().makeInfo(marketConditionFile)
+                                }
                                 auctionTask.exitAuction()
                                 loginTask.waitLoadingGame()
                                 logI("옥션 종료")
+
+
 
                                 if (type.isNotEmpty()) {
                                     meisterTask.apply {
