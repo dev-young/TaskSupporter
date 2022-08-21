@@ -407,7 +407,7 @@ open class AdditionalOptionTask : MapleBaseTask() {
                 this[UpgradeItemTask.INT] = 60
                 this[UpgradeItemTask.HP] = 2101
             } else {
-                this[UpgradeItemTask.STR] = 85
+                this[UpgradeItemTask.STR] = 82
                 this[UpgradeItemTask.DEX] = 90
                 this[UpgradeItemTask.LUK] = 85
                 this[UpgradeItemTask.INT] = 90

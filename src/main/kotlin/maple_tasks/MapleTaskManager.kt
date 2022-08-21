@@ -861,7 +861,8 @@ class MapleTaskManager : BaseTaskManager() {
                                 auctionTask.cancelSellingItem()
                                 auctionTask.resaleItem(decreasePrice1, pivotPrice, decreasePrice2)
                                 if(makeMarketCondition) {
-                                    MarketConditionTask().makeInfo(marketConditionFile)
+                                    val list = MarketConditionTask().makeInfo(marketConditionFile)
+                                    ItemManager().addAll(list)
                                 }
                                 auctionTask.exitAuction()
                                 loginTask.waitLoadingGame()
